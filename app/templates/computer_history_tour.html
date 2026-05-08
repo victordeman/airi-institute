@@ -504,12 +504,12 @@
 
         // Plane for "Portrait"
         const geo = new THREE.PlaneGeometry(15, 20);
-
+        
         // Dynamic texture creation with image loading
         const loader = new THREE.TextureLoader();
-        const mat = new THREE.MeshBasicMaterial({
-            side: THREE.DoubleSide,
-            transparent: true,
+        const mat = new THREE.MeshBasicMaterial({ 
+            side: THREE.DoubleSide, 
+            transparent: true, 
             opacity: 0.9,
             color: 0xffffff
         });
@@ -518,14 +518,14 @@
         const canvas = document.createElement('canvas');
         canvas.width = 512; canvas.height = 768;
         const ctx = canvas.getContext('2d');
-
+        
         const tex = new THREE.CanvasTexture(canvas);
         mat.map = tex;
 
         const drawLabel = (img = null) => {
             ctx.fillStyle = 'rgba(24, 24, 27, 0.98)';
             ctx.fillRect(0, 0, 512, 768);
-
+            
             if (img && img.complete && img.naturalWidth !== 0) {
                 // Draw high-quality historical image centered in the top half
                 const targetW = 460;
@@ -535,9 +535,9 @@
                 const dh = img.height * scale;
                 const dx = (512 - dw) / 2;
                 const dy = 60 + (targetH - dh) / 2;
-
+                
                 ctx.drawImage(img, dx, dy, dw, dh);
-
+                
                 ctx.fillStyle = '#ffffff';
                 ctx.font = 'bold 50px Inter';
                 ctx.textAlign = 'center';
@@ -545,7 +545,7 @@
                 ctx.font = '36px Inter';
                 ctx.fillStyle = '#22d3ee';
                 ctx.fillText(p.year, 256, 510);
-
+                
                 ctx.font = '30px Inter';
                 ctx.fillStyle = '#ffffff';
                 const words = p.contribution.split(' ');
@@ -590,7 +590,7 @@
             ctx.strokeStyle = '#22d3ee';
             ctx.lineWidth = 20;
             ctx.strokeRect(10, 10, 492, 748);
-
+            
             tex.needsUpdate = true;
         };
 
@@ -1156,10 +1156,10 @@
         color: #ffffff !important;
     }
 
-    .description-text,
-    .description-text p,
-    .description-text li,
-    .description-text strong,
+    .description-text, 
+    .description-text p, 
+    .description-text li, 
+    .description-text strong, 
     .description-text h4 {
       font-size: 15.5px;
       line-height: 1.7;
