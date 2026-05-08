@@ -1,0 +1,1105 @@
+{% extends "base.html" %}
+{% block title %}Computer History 3D Tour - NAIRA{% endblock %}
+{% block content %}
+<div id="ai-tour-container" class="w-full h-screen bg-black relative flex overflow-hidden">
+    <!-- Main 3D Scene -->
+    <div id="ai-canvas-container" class="flex-1 h-full relative z-0">
+        <!-- Persistent Exit Link -->
+        <div class="absolute top-8 left-8 z-50">
+             <a href="/" class="flex items-center gap-2 text-white/40 hover:text-white transition-all description-text" style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.2em; font-weight: 700;">
+                <i data-feather="arrow-left" class="w-4 h-4"></i>
+                Back to NAIRA Home
+            </a>
+        </div>
+
+        <!-- Instructional Overlays -->
+        <div id="intro-ui" class="absolute top-24 left-8 z-40 space-y-4 transition-all duration-1000">
+            <div class="pointer-events-none space-y-2 p-8 rounded-3xl shadow-2xl" style="background: rgba(24, 24, 27, 0.9); backdrop-filter: blur(24px); border: 1px solid rgba(255,255,255,0.1);">
+                <h1 class="english-label" style="margin-bottom: 8px;">Computer History 3D Tour</h1>
+                <h2 id="current-phase-title" class="text-3xl font-display font-medium mb-2" style="color: #ffffff !important;">“From Abacus to AI: The Evolution of Computing”</h2>
+                <p class="description-text max-w-lg">An immersive journey through the machines, minds, and milestones that built the digital world — from mechanical calculators to today’s intelligent systems.</p>
+            </div>
+            <button id="start-tour-btn" class="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-full shadow-lg shadow-indigo-500/20 flex items-center gap-2 transition-all active:scale-95 description-text" style="font-size: 14px; text-transform: uppercase;">
+                <i data-feather="play" class="w-4 h-4"></i>
+                Start Guided Tour
+            </button>
+        </div>
+
+        <div class="absolute bottom-8 left-24 z-40 flex flex-col gap-4 transition-all duration-1000">
+            <div id="agent-status-panel" class="flex items-center gap-8 px-8 py-4 rounded-3xl shadow-2xl" style="background: rgba(24, 24, 27, 0.9); backdrop-filter: blur(24px); border: 1px solid rgba(255,255,255,0.1);">
+                <div class="flex flex-col">
+                    <span class="english-label" style="margin-bottom: 4px; font-size: 11px;">Computing Era</span>
+                    <span id="core-state-val" class="description-text" style="color: #6366f1; font-size: 22px; font-weight: 700;">Mechanical</span>
+                </div>
+                <div class="w-px h-10 bg-white/10"></div>
+                <div class="flex flex-col">
+                    <span class="english-label" style="margin-bottom: 4px; font-size: 11px;">Active Architecture</span>
+                    <span id="active-modules-val" class="description-text" style="color: #6366f1; font-size: 22px; font-weight: 700;">Logic</span>
+                </div>
+            </div>
+
+            <div class="english-label" style="font-size: 11px; letter-spacing: 0.2em; padding: 10px 24px; border-radius: 999px; background: rgba(24, 24, 27, 0.9); backdrop-filter: blur(24px); border: 1px solid rgba(255,255,255,0.1); display: inline-block; width: fit-content; font-weight: 600;">
+                Drag to rotate · Scroll to zoom · Click nodes to explore Pioneers & Machines
+            </div>
+        </div>
+
+        <!-- Floating Controls Panel -->
+        <div class="absolute bottom-8 right-8 z-40 w-80 space-y-4 transition-all duration-1000">
+            <div class="glass-card p-6 rounded-3xl border border-white/10 space-y-6">
+                <div class="space-y-2">
+                    <h3 class="english-label" style="font-size: 12px;">Build Your Own Era</h3>
+                    <p class="description-text" style="font-size: 12px; opacity: 0.8;">Drag components to evolve the Computing Core</p>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <button class="module-btn p-3 rounded-xl border border-white/10 text-xs font-bold text-white hover:bg-indigo-500/20 hover:border-indigo-500/50 transition-all" data-module="logic">LOGIC</button>
+                    <button class="module-btn p-3 rounded-xl border border-white/10 text-xs font-bold text-white hover:bg-amber-500/20 hover:border-amber-500/50 transition-all" data-module="storage">STORAGE</button>
+                    <button class="module-btn p-3 rounded-xl border border-white/10 text-xs font-bold text-white hover:bg-blue-500/20 hover:border-blue-500/50 transition-all" data-module="processor">PROCESSOR</button>
+                    <button class="module-btn p-3 rounded-xl border border-white/10 text-xs font-bold text-white hover:bg-emerald-500/20 hover:border-emerald-500/50 transition-all" data-module="interface">INTERFACE</button>
+                </div>
+
+                <div class="pt-4 border-t border-white/5 space-y-4">
+                    <button id="reset-experience" class="w-full py-4 px-6 bg-slate-800 hover:bg-slate-700 text-white rounded-full border border-white/10 transition-all description-text shadow-lg" style="font-size: 13px; text-transform: uppercase; text-align: center; font-weight: 600;">
+                        Reset Experience
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Description Panel -->
+        <div id="ai-info-panel" class="description-panel hidden">
+            <button id="close-ai-info" class="close-btn">
+                <i data-feather="x" class="w-5 h-5"></i>
+            </button>
+
+            <div class="space-y-6">
+                <div id="ai-panel-header" class="transition-all duration-700">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div id="status-dot" class="w-2 h-2 rounded-full transition-all duration-700" style="background-color: rgb(99, 102, 241); box-shadow: rgb(99, 102, 241) 0px 0px 20px;"></div>
+                        <span id="ai-panel-subtitle" class="english-label" style="margin-bottom: 0;">Computing Milestone</span>
+                    </div>
+                    <h2 id="ai-panel-title" class="text-[#ffffff] font-medium text-2xl tracking-tight leading-none"></h2>
+                </div>
+
+                <div id="ai-panel-content" class="description-text overflow-y-auto max-h-[50vh] pr-2"></div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="mt-8 space-y-3">
+                <button id="ai-drill-down" class="w-full transition-all text-white py-5 rounded-[24px] flex items-center justify-center gap-3 shadow-2xl active:scale-[0.97] border tracking-wide description-text" style="font-size: 14px; text-transform: uppercase; border-color: rgba(99, 102, 241, 0.5); color: rgb(165, 180, 252); background: rgba(99, 102, 241, 0.1);">
+                    <i data-feather="zoom-in" class="w-5 h-5"></i>
+                    Analyze Milestone
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- AI Assistant Sidebar -->
+    <aside id="ai-sidebar" class="w-96 bg-[#0a0f1a] border-l border-slate-800/40 flex flex-col z-40 transform transition-transform duration-500 translate-x-0 lg:relative fixed right-0 top-0 h-full">
+        <div class="p-6 border-b border-white/5 flex items-center justify-between bg-slate-900/40">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-2xl bg-indigo-600/20 flex items-center justify-center">
+                    <i data-feather="cpu" class="w-5 h-5 text-indigo-400"></i>
+                </div>
+                <div>
+                    <p class="english-label" style="font-size: 10px; margin-bottom: 2px;">Computing Guide</p>
+                    <h3 class="description-text" style="font-size: 14px; color: #ffffff;">History Specialist</h3>
+                </div>
+            </div>
+            <button id="close-sidebar" class="p-2 text-white hover:text-indigo-400 transition-colors lg:hidden">
+                <i data-feather="x" class="w-5 h-5"></i>
+            </button>
+        </div>
+
+        <!-- Chat Body -->
+        <div id="ai-chat-body" class="flex-1 overflow-y-auto p-6 space-y-4 bg-slate-950/20">
+            <div class="p-4 rounded-2xl" style="background: rgba(24, 24, 27, 0.95); backdrop-filter: blur(24px); border: 1px solid rgba(255,255,255,0.1);">
+                <span class="english-label" style="font-size: 10px; margin-bottom: 8px;">Introduction</span>
+                <p class="description-text" style="font-size: 14px; color: #ffffff;">Welcome to the history of computing. I am here to guide you from the mechanical dreams of Babbage to the silicon-powered AI of today. What era of computing interests you most?</p>
+            </div>
+        </div>
+
+        <!-- Chat Input -->
+        <div class="p-6 border-t border-white/5 bg-slate-900/40">
+            <form id="ai-chat-form" class="relative">
+                <input type="text" id="ai-chat-input" placeholder="Ask about computer history..." class="w-full bg-slate-950 border border-white/10 rounded-xl py-4 pl-4 pr-12 description-text focus:outline-none focus:border-indigo-500 transition-all" style="font-size: 14px;">
+                <button type="submit" class="absolute right-2 top-1/2 -translate-y-1/2 p-2 bg-indigo-600 rounded-lg text-white hover:bg-indigo-700 transition-all">
+                    <i data-feather="arrow-up" class="w-4 h-4"></i>
+                </button>
+            </form>
+        </div>
+    </aside>
+</div>
+
+<script type="importmap">
+    {
+        "imports": {
+            "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+            "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+        }
+    }
+</script>
+
+<script type="module">
+    import * as THREE from 'three';
+    import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+    import { DragControls } from 'three/addons/controls/DragControls.js';
+
+    // --- DATA ---
+    const PIONEERS = [
+        {
+            id: 'babbage',
+            name: 'Charles Babbage',
+            year: '1837–1871',
+            image: 'https://upload.wikimedia.org/wikipedia/commons/6/61/Charles_Babbage_-_1860.jpg',
+            contribution: 'Designed the Analytical Engine, the first general-purpose mechanical computer.',
+            content: `
+                <div class="space-y-4">
+                    <p>Charles Babbage was an English mathematician and inventor who originated the concept of a digital programmable computer.</p>
+                    <p>His Analytical Engine, though never fully completed in his lifetime, contained all the essential elements of a modern computer, including an arithmetic logic unit, control flow in the form of conditional branching and loops, and integrated memory.</p>
+                </div>
+            `
+        },
+        {
+            id: 'turing',
+            name: 'Alan Turing',
+            year: 1936,
+            image: 'https://upload.wikimedia.org/wikipedia/commons/a/a1/Alan_Turing_Aged_16.jpg',
+            contribution: 'Formalized the concepts of algorithm and computation with the Turing Machine.',
+            content: `
+                <p>Alan Turing's 1936 paper introduced the Universal Turing Machine, a mathematical model of a computer that could simulate any algorithmic process. This provided the theoretical foundation for all modern digital computers.</p>
+            `
+        },
+        {
+            id: 'eniac',
+            name: 'ENIAC',
+            year: 1945,
+            image: 'https://upload.wikimedia.org/wikipedia/commons/4/4e/Eniac.jpg',
+            contribution: 'The first programmable, electronic, general-purpose digital computer.',
+            content: `
+                <p>Developed by J. Presper Eckert and John Mauchly, ENIAC used 18,000 vacuum tubes and occupied 1,800 square feet. It was over 1,000 times faster than electromechanical machines, marking the beginning of the electronic computing era.</p>
+            `
+        },
+        {
+            id: 'univac',
+            name: 'UNIVAC I',
+            year: 1951,
+            image: 'https://upload.wikimedia.org/wikipedia/commons/a/af/Univac_I_at_Census_Bureau_with_two_operators.jpg',
+            contribution: 'The first commercial computer produced in the United States.',
+            content: `
+                <p>UNIVAC I (Universal Automatic Computer I) was designed for business and administrative use. It gained fame when it correctly predicted the outcome of the 1952 U.S. presidential election on television.</p>
+            `
+        },
+        {
+            id: 'ibm360',
+            name: 'IBM System/360',
+            year: '1964',
+            image: 'https://upload.wikimedia.org/wikipedia/commons/2/25/IBM_701_at_the_Computer_History_Museum.jpg',
+            contribution: 'A landmark family of compatible mainframe computers.',
+            content: `
+                <p>IBM System/360 allowed customers to upgrade their systems without rewriting their software. This "family" concept revolutionized the industry and established IBM's dominance in the mainframe market for decades.</p>
+            `
+        },
+        {
+            id: 'pdp8',
+            name: 'PDP-8',
+            year: 1965,
+            image: 'https://upload.wikimedia.org/wikipedia/commons/c/c2/PDP-8_Front_Panel.jpg',
+            contribution: 'The first commercially successful minicomputer.',
+            content: `
+                <p>The PDP-8, produced by Digital Equipment Corporation (DEC), was small enough to fit on a table and cost far less than mainframes, bringing computing power to smaller laboratories and businesses.</p>
+            `
+        },
+        {
+            id: 'intel4004',
+            name: 'Intel 4004',
+            year: 1971,
+            image: 'https://upload.wikimedia.org/wikipedia/commons/d/d4/Intel_4004.jpg',
+            contribution: 'The world\'s first commercially available microprocessor.',
+            content: `
+                <p>The 4004 integrated the functions of a computer's central processing unit onto a single silicon chip. This breakthrough enabled the miniaturization that led to personal computers and mobile devices.</p>
+            `
+        },
+        {
+            id: 'altair',
+            name: 'Altair 8800',
+            year: 1975,
+            image: 'https://upload.wikimedia.org/wikipedia/commons/6/64/Altair_8800_at_the_Computer_History_Museum_-_front.jpg',
+            contribution: 'The kit that sparked the personal computer revolution.',
+            content: `
+                <p>Featured on the cover of Popular Electronics, the Altair 8800 inspired hobbyists like Bill Gates and Paul Allen to write software (Altair BASIC), leading to the birth of Microsoft and the home computer industry.</p>
+            `
+        },
+        {
+            id: 'appleii',
+            name: 'Apple I / II',
+            year: '1976–1977',
+            image: 'https://upload.wikimedia.org/wikipedia/commons/b/bc/Apple_I_Computer.jpg',
+            contribution: 'Transformed personal computers into consumer products.',
+            content: `
+                <p>Steve Wozniak and Steve Jobs founded Apple to sell the Apple I. The follow-up Apple II featured color graphics and a professional case, becoming one of the most successful personal computers of the era.</p>
+            `
+        },
+        {
+            id: 'ibmpc',
+            name: 'IBM PC',
+            year: 1981,
+            image: 'https://upload.wikimedia.org/wikipedia/commons/3/33/IBM_PC_5150.jpg',
+            contribution: 'Legitimized the personal computer for the business world.',
+            content: `
+                <p>The IBM PC (Model 5150) established a standard architecture that was widely cloned, creating a massive ecosystem of compatible hardware and software that defined the industry for decades.</p>
+            `
+        },
+        {
+            id: 'macintosh',
+            name: 'Macintosh',
+            year: 1984,
+            image: 'https://upload.wikimedia.org/wikipedia/commons/e/e3/Macintosh_128k_transparency.png',
+            contribution: 'The first successful computer to use a Graphical User Interface (GUI).',
+            content: `
+                <p>The Macintosh popularized the mouse and the desktop metaphor (windows, icons, menus), making computers accessible to ordinary people without requiring them to learn complex text commands.</p>
+            `
+        }
+    ];
+
+    const PHASES = [
+        {
+            id: 1,
+            title: "Phase 1: Foundations",
+            subtitle: "Mechanical to Electronic Computing",
+            content: `
+                <div class="space-y-6">
+                    <section>
+                        <h4 class="text-indigo-400 font-bold mb-2">What is a Computer?</h4>
+                        <ul class="list-disc pl-5 space-y-2 opacity-90">
+                            <li><strong>Definition:</strong> A device that processes data according to instructions, evolving from mechanical calculators to electronic stored-program machines.</li>
+                            <li><strong>Core Evolution:</strong> From gears and relays → vacuum tubes → transistors → microprocessors.</li>
+                        </ul>
+                    </section>
+                    <section>
+                        <h4 class="text-indigo-400 font-bold mb-2">Early Milestones</h4>
+                        <ul class="list-disc pl-5 space-y-2 opacity-90">
+                            <li><strong>Babbage’s Analytical Engine:</strong> The first design for a general-purpose computer.</li>
+                            <li><strong>Zuse Z3 (1941):</strong> The world's first working programmable, fully automatic digital computer.</li>
+                            <li><strong>Colossus & ENIAC (1940s):</strong> The first electronic computers, built for wartime codebreaking and ballistics.</li>
+                        </ul>
+                    </section>
+                </div>
+            `
+        },
+        {
+            id: 2,
+            title: "Phase 2: Commercialization & Miniaturization",
+            subtitle: "Mainframes to Minicomputers",
+            content: `
+                <div class="space-y-6">
+                    <section>
+                        <h4 class="text-indigo-400 font-bold mb-2">The Birth of Commercial Computing</h4>
+                        <ul class="list-disc pl-5 space-y-1 opacity-90">
+                            <li><strong>UNIVAC I (1951):</strong> First mass-produced computer for business.</li>
+                            <li><strong>IBM 701 & 650:</strong> IBM's entry into the large-scale market.</li>
+                            <li><strong>Transistor revolution:</strong> Replacing bulky vacuum tubes with tiny, efficient silicon switches.</li>
+                        </ul>
+                    </section>
+                    <section>
+                        <h4 class="text-indigo-400 font-bold mb-2">Minicomputers & Mainframes</h4>
+                        <ul class="list-disc pl-5 space-y-1 opacity-90">
+                            <li><strong>PDP-8 (1965):</strong> First successful minicomputer, bringing computing to the laboratory.</li>
+                            <li><strong>IBM System/360 (1964):</strong> A family of compatible computers that set the standard for mainframes.</li>
+                        </ul>
+                    </section>
+                </div>
+            `
+        },
+        {
+            id: 3,
+            title: "Phase 3: Personal Computing & the Digital Age",
+            subtitle: "The PC Revolution & Beyond",
+            content: `
+                <div class="space-y-6">
+                    <section>
+                        <h4 class="text-indigo-400 font-bold mb-2">The Personal Computer Revolution</h4>
+                        <ul class="list-disc pl-5 space-y-1 opacity-90">
+                            <li><strong>Altair 8800 (1975):</strong> Sparked the home computer movement.</li>
+                            <li><strong>Apple I & II, IBM PC:</strong> Standardized personal computing for home and office.</li>
+                            <li><strong>Macintosh (1984):</strong> The GUI revolution that made computing intuitive.</li>
+                        </ul>
+                    </section>
+                    <section>
+                        <h4 class="text-indigo-400 font-bold mb-2">Modern Era & Beyond</h4>
+                        <ul class="list-disc pl-5 space-y-1 opacity-90">
+                            <li>Microprocessors, internet, mobile computing, cloud, and AI hardware.</li>
+                            <li>Future directions: Quantum computing and advanced neural architectures.</li>
+                        </ul>
+                    </section>
+                </div>
+            `
+        }
+    ];
+
+    // --- THREE.JS ENGINE ---
+    const container = document.getElementById('ai-canvas-container');
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x000000);
+
+    const camera = new THREE.PerspectiveCamera(60, container.clientWidth / container.clientHeight, 0.1, 2000);
+    camera.position.set(0, 500, 1000); // Start far for fly-in
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    renderer.setSize(container.clientWidth, container.clientHeight);
+    renderer.setPixelRatio(window.devicePixelRatio);
+    container.appendChild(renderer.domElement);
+
+    const controls = new OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.05;
+
+    // --- DRAG CONTROLS SETUP ---
+    window.draggableObjects = [];
+    let draggableObjects = window.draggableObjects;
+    const dragControls = new DragControls(draggableObjects, camera, renderer.domElement);
+
+    dragControls.addEventListener('dragstart', function (event) {
+        controls.enabled = false;
+        if (event.object.material.emissive) {
+            event.object.material.emissiveIntensity = 2;
+        }
+    });
+
+    dragControls.addEventListener('dragend', function (event) {
+        controls.enabled = true;
+        if (event.object.material.emissive) {
+            event.object.material.emissiveIntensity = 0.5;
+        }
+    });
+
+    // --- Lights ---
+    scene.add(new THREE.AmbientLight(0xffffff, 0.4));
+    const mainLight = new THREE.PointLight(0x6366f1, 2, 500);
+    mainLight.position.set(50, 50, 50);
+    scene.add(mainLight);
+
+    // --- Cosmic Environment ---
+    function createStarfield() {
+        const geo = new THREE.BufferGeometry();
+        const vertices = [];
+        const colors = [];
+        for (let i = 0; i < 15000; i++) {
+            vertices.push(
+                THREE.MathUtils.randFloatSpread(2500),
+                THREE.MathUtils.randFloatSpread(2500),
+                THREE.MathUtils.randFloatSpread(2500)
+            );
+            const color = new THREE.Color();
+            color.setHSL(Math.random(), 0.7, 0.9);
+            colors.push(color.r, color.g, color.b);
+        }
+        geo.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
+        geo.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
+        const mat = new THREE.PointsMaterial({ size: 1.2, vertexColors: true, transparent: true, opacity: 0.8 });
+        return new THREE.Points(geo, mat);
+    }
+    scene.add(createStarfield());
+
+    // Nebula Effect (Glowing Planes)
+    function createNebula(color, pos) {
+        const geo = new THREE.PlaneGeometry(1000, 1000);
+        const canvas = document.createElement('canvas');
+        canvas.width = 512; canvas.height = 512;
+        const ctx = canvas.getContext('2d');
+        const grad = ctx.createRadialGradient(256, 256, 0, 256, 256, 256);
+        grad.addColorStop(0, color);
+        grad.addColorStop(1, 'rgba(0,0,0,0)');
+        ctx.fillStyle = grad;
+        ctx.fillRect(0,0,512,512);
+        const tex = new THREE.CanvasTexture(canvas);
+        const mat = new THREE.MeshBasicMaterial({ map: tex, transparent: true, opacity: 0.15, depthWrite: false, side: THREE.DoubleSide });
+        const mesh = new THREE.Mesh(geo, mat);
+        mesh.position.copy(pos);
+        return mesh;
+    }
+    scene.add(createNebula('rgba(99, 102, 241, 1)', new THREE.Vector3(-500, -200, -500)));
+    scene.add(createNebula('rgba(234, 179, 8, 1)', new THREE.Vector3(500, 200, -800)));
+
+    // Thought Particles
+    const particleCount = 200;
+    const particlesGeo = new THREE.BufferGeometry();
+    const particlePos = new Float32Array(particleCount * 3);
+    for(let i=0; i<particleCount*3; i++) particlePos[i] = THREE.MathUtils.randFloatSpread(100);
+    particlesGeo.setAttribute('position', new THREE.BufferAttribute(particlePos, 3));
+    const particlesMat = new THREE.PointsMaterial({ color: 0x6366f1, size: 2, transparent: true, opacity: 0.6, blending: THREE.AdditiveBlending });
+    const thoughtParticles = new THREE.Points(particlesGeo, particlesMat);
+    scene.add(thoughtParticles);
+
+    // Advanced Particle Systems
+    const sparks = [];
+    function createSpark(pos, color) {
+        const geo = new THREE.SphereGeometry(0.5, 8, 8);
+        const mat = new THREE.MeshBasicMaterial({ color: color, transparent: true, opacity: 1 });
+        const mesh = new THREE.Mesh(geo, mat);
+        mesh.position.copy(pos);
+        mesh.userData = {
+            velocity: new THREE.Vector3(Math.random()-0.5, Math.random()-0.5, Math.random()-0.5).multiplyScalar(2),
+            life: 1.0
+        };
+        scene.add(mesh);
+        sparks.push(mesh);
+    }
+
+    function triggerToolBurst() {
+        for(let i=0; i<30; i++) {
+            createSpark(new THREE.Vector3(0,0,0), 0xeab308);
+        }
+    }
+
+    const collaborationBeams = [];
+    function createBeam(start, end) {
+        const material = new THREE.LineBasicMaterial({ color: 0x6366f1, transparent: true, opacity: 0.5 });
+        const points = [start, end];
+        const geo = new THREE.BufferGeometry().setFromPoints(points);
+        const line = new THREE.Line(geo, material);
+        scene.add(line);
+        collaborationBeams.push({ line, life: 1.0 });
+    }
+
+    // --- Computing Core ---
+    const coreGroup = new THREE.Group();
+    scene.add(coreGroup);
+
+    const coreGeo = new THREE.SphereGeometry(15, 64, 64);
+    const coreMat = new THREE.MeshStandardMaterial({
+        color: 0x6366f1,
+        emissive: 0x6366f1,
+        emissiveIntensity: 0.5,
+        metalness: 0.8,
+        roughness: 0.2,
+        wireframe: true
+    });
+    const agentCore = new THREE.Mesh(coreGeo, coreMat);
+    coreGroup.add(agentCore);
+
+    const innerCore = new THREE.Mesh(
+        new THREE.SphereGeometry(10, 32, 32),
+        new THREE.MeshStandardMaterial({ color: 0x000000, emissive: 0x6366f1, emissiveIntensity: 2 })
+    );
+    coreGroup.add(innerCore);
+
+    // --- Pioneer Timeline (Helix) ---
+    const timelineGroup = new THREE.Group();
+    scene.add(timelineGroup);
+
+    const pioneerPlanes = [];
+    PIONEERS.forEach((p, i) => {
+        const angle = (i / PIONEERS.length) * Math.PI * 2;
+        const radius = 100;
+        const x = Math.cos(angle) * radius;
+        const z = Math.sin(angle) * radius;
+        const y = (i - PIONEERS.length/2) * 25; // Helix shape
+
+        const group = new THREE.Group();
+        group.position.set(x, y, z);
+        group.userData.originalY = y;
+        group.lookAt(0, 0, 0);
+        group.rotation.y += Math.PI / 6; // Tilt
+
+        // Plane for "Portrait"
+        const geo = new THREE.PlaneGeometry(15, 20);
+        const canvas = document.createElement('canvas');
+        canvas.width = 512; canvas.height = 768;
+        const ctx = canvas.getContext('2d');
+        ctx.fillStyle = 'rgba(24, 24, 27, 0.9)';
+        ctx.fillRect(0, 0, 512, 768);
+        ctx.strokeStyle = '#6366f1';
+        ctx.lineWidth = 10;
+        ctx.strokeRect(5, 5, 502, 758);
+
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 60px Inter';
+        ctx.textAlign = 'center';
+        ctx.fillText(p.name, 256, 100);
+        ctx.font = '40px Inter';
+        ctx.fillStyle = '#818cf8';
+        ctx.fillText(p.year, 256, 160);
+
+        ctx.font = '32px Inter';
+        ctx.fillStyle = '#ffffff';
+        const words = p.contribution.split(' ');
+        let line = '';
+        let currentY = 250;
+        words.forEach(w => {
+            if (ctx.measureText(line + w).width > 400) {
+                ctx.fillText(line, 256, currentY);
+                line = w + ' ';
+                currentY += 45;
+            } else {
+                line += w + ' ';
+            }
+        });
+        ctx.fillText(line, 256, currentY);
+
+        const tex = new THREE.CanvasTexture(canvas);
+        const mat = new THREE.MeshBasicMaterial({ map: tex, side: THREE.DoubleSide, transparent: true, opacity: 0.9 });
+        const mesh = new THREE.Mesh(geo, mat);
+        mesh.userData = { type: 'pioneer', data: p };
+        group.add(mesh);
+        draggableObjects.push(mesh);
+
+        // Neon Glow Edge
+        const edgeGeo = new THREE.EdgesGeometry(geo);
+        const edgeMat = new THREE.LineBasicMaterial({ color: 0x6366f1, linewidth: 2 });
+        const edges = new THREE.LineSegments(edgeGeo, edgeMat);
+        group.add(edges);
+
+        timelineGroup.add(group);
+        pioneerPlanes.push(mesh);
+    });
+
+    // --- Module Nodes ---
+    window.moduleNodes = [];
+    const moduleNodes = window.moduleNodes;
+    const MODULE_TYPES = [
+        { id: 'logic', name: 'LOGIC', color: 0x6366f1 },
+        { id: 'storage', name: 'STORAGE', color: 0xeab308 },
+        { id: 'processor', name: 'PROCESSOR', color: 0x3b82f6 },
+        { id: 'interface', name: 'INTERFACE', color: 0x10b981 }
+    ];
+
+    MODULE_TYPES.forEach((m, i) => {
+        const geo = new THREE.BoxGeometry(8, 8, 8);
+        const mat = new THREE.MeshStandardMaterial({
+            color: m.color,
+            emissive: m.color,
+            emissiveIntensity: 0.5,
+            transparent: true,
+            opacity: 0.8
+        });
+        const mesh = new THREE.Mesh(geo, mat);
+        mesh.position.set(100, -50 + i * 20, 0);
+        mesh.userData = { type: 'module', id: m.id };
+        scene.add(mesh);
+        moduleNodes.push(mesh);
+        draggableObjects.push(mesh);
+
+        // Label
+        const label = createTextLabel(m.name);
+        label.position.copy(mesh.position).add(new THREE.Vector3(0, 8, 0));
+        scene.add(label);
+        mesh.userData.label = label;
+    });
+
+    dragControls.addEventListener('drag', function (event) {
+        if (event.object.userData.type === 'module') {
+            event.object.userData.label.position.copy(event.object.position).add(new THREE.Vector3(0, 8, 0));
+
+            // Check proximity to Core
+            const dist = event.object.position.distanceTo(new THREE.Vector3(0,0,0));
+            if (dist < 30) {
+                if (!activeModules.includes(event.object.userData.id)) {
+                    activeModules.push(event.object.userData.id);
+                    updateCore();
+                    // Visual feedback
+                    event.object.material.emissiveIntensity = 5;
+                }
+            }
+        }
+    });
+
+    // --- Phase Nodes (Orbiting Shells style) ---
+    const phaseNodes = [];
+    const connections = [];
+
+    PHASES.forEach((p, i) => {
+        const group = new THREE.Group();
+        const angle = (i / PHASES.length) * Math.PI * 2 + Math.PI / 4;
+        group.position.set(Math.cos(angle) * 180, 0, Math.sin(angle) * 180);
+
+        // Inner core of phase
+        const geo = new THREE.IcosahedronGeometry(10, 1);
+        const mat = new THREE.MeshStandardMaterial({
+            color: 0x6366f1,
+            emissive: 0x6366f1,
+            emissiveIntensity: 0.8,
+            wireframe: true
+        });
+        const mesh = new THREE.Mesh(geo, mat);
+        mesh.userData = { type: 'phase', data: p };
+        group.add(mesh);
+
+        // Outer shell
+        const shellGeo = new THREE.SphereGeometry(14, 32, 32);
+        const shellMat = new THREE.MeshPhongMaterial({
+            color: 0x6366f1,
+            transparent: true,
+            opacity: 0.1,
+            side: THREE.BackSide
+        });
+        group.add(new THREE.Mesh(shellGeo, shellMat));
+
+        scene.add(group);
+        phaseNodes.push(mesh);
+        draggableObjects.push(mesh);
+
+        // Label
+        const label = createTextLabel(p.title);
+        label.position.copy(group.position).add(new THREE.Vector3(0, 20, 0));
+        scene.add(label);
+    });
+
+    // --- Connections (Dynamic Glowing Tubes) ---
+    function createConnection(startObj, endPos) {
+        const material = new THREE.MeshStandardMaterial({
+            color: 0x6366f1,
+            emissive: 0x6366f1,
+            emissiveIntensity: 2,
+            transparent: true,
+            opacity: 0.3
+        });
+        const group = new THREE.Group();
+        scene.add(group);
+
+        return {
+            startObj,
+            endPos,
+            mesh: null,
+            update: function() {
+                if (this.mesh) {
+                    group.remove(this.mesh);
+                    this.mesh.geometry.dispose();
+                }
+                const startPos = new THREE.Vector3();
+                this.startObj.getWorldPosition(startPos);
+
+                const curve = new THREE.QuadraticBezierCurve3(
+                    startPos,
+                    new THREE.Vector3((startPos.x + this.endPos.x) / 2, (startPos.y + this.endPos.y) / 2 + 30, (startPos.z + this.endPos.z) / 2),
+                    this.endPos
+                );
+                const geometry = new THREE.TubeGeometry(curve, 20, 0.2, 8, false);
+                this.mesh = new THREE.Mesh(geometry, material);
+                group.add(this.mesh);
+            }
+        };
+    }
+
+    // Connect Pioneers to Phases and Core
+    PIONEERS.forEach((p, i) => {
+        const mesh = pioneerPlanes[i];
+        const connection = createConnection(mesh, new THREE.Vector3(0,0,0));
+        connections.push(connection);
+    });
+    phaseNodes.forEach(node => {
+        const connection = createConnection(node, new THREE.Vector3(0,0,0));
+        connections.push(connection);
+    });
+
+    function createTextLabel(text) {
+        const canvas = document.createElement('canvas');
+        canvas.width = 512; canvas.height = 128;
+        const ctx = canvas.getContext('2d');
+        ctx.fillStyle = 'rgba(0,0,0,0)';
+        ctx.fillRect(0,0,512,128);
+        ctx.font = 'bold 48px Inter';
+        ctx.fillStyle = '#ffffff';
+        ctx.textAlign = 'center';
+        ctx.fillText(text.toUpperCase(), 256, 80);
+        const tex = new THREE.CanvasTexture(canvas);
+        const mesh = new THREE.Mesh(new THREE.PlaneGeometry(20, 5), new THREE.MeshBasicMaterial({ map: tex, transparent: true }));
+        return mesh;
+    }
+
+    // --- Animation Loop ---
+    let currentSparkColor = 0x6366f1;
+    function animate(t) {
+        requestAnimationFrame(animate);
+
+        agentCore.rotation.y += 0.01;
+        agentCore.rotation.x += 0.005;
+        innerCore.scale.setScalar(1 + Math.sin(t * 0.002) * 0.1);
+
+        timelineGroup.rotation.y += 0.002;
+        pioneerPlanes.forEach((p, i) => {
+            p.parent.position.y = p.parent.userData.originalY + Math.sin(t * 0.001 + i) * 2;
+        });
+
+        thoughtParticles.rotation.y += 0.001;
+        const positions = thoughtParticles.geometry.attributes.position.array;
+        for(let i=0; i<particleCount; i++) {
+            positions[i*3+1] += Math.sin(t * 0.001 + i) * 0.02;
+        }
+        thoughtParticles.geometry.attributes.position.needsUpdate = true;
+
+        // Update Dynamic Connections
+        connections.forEach(c => c.update());
+
+        // Update Beams
+        for(let i = collaborationBeams.length - 1; i >= 0; i--) {
+            const b = collaborationBeams[i];
+            b.life -= 0.01;
+            b.line.material.opacity = b.life * 0.5;
+            if(b.life <= 0) {
+                scene.remove(b.line);
+                collaborationBeams.splice(i, 1);
+            }
+        }
+
+        // Randomly trigger beams between nodes to show knowledge flow
+        if (Math.random() < 0.02) {
+            const nodes = [...pioneerPlanes, ...phaseNodes];
+            const n1 = nodes[Math.floor(Math.random() * nodes.length)];
+            const n2 = nodes[Math.floor(Math.random() * nodes.length)];
+            if (n1 && n2 && n1 !== n2) {
+                const p1 = new THREE.Vector3();
+                const p2 = new THREE.Vector3();
+                n1.getWorldPosition(p1);
+                n2.getWorldPosition(p2);
+                createBeam(p1, p2);
+            }
+        }
+
+        // Update Sparks
+        for(let i=sparks.length-1; i>=0; i--) {
+            const s = sparks[i];
+            s.position.add(s.userData.velocity);
+            s.userData.life -= 0.02;
+            s.material.opacity = s.userData.life;
+            if(s.userData.life <= 0) {
+                scene.remove(s);
+                sparks.splice(i, 1);
+            }
+        }
+
+        // Randomly trigger reasoning sparks from core
+        if (Math.random() < 0.1) {
+            createSpark(new THREE.Vector3(0,0,0), currentSparkColor);
+        }
+
+        controls.update();
+        renderer.render(scene, camera);
+    }
+    // Dramatic Fly-in
+    setTimeout(() => {
+        const startPos = camera.position.clone();
+        const endPos = new THREE.Vector3(0, 50, 150);
+        let progress = 0;
+        const duration = 120;
+        const flyIn = () => {
+            progress++;
+            camera.position.lerpVectors(startPos, endPos, progress/duration);
+            if (progress < duration) requestAnimationFrame(flyIn);
+        };
+        flyIn();
+    }, 500);
+
+    animate(0);
+
+    // --- Interactions ---
+    const raycaster = new THREE.Raycaster();
+    const mouse = new THREE.Vector2();
+    const infoPanel = document.getElementById('ai-info-panel');
+
+    container.addEventListener('click', (e) => {
+        const rect = container.getBoundingClientRect();
+        mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+        mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+
+        raycaster.setFromCamera(mouse, camera);
+        const intersects = raycaster.intersectObjects([...pioneerPlanes, ...phaseNodes]);
+
+        if (intersects.length > 0) {
+            const obj = intersects[0].object;
+            showInfo(obj.userData);
+        } else {
+            infoPanel.classList.add('hidden');
+        }
+    });
+
+    window.showInfo = function(userData) {
+        const { type, data } = userData;
+        const title = document.getElementById('ai-panel-title');
+        const subtitle = document.getElementById('ai-panel-subtitle');
+        const content = document.getElementById('ai-panel-content');
+
+        title.textContent = data.name || data.title;
+        subtitle.textContent = type === 'pioneer' ? `English: Milestone (${data.year})` : `English: ${data.subtitle}`;
+
+        let html = '';
+        if (type === 'pioneer' && data.image) {
+            html += `<img src="${data.image}" alt="${data.name}" class="w-full h-48 object-cover rounded-2xl mb-6 border border-white/10 shadow-lg">`;
+        }
+        html += data.content;
+        content.innerHTML = html;
+
+        infoPanel.classList.remove('hidden');
+    }
+
+    document.getElementById('close-ai-info').onclick = () => infoPanel.classList.add('hidden');
+
+    // --- Tour Logic ---
+    let tourIndex = 0;
+    const tourPoints = [...PIONEERS.map(p => ({ type: 'pioneer', data: p })), ...PHASES.map(p => ({ type: 'phase', data: p }))];
+
+    document.getElementById('start-tour-btn').onclick = () => {
+        // Hide Intro UI
+        const introUI = document.getElementById('intro-ui');
+        introUI.style.display = 'none';
+
+        const sidebar = document.getElementById('ai-sidebar');
+        sidebar.style.display = 'none';
+
+        // Hide Build Panel too for full immersion
+        const buildPanel = document.querySelector('.absolute.bottom-8.right-8.z-40.w-80');
+        if (buildPanel) {
+            buildPanel.style.opacity = '0';
+            buildPanel.style.pointerEvents = 'none';
+            buildPanel.style.transform = 'translateY(50px)';
+        }
+
+        const statusPanel = document.getElementById('agent-status-panel');
+        if (statusPanel) {
+            statusPanel.parentElement.style.opacity = '0';
+            statusPanel.parentElement.style.pointerEvents = 'none';
+            statusPanel.parentElement.style.transform = 'translateY(50px)';
+        }
+
+        tourIndex = 0;
+        runTourStep();
+    };
+
+    function runTourStep() {
+        if (tourIndex >= tourPoints.length) return;
+        const step = tourPoints[tourIndex];
+        showInfo(step);
+
+        let targetPos;
+        if (step.type === 'pioneer') {
+            const mesh = pioneerPlanes.find(p => p.userData.data.id === step.data.id);
+            const worldPos = new THREE.Vector3();
+            mesh.getWorldPosition(worldPos);
+            targetPos = worldPos.clone().add(worldPos.clone().normalize().multiplyScalar(40));
+            controls.target.copy(worldPos);
+        } else {
+            const mesh = phaseNodes.find(p => p.userData.data.id === step.data.id);
+            const worldPos = new THREE.Vector3();
+            mesh.getWorldPosition(worldPos);
+            targetPos = worldPos.clone().add(new THREE.Vector3(0, 30, 80));
+            controls.target.copy(worldPos);
+        }
+
+        // Camera move
+        const startPos = camera.position.clone();
+        let progress = 0;
+        const duration = 60;
+        const move = () => {
+            progress++;
+            camera.position.lerpVectors(startPos, targetPos, progress/duration);
+            if (progress < duration) requestAnimationFrame(move);
+        };
+        move();
+
+        tourIndex++;
+        setTimeout(runTourStep, 8000);
+    }
+
+    // --- Core Evolution Logic ---
+    let activeModules = ['logic'];
+    document.querySelectorAll('.module-btn').forEach(btn => {
+        btn.onclick = () => {
+            const mod = btn.getAttribute('data-module');
+            if (!activeModules.includes(mod)) {
+                activeModules.push(mod);
+                btn.classList.add('bg-indigo-500/40', 'border-indigo-400');
+                updateCore();
+            }
+        };
+    });
+
+    function updateCore() {
+        triggerToolBurst();
+        document.getElementById('active-modules-val').textContent = activeModules.join(', ');
+        const count = activeModules.length;
+
+        // Visual Evolve Logic (Mechanical -> Vacuum -> Silicon -> AI Hardware)
+        if (count >= 4) {
+            document.getElementById('core-state-val').textContent = 'AI Hardware';
+            currentSparkColor = 0x6366f1;
+            agentCore.geometry.dispose();
+            agentCore.geometry = new THREE.IcosahedronGeometry(18, 1);
+            agentCore.material.color.setHex(0x6366f1);
+            agentCore.material.emissive.setHex(0x6366f1);
+            agentCore.material.wireframe = true;
+
+            // Add tiny satellites for modern tech
+            for(let i=0; i<8; i++) {
+                const sat = new THREE.Mesh(new THREE.SphereGeometry(2, 8, 8), new THREE.MeshStandardMaterial({ color: 0x6366f1, emissive: 0x6366f1 }));
+                const satAngle = (i/8) * Math.PI * 2;
+                sat.position.set(Math.cos(satAngle) * 30, Math.sin(satAngle * 2) * 10, Math.sin(satAngle) * 30);
+                coreGroup.add(sat);
+            }
+        } else if (count >= 3) {
+            document.getElementById('core-state-val').textContent = 'Silicon';
+            currentSparkColor = 0x3b82f6;
+            agentCore.geometry.dispose();
+            agentCore.geometry = new THREE.TorusKnotGeometry(12, 3, 100, 16);
+            agentCore.material.color.setHex(0x3b82f6);
+            agentCore.material.wireframe = false;
+        } else if (count >= 2) {
+            document.getElementById('core-state-val').textContent = 'Vacuum Tubes';
+            currentSparkColor = 0xeab308;
+            agentCore.geometry.dispose();
+            agentCore.geometry = new THREE.CylinderGeometry(10, 10, 20, 32);
+            agentCore.material.color.setHex(0xeab308);
+            agentCore.material.wireframe = true;
+        } else {
+            document.getElementById('core-state-val').textContent = 'Mechanical';
+            currentSparkColor = 0x94a3b8;
+            agentCore.geometry.dispose();
+            agentCore.geometry = new THREE.TorusGeometry(12, 4, 16, 100);
+            agentCore.material.color.setHex(0x94a3b8);
+            agentCore.material.wireframe = true;
+        }
+
+        // Particle Burst on evolve
+        particlesMat.opacity = 1.0;
+        setTimeout(() => particlesMat.opacity = 0.6, 500);
+    }
+
+    document.getElementById('reset-experience').onclick = () => {
+        // Restore UI
+        document.querySelector('.absolute.top-8.left-8').style.opacity = '1';
+        document.querySelector('.absolute.top-8.left-8').style.pointerEvents = 'all';
+        document.getElementById('ai-sidebar').style.transform = 'translateX(0)';
+        location.reload();
+    };
+
+    // AI Chat
+    const chatForm = document.getElementById('ai-chat-form');
+    chatForm.onsubmit = async (e) => {
+        e.preventDefault();
+        const input = document.getElementById('ai-chat-input');
+        const msg = input.value.trim();
+        if (!msg) return;
+
+        const body = document.getElementById('ai-chat-body');
+        const userDiv = document.createElement('div');
+        userDiv.className = 'bg-white/10 border border-white/20 p-4 rounded-2xl ml-8';
+        const userLabel = document.createElement('span');
+        userLabel.className = 'english-label';
+        userLabel.style.fontSize = '10px';
+        userLabel.style.marginBottom = '4px';
+        userLabel.textContent = 'User';
+        const userText = document.createElement('p');
+        userText.className = 'description-text';
+        userText.style.fontSize = '14px';
+        userText.style.color = '#ffffff';
+        userText.textContent = msg;
+        userDiv.appendChild(userLabel);
+        userDiv.appendChild(userText);
+        body.appendChild(userDiv);
+        input.value = '';
+        body.scrollTop = body.scrollHeight;
+
+        try {
+            const res = await fetch('/api/chat', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ message: msg, model: 'qwen' })
+            });
+            const data = await res.json();
+            const aiDiv = document.createElement('div');
+            aiDiv.className = 'bg-indigo-600/20 border border-indigo-500/30 p-4 rounded-2xl mr-8';
+            const aiLabel = document.createElement('span');
+            aiLabel.className = 'english-label';
+            aiLabel.style.fontSize = '10px';
+            aiLabel.style.marginBottom = '4px';
+            aiLabel.textContent = 'Assistant';
+            const aiText = document.createElement('p');
+            aiText.className = 'description-text';
+            aiText.style.fontSize = '14px';
+            aiText.style.color = '#ffffff';
+            aiText.textContent = data.response;
+            aiDiv.appendChild(aiLabel);
+            aiDiv.appendChild(aiText);
+            body.appendChild(aiDiv);
+            body.scrollTop = body.scrollHeight;
+        } catch (err) { console.error(err); }
+    };
+
+    window.addEventListener('resize', () => {
+        camera.aspect = container.clientWidth / container.clientHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(container.clientWidth, container.clientHeight);
+    });
+
+    if (window.feather) feather.replace();
+</script>
+
+<style>
+    /* Fullscreen Immersion */
+    #navbar, footer, header, #top-bar, .bg-primary.text-white.py-2 { display: none !important; }
+    body { overflow: hidden !important; background-color: black !important; margin-top: 0 !important; }
+    #ai-tour-container { top: 0; left: 0; z-index: 100; }
+
+    .glass-card {
+        background: rgba(15, 23, 42, 0.7);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+    }
+
+    .description-panel {
+      position: absolute;
+      right: 32px;
+      top: 32px;
+      bottom: 32px;
+      z-index: 40;
+      width: 420px;
+      max-width: 90vw;
+      overflow-y: auto;
+      background: rgba(24, 24, 27, 0.95);
+      backdrop-filter: blur(24px);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 32px;
+      box-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.8);
+      padding: 40px;
+      color: #ffffff;
+      animation: panelPop 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .english-label {
+      color: #22d3ee !important;
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      margin-bottom: 12px;
+      display: block;
+    }
+
+    .description-text {
+      font-size: 15.5px;
+      line-height: 1.7;
+      font-weight: 400;
+      color: #ffffff !important;
+    }
+
+    .close-btn {
+      position: absolute;
+      top: 24px;
+      right: 24px;
+      color: #9ca3af;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .close-btn:hover { color: #ffffff; transform: rotate(90deg); }
+
+    @keyframes panelPop {
+        from { opacity: 0; transform: translateX(30px) scale(0.98); }
+        to { opacity: 1; transform: translateX(0) scale(1); }
+    }
+
+    /* Scrollbar Styling */
+    .description-panel::-webkit-scrollbar { width: 4px; }
+    .description-panel::-webkit-scrollbar-track { background: transparent; }
+    .description-panel::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
+</style>
+{% endblock %}

@@ -176,6 +176,10 @@ async def economics_tour_test(request: Request):
 async def terracotta_tour_test(request: Request):
     return templates.TemplateResponse("terracotta_tour_test.html", {"request": request})
 
+@router.get("/computer-history-tour")
+async def computer_history_tour(request: Request):
+    return templates.TemplateResponse("computer_history_tour.html", {"request": request})
+
 @router.get("/privacy")
 async def privacy(request: Request):
     return templates.TemplateResponse("privacy.html", {"request": request})
