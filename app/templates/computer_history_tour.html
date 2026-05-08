@@ -29,12 +29,12 @@
             <div id="agent-status-panel" class="flex items-center gap-8 px-8 py-4 rounded-3xl shadow-2xl" style="background: rgba(24, 24, 27, 0.9); backdrop-filter: blur(24px); border: 1px solid rgba(255,255,255,0.1);">
                 <div class="flex flex-col">
                     <span class="english-label" style="margin-bottom: 4px; font-size: 11px;">Computing Era</span>
-                    <span id="core-state-val" class="description-text" style="color: #6366f1; font-size: 22px; font-weight: 700;">Mechanical</span>
+                    <span id="core-state-val" class="description-text" style="color: #22d3ee; font-size: 22px; font-weight: 700;">Mechanical</span>
                 </div>
                 <div class="w-px h-10 bg-white/10"></div>
                 <div class="flex flex-col">
                     <span class="english-label" style="margin-bottom: 4px; font-size: 11px;">Active Architecture</span>
-                    <span id="active-modules-val" class="description-text" style="color: #6366f1; font-size: 22px; font-weight: 700;">Logic</span>
+                    <span id="active-modules-val" class="description-text" style="color: #22d3ee; font-size: 22px; font-weight: 700;">Logic</span>
                 </div>
             </div>
 
@@ -75,7 +75,7 @@
             <div class="space-y-6">
                 <div id="ai-panel-header" class="transition-all duration-700">
                     <div class="flex items-center gap-3 mb-4">
-                        <div id="status-dot" class="w-2 h-2 rounded-full transition-all duration-700" style="background-color: rgb(99, 102, 241); box-shadow: rgb(99, 102, 241) 0px 0px 20px;"></div>
+                        <div id="status-dot" class="w-2 h-2 rounded-full transition-all duration-700" style="background-color: rgb(34, 211, 238); box-shadow: rgb(34, 211, 238) 0px 0px 20px;"></div>
                         <span id="ai-panel-subtitle" class="english-label" style="margin-bottom: 0;">Computing Milestone</span>
                     </div>
                     <h2 id="ai-panel-title" class="text-[#ffffff] font-medium text-2xl tracking-tight leading-none"></h2>
@@ -86,7 +86,7 @@
 
             <!-- Action Buttons -->
             <div class="mt-8 space-y-3">
-                <button id="ai-drill-down" class="w-full transition-all text-white py-5 rounded-[24px] flex items-center justify-center gap-3 shadow-2xl active:scale-[0.97] border tracking-wide description-text" style="font-size: 14px; text-transform: uppercase; border-color: rgba(99, 102, 241, 0.5); color: rgb(165, 180, 252); background: rgba(99, 102, 241, 0.1);">
+                <button id="ai-drill-down" class="w-full transition-all text-white py-5 rounded-[24px] flex items-center justify-center gap-3 shadow-2xl active:scale-[0.97] border tracking-wide description-text" style="font-size: 14px; text-transform: uppercase; border-color: rgba(34, 211, 238, 0.5); color: rgb(34, 211, 238); background: rgba(34, 211, 238, 0.1);">
                     <i data-feather="zoom-in" class="w-5 h-5"></i>
                     Analyze Milestone
                 </button>
@@ -194,7 +194,7 @@
             id: 'ibm360',
             name: 'IBM System/360',
             year: '1964',
-            image: 'https://upload.wikimedia.org/wikipedia/commons/2/25/IBM_701_at_the_Computer_History_Museum.jpg',
+            image: 'https://upload.wikimedia.org/wikipedia/commons/0/01/IBM_System_360_Model_50.jpg',
             contribution: 'A landmark family of compatible mainframe computers.',
             content: `
                 <p>IBM System/360 allowed customers to upgrade their systems without rewriting their software. This "family" concept revolutionized the industry and established IBM's dominance in the mainframe market for decades.</p>
@@ -375,7 +375,7 @@
 
     // --- Lights ---
     scene.add(new THREE.AmbientLight(0xffffff, 0.4));
-    const mainLight = new THREE.PointLight(0x6366f1, 2, 500);
+    const mainLight = new THREE.PointLight(0x22d3ee, 2, 500);
     mainLight.position.set(50, 50, 50);
     scene.add(mainLight);
 
@@ -504,41 +504,116 @@
 
         // Plane for "Portrait"
         const geo = new THREE.PlaneGeometry(15, 20);
+
+        // Dynamic texture creation with image loading
+        const loader = new THREE.TextureLoader();
+        const mat = new THREE.MeshBasicMaterial({
+            side: THREE.DoubleSide,
+            transparent: true,
+            opacity: 0.9,
+            color: 0xffffff
+        });
+
+        // Use a canvas for the portrait label
         const canvas = document.createElement('canvas');
         canvas.width = 512; canvas.height = 768;
         const ctx = canvas.getContext('2d');
-        ctx.fillStyle = 'rgba(24, 24, 27, 0.9)';
-        ctx.fillRect(0, 0, 512, 768);
-        ctx.strokeStyle = '#6366f1';
-        ctx.lineWidth = 10;
-        ctx.strokeRect(5, 5, 502, 758);
-
-        ctx.fillStyle = '#ffffff';
-        ctx.font = 'bold 60px Inter';
-        ctx.textAlign = 'center';
-        ctx.fillText(p.name, 256, 100);
-        ctx.font = '40px Inter';
-        ctx.fillStyle = '#818cf8';
-        ctx.fillText(p.year, 256, 160);
-
-        ctx.font = '32px Inter';
-        ctx.fillStyle = '#ffffff';
-        const words = p.contribution.split(' ');
-        let line = '';
-        let currentY = 250;
-        words.forEach(w => {
-            if (ctx.measureText(line + w).width > 400) {
-                ctx.fillText(line, 256, currentY);
-                line = w + ' ';
-                currentY += 45;
-            } else {
-                line += w + ' ';
-            }
-        });
-        ctx.fillText(line, 256, currentY);
 
         const tex = new THREE.CanvasTexture(canvas);
-        const mat = new THREE.MeshBasicMaterial({ map: tex, side: THREE.DoubleSide, transparent: true, opacity: 0.9 });
+        mat.map = tex;
+
+        const drawLabel = (img = null) => {
+            ctx.fillStyle = 'rgba(24, 24, 27, 0.98)';
+            ctx.fillRect(0, 0, 512, 768);
+
+            if (img && img.complete && img.naturalWidth !== 0) {
+                // Draw high-quality historical image centered in the top half
+                const targetW = 460;
+                const targetH = 340;
+                const scale = Math.min(targetW / img.width, targetH / img.height);
+                const dw = img.width * scale;
+                const dh = img.height * scale;
+                const dx = (512 - dw) / 2;
+                const dy = 60 + (targetH - dh) / 2;
+
+                ctx.drawImage(img, dx, dy, dw, dh);
+
+                ctx.fillStyle = '#ffffff';
+                ctx.font = 'bold 50px Inter';
+                ctx.textAlign = 'center';
+                ctx.fillText(p.name, 256, 460);
+                ctx.font = '36px Inter';
+                ctx.fillStyle = '#22d3ee';
+                ctx.fillText(p.year, 256, 510);
+
+                ctx.font = '30px Inter';
+                ctx.fillStyle = '#ffffff';
+                const words = p.contribution.split(' ');
+                let line = '';
+                let currentY = 580;
+                words.forEach(w => {
+                    if (ctx.measureText(line + w).width > 440) {
+                        ctx.fillText(line, 256, currentY);
+                        line = w + ' ';
+                        currentY += 45;
+                    } else {
+                        line += w + ' ';
+                    }
+                });
+                ctx.fillText(line, 256, currentY);
+            } else {
+                ctx.fillStyle = '#ffffff';
+                ctx.font = 'bold 60px Inter';
+                ctx.textAlign = 'center';
+                ctx.fillText(p.name, 256, 200);
+                ctx.font = '40px Inter';
+                ctx.fillStyle = '#22d3ee';
+                ctx.fillText(p.year, 256, 280);
+
+                ctx.font = '36px Inter';
+                ctx.fillStyle = '#ffffff';
+                const words = p.contribution.split(' ');
+                let line = '';
+                let currentY = 400;
+                words.forEach(w => {
+                    if (ctx.measureText(line + w).width > 400) {
+                        ctx.fillText(line, 256, currentY);
+                        line = w + ' ';
+                        currentY += 50;
+                    } else {
+                        line += w + ' ';
+                    }
+                });
+                ctx.fillText(line, 256, currentY);
+            }
+
+            ctx.strokeStyle = '#22d3ee';
+            ctx.lineWidth = 20;
+            ctx.strokeRect(10, 10, 492, 748);
+
+            tex.needsUpdate = true;
+        };
+
+        drawLabel(); // Initial draw
+
+        // Load historical image onto the 3D plane
+        const image = new Image();
+        image.crossOrigin = "anonymous";
+        image.onload = () => {
+            drawLabel(image);
+        };
+        image.onerror = () => {
+            console.error("Failed to load image:", p.image);
+            // Fallback to a nice generated placeholder if the image fails
+            if (!image.src.includes('placehold.co')) {
+                image.src = `https://placehold.co/600x800/1e293b/ffffff?text=${encodeURIComponent(p.name)}`;
+            } else {
+                drawLabel();
+            }
+        };
+        // Use the original URL first. Playwright/Modern browsers handle Wikimedia CORS well if crossOrigin is set.
+        image.src = p.image;
+
         const mesh = new THREE.Mesh(geo, mat);
         mesh.userData = { type: 'pioneer', data: p };
         group.add(mesh);
@@ -824,12 +899,15 @@
 
         let html = '';
         if (type === 'pioneer' && data.image) {
-            html += `<img src="${data.image}" alt="${data.name}" class="w-full h-48 object-cover rounded-2xl mb-6 border border-white/10 shadow-lg">`;
+            html += `<div class="w-full mb-6 rounded-2xl overflow-hidden border border-white/20 shadow-2xl bg-black/40">
+                        <img src="${data.image}" alt="${data.name}" class="w-full h-64 object-contain" onerror="this.src='https://placehold.co/600x400/1e293b/ffffff?text=${encodeURIComponent(data.name)}'">
+                    </div>`;
         }
-        html += data.content;
+        html += `<div class="description-text">${data.content}</div>`;
         content.innerHTML = html;
 
         infoPanel.classList.remove('hidden');
+        if (window.feather) feather.replace();
     }
 
     document.getElementById('close-ai-info').onclick = () => infoPanel.classList.add('hidden');
@@ -1074,7 +1152,15 @@
       display: block;
     }
 
-    .description-text {
+    #ai-panel-title {
+        color: #ffffff !important;
+    }
+
+    .description-text,
+    .description-text p,
+    .description-text li,
+    .description-text strong,
+    .description-text h4 {
       font-size: 15.5px;
       line-height: 1.7;
       font-weight: 400;
