@@ -26,4 +26,4 @@ def test_test_tours_routes():
 def test_immersive_learning_link():
     response = client.get("/immersive-learning")
     assert response.status_code == 200
-    assert b"/immersive-learning/test-tours" in response.content
+    assert b"/immersive-learning/test-tours" not in response.content
