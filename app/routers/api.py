@@ -258,7 +258,7 @@ async def get_stats(db: libsql_client.Client = Depends(get_db)):
     }
 
 # --- AI Chat ---
-import google.generativeai as genai
+from google import genai
 from huggingface_hub import AsyncInferenceClient
 
 async def call_gemini(system_prompt: str, user_msg: str):
@@ -266,9 +266,11 @@ async def call_gemini(system_prompt: str, user_msg: str):
     if not api_key:
         return None
     try:
-        genai.configure(api_key=api_key)
-        model = genai.GenerativeModel('gemini-1.5-flash')
-        response = await model.generate_content_async(f"{system_prompt}\n\nUser: {user_msg}")
+        client = genai.Client(api_key=api_key)
+        response = await client.aio.models.generate_content(
+            model='gemini-1.5-flash',
+            contents=f"{system_prompt}\n\nUser: {user_msg}"
+        )
         return response.text
     except Exception as e:
         return f"Error calling Gemini: {str(e)}"

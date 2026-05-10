@@ -72,12 +72,56 @@ document.addEventListener('DOMContentLoaded', () => {
     const aiInput = document.getElementById('ai-input');
     const aiChatBody = document.getElementById('ai-chat-body');
 
+    let chatInitialized = false;
+
+    function initAiChat() {
+        if (chatInitialized) return;
+
+        if (aiChatForm) {
+            aiChatForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const text = aiInput.value.trim();
+                if (!text) return;
+
+                // Add user message
+                addChatMessage(text, 'user');
+                aiInput.value = '';
+
+                try {
+                    const token = localStorage.getItem('access_token');
+                    const headers = { 'Content-Type': 'application/json' };
+                    if (token) headers['Authorization'] = `Bearer ${token}`;
+
+                    const response = await fetch('/api/chat', {
+                        method: 'POST',
+                        headers: headers,
+                        body: JSON.stringify({ message: text }),
+                    });
+
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        throw new Error(errorData.detail || 'Failed to connect');
+                    }
+
+                    const result = await response.json();
+                    addChatMessage(result.response || "I'm sorry, I couldn't process that.", 'ai');
+                } catch (error) {
+                    addChatMessage("Sorry, I'm having trouble connecting to the NAIRA brain right now. Please try again later.", 'ai');
+                }
+            });
+        }
+
+        chatInitialized = true;
+        console.log("NAIRA AI Chat Initialized lazily.");
+    }
+
     window.openAiAgent = () => {
         const modal = document.getElementById('ai-modal');
         if (modal) {
             modal.classList.remove('hidden');
             modal.classList.add('flex');
             document.body.classList.add('overflow-hidden');
+            initAiChat();
         }
     };
 
@@ -102,40 +146,6 @@ document.addEventListener('DOMContentLoaded', () => {
             window.closeAiAgent();
         }
     });
-
-    if (aiChatForm) {
-        aiChatForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const text = aiInput.value.trim();
-            if (!text) return;
-
-            // Add user message
-            addChatMessage(text, 'user');
-            aiInput.value = '';
-
-            try {
-                const token = localStorage.getItem('access_token');
-                const headers = { 'Content-Type': 'application/json' };
-                if (token) headers['Authorization'] = `Bearer ${token}`;
-
-                const response = await fetch('/api/chat', {
-                    method: 'POST',
-                    headers: headers,
-                    body: JSON.stringify({ message: text }),
-                });
-
-                if (!response.ok) {
-                    const errorData = await response.json();
-                    throw new Error(errorData.detail || 'Failed to connect');
-                }
-
-                const result = await response.json();
-                addChatMessage(result.response || "I'm sorry, I couldn't process that.", 'ai');
-            } catch (error) {
-                addChatMessage("Sorry, I'm having trouble connecting to the NAIRA brain right now. Please try again later.", 'ai');
-            }
-        });
-    }
 
     function addChatMessage(text, sender) {
         if (!aiChatBody) return;

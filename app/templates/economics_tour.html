@@ -744,7 +744,6 @@
     }
 
     function animate(t) {
-        requestAnimationFrame(animate);
         updateMarket();
         
         nodes.forEach((node, i) => {
@@ -768,7 +767,32 @@
         controls.update();
         renderer.render(scene, camera);
     }
-    animate(0);
+
+    // Optimization: Only run loop when visible and tab is active
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting && !document.hidden) {
+                renderer.setAnimationLoop(animate);
+            } else {
+                renderer.setAnimationLoop(null);
+            }
+        });
+    }, { threshold: 0.1 });
+
+    observer.observe(renderer.domElement);
+
+    document.addEventListener('visibilitychange', () => {
+        if (document.hidden) {
+            renderer.setAnimationLoop(null);
+        } else {
+            const rect = renderer.domElement.getBoundingClientRect();
+            const inViewport = rect.top < window.innerHeight && rect.bottom > 0;
+            if (inViewport) {
+                renderer.setAnimationLoop(animate);
+            }
+        }
+    });
+
 
     // --- UI EVENTS ---
     const raycaster = new THREE.Raycaster();
