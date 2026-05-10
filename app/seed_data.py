@@ -325,6 +325,65 @@ VISION_MISSIONS_DATA = [
     )
 ]
 
+SERVICES_DATA = [
+    (
+        "Research & Innovation",
+        "Advancing the frontiers of African-centered AI through foundational and applied research in ML, NLP, and Agentic Systems.",
+        "Our research wing is dedicated to bridging the gap between global AI advancements and African indigenous knowledge. We focus on Multi-agent systems, NLP for low-resource African languages, and Computer Vision models that understand the continent's unique environmental and cultural contexts. By integrating traditional wisdom with modern algorithms, we create technology that is both cutting-edge and culturally resonant.",
+        "search",
+        "indigo"
+    ),
+    (
+        "AI Model Training & Development",
+        "Custom model development and fine-tuning tailored for African contexts, from education to governance.",
+        "We provide comprehensive AI development services including custom model training, fine-tuning of Large Language Models (LLMs), and synthetic data generation. Our expertise covers domain-specific applications in healthcare, agriculture, and public administration. We prioritize model optimization and quantization to ensure high performance on diverse hardware across the continent.",
+        "cpu",
+        "amber"
+    ),
+    (
+        "AI Consulting & Strategy",
+        "Strategic roadmaps and ethical AI governance to guide organizations through their digital transformation.",
+        "NAIRA helps organizations assess their AI readiness and develop robust strategic roadmaps. We specialize in use-case prioritization and the implementation of responsible AI governance frameworks. Our consulting services ensure that your AI adoption is ethical, sustainable, and aligned with international best practices while respecting local data sovereignty.",
+        "briefcase",
+        "emerald"
+    ),
+    (
+        "XR & Immersive Technology",
+        "Creating the next generation of immersive learning experiences through 3D modeling and XR simulation.",
+        "We design and deploy XR classrooms and immersive simulations that revolutionize professional training and academic education. Our services include high-fidelity 3D modeling, interactive content creation, and the development of mixed-reality environments that make complex concepts tangible and engaging for learners of all backgrounds.",
+        "layers",
+        "purple"
+    ),
+    (
+        "Education & Workforce Development",
+        "Empowering the next generation of African talent through certified training and faculty development.",
+        "Our training programs are designed to close the digital skills gap in Africa. We offer professional certifications, hands-on workshops, and faculty development initiatives that integrate AI and XR into existing curricula. We are committed to nurturing a workforce that is not only tech-literate but also capable of leading global innovation.",
+        "book-open",
+        "rose"
+    ),
+    (
+        "Enterprise & Implementation",
+        "Scalable AI solution deployment and process automation for modern African enterprises.",
+        "We support businesses in implementing custom AI solutions that optimize operations and automate complex workflows. From initial proof-of-concept to full-scale deployment, our team ensures seamless integration with your existing systems, driving efficiency and competitive advantage in the digital economy.",
+        "zap",
+        "blue"
+    ),
+    (
+        "Technology Transfer",
+        "Supporting the ecosystem through startup incubation, IP management, and industry partnerships.",
+        "NAIRA acts as a bridge between academia and industry. We provide support for startup incubation, spin-off ventures, and intellectual property management. By fostering strong industry partnerships, we facilitate the commercialization of research breakthroughs and support the growth of the African tech entrepreneurship ecosystem.",
+        "share-2",
+        "cyan"
+    ),
+    (
+        "Pan-African Infrastructure",
+        "Ensuring data sovereignty and secure AI infrastructure through collaborative continental networks.",
+        "We are building a secure, Pan-African AI infrastructure that prioritizes data sovereignty and secure collaboration. Our services include multilingual AI support (English and major African languages) and the deployment of decentralized networks that allow researchers and organizations across the continent to share resources and knowledge securely.",
+        "globe",
+        "indigo"
+    )
+]
+
 CONTENT_MODEL_DATA = [
     (
         "cultural-relevance",

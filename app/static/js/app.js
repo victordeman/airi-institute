@@ -201,6 +201,7 @@ document.addEventListener('DOMContentLoaded', () => {
         'en': {
             'nav-home': 'Home',
             'nav-vision': 'Vision',
+            'nav-services': 'Services',
             'nav-pillars': 'Pillars',
             'nav-architecture': 'Architecture',
             'nav-revenue': 'Revenue',
@@ -221,6 +222,7 @@ document.addEventListener('DOMContentLoaded', () => {
         'yo': {
             'nav-home': 'Ile',
             'nav-vision': 'Iriran',
+            'nav-services': 'Awọn iṣẹ',
             'nav-pillars': 'Awọn Opó',
             'nav-architecture': 'Imọ-iṣelọpọ',
             'nav-revenue': 'Owo-wiwọle',
@@ -241,6 +243,7 @@ document.addEventListener('DOMContentLoaded', () => {
         'sw': {
             'nav-home': 'Nyumbani',
             'nav-vision': 'Maono',
+            'nav-services': 'Huduma',
             'nav-pillars': 'Nguzo',
             'nav-architecture': 'Usanifu',
             'nav-revenue': 'Mapato',
@@ -261,6 +264,7 @@ document.addEventListener('DOMContentLoaded', () => {
         'ig': {
             'nav-home': 'Ụlọ',
             'nav-vision': 'Ọhụụ',
+            'nav-services': 'Ọrụ',
             'nav-pillars': 'Ogidi',
             'nav-architecture': 'Nhazi',
             'nav-revenue': 'Ego nwetara',
@@ -281,6 +285,7 @@ document.addEventListener('DOMContentLoaded', () => {
         'ha': {
             'nav-home': 'Gida',
             'nav-vision': 'Hasashe',
+            'nav-services': 'Ayyuka',
             'nav-pillars': 'Shika-shikai',
             'nav-architecture': 'Tsarin Gini',
             'nav-revenue': 'Kudaden Shiga',
