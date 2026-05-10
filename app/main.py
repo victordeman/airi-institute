@@ -11,6 +11,7 @@ from slowapi.middleware import SlowAPIMiddleware
 from app.limiter import limiter
 from app.database import init_db, get_all_naira_data
 from app.rag import rag_manager
+from fastapi.responses import FileResponse
 from app.routers.api import router as api_router
 from app.routers.pages import router as pages_router
 from app.routers.auth import router as auth_router
@@ -60,6 +61,15 @@ app.add_middleware(
 
 # Mount static files with absolute path
 app.mount("/static", StaticFiles(directory=os.path.join(BASE_DIR, "static")), name="static")
+
+# Root favicon routes to resolve 404s/403s from browsers
+@app.get("/favicon.ico", include_in_schema=False)
+async def favicon_ico():
+    return FileResponse(os.path.join(BASE_DIR, "static", "images", "favicon.ico"))
+
+@app.get("/favicon.png", include_in_schema=False)
+async def favicon_png():
+    return FileResponse(os.path.join(BASE_DIR, "static", "images", "favicon.png"))
 
 # Include routers
 app.include_router(auth_router)
