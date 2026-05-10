@@ -1,7 +1,8 @@
 import logging
 import os
 import numpy as np
-import google.generativeai as genai
+from google import genai
+from google.genai import types
 
 logger = logging.getLogger(__name__)
 
@@ -9,23 +10,32 @@ class RAGManager:
     def __init__(self):
         self.documents = []
         self.embeddings = None
+        self._client = None
+
+    def _get_client(self):
+        api_key = os.getenv("GOOGLE_API_KEY")
+        if not api_key:
+            return None
+        if not self._client:
+            self._client = genai.Client(api_key=api_key)
+        return self._client
 
     async def _get_embedding(self, text: str) -> list[float]:
         """
         Fetch embedding via Gemini API. Fallback to dummy for Local Mode.
         """
-        api_key = os.getenv("GOOGLE_API_KEY")
-        if not api_key:
+        client = self._get_client()
+        if not client:
             return None
         
         try:
-            genai.configure(api_key=api_key)
-            result = await genai.embed_content_async(
-                model="models/text-embedding-004",
-                content=text,
-                task_type="retrieval_document"
+            # Using the new google-genai SDK (async via aio)
+            result = await client.aio.models.embed_content(
+                model="text-embedding-004",
+                contents=text,
+                config=types.EmbedContentConfig(task_type="RETRIEVAL_DOCUMENT")
             )
-            return result['embedding']
+            return result.embeddings[0].values
         except Exception as e:
             logger.error(f"Error fetching Gemini embedding: {e}")
             return None
@@ -45,7 +55,6 @@ class RAGManager:
             try:
                 logger.info(f"Generating embeddings for {len(data)} documents via Gemini...")
                 # Fetch embeddings for all documents
-                # Note: Batch embedding might be better but let's keep it simple for now
                 all_embeddings = []
                 for doc in data:
                     emb = await self._get_embedding(doc)
@@ -61,7 +70,13 @@ class RAGManager:
                 logger.error(f"Failed to build Gemini-based RAG index: {e}")
                 self.embeddings = None
         else:
-            logger.info("No GOOGLE_API_KEY found. RAG will fallback to keyword search.")
+            # ISSUE 3: Robust warning for missing API key
+            logger.warning("CRITICAL: No GOOGLE_API_KEY found in environment variables.")
+            logger.warning("RAG system will fallback to basic keyword search.")
+            logger.warning("To enable Gemini embeddings, set GOOGLE_API_KEY in your environment.")
+            logger.warning("For production (Vercel), add it in Dashboard -> Settings -> Environment Variables.")
+            # GOOGLE_API_KEY must be set in Vercel Dashboard → Settings → Environment Variables
+            # for the RAG to function in production.
             self.embeddings = None
 
     async def query(self, query_text: str, top_k: int = 3) -> list[str]:
