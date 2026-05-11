@@ -673,6 +673,7 @@
     let ironContent = 50;
 
     function animate(t) {
+        requestAnimationFrame(animate);
         
         clayCore.rotation.y += 0.005;
         const pulse = 1 + Math.sin(t * 0.001) * 0.03;
@@ -694,32 +695,7 @@
         controls.update();
         renderer.render(scene, camera);
     }
-
-    // Optimization: Only run loop when visible and tab is active
-    const observer = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-            if (entry.isIntersecting && !document.hidden) {
-                renderer.setAnimationLoop(animate);
-            } else {
-                renderer.setAnimationLoop(null);
-            }
-        });
-    }, { threshold: 0.1 });
-
-    observer.observe(renderer.domElement);
-
-    document.addEventListener('visibilitychange', () => {
-        if (document.hidden) {
-            renderer.setAnimationLoop(null);
-        } else {
-            const rect = renderer.domElement.getBoundingClientRect();
-            const inViewport = rect.top < window.innerHeight && rect.bottom > 0;
-            if (inViewport) {
-                renderer.setAnimationLoop(animate);
-            }
-        }
-    });
-
+    animate(0);
 
     // --- Buttons ---
     document.getElementById('start-tour-btn').onclick = () => {

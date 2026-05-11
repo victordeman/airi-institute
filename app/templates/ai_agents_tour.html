@@ -686,6 +686,8 @@
 
     // --- Animation Loop ---
     function animate(t) {
+        requestAnimationFrame(animate);
+
         agentCore.rotation.y += 0.01;
         agentCore.rotation.x += 0.005;
         innerCore.scale.setScalar(1 + Math.sin(t * 0.002) * 0.1);
@@ -750,33 +752,6 @@
         controls.update();
         renderer.render(scene, camera);
     }
-
-    // Optimization: Only run loop when visible and tab is active
-    const observer = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-            if (entry.isIntersecting && !document.hidden) {
-                renderer.setAnimationLoop(animate);
-            } else {
-                renderer.setAnimationLoop(null);
-            }
-        });
-    }, { threshold: 0.1 });
-
-    observer.observe(renderer.domElement);
-
-    document.addEventListener('visibilitychange', () => {
-        if (document.hidden) {
-            renderer.setAnimationLoop(null);
-        } else {
-            // Check if still in viewport before resuming
-            const rect = renderer.domElement.getBoundingClientRect();
-            const inViewport = rect.top < window.innerHeight && rect.bottom > 0;
-            if (inViewport) {
-                renderer.setAnimationLoop(animate);
-            }
-        }
-    });
-
     // Dramatic Fly-in
     setTimeout(() => {
         const startPos = camera.position.clone();
@@ -790,6 +765,8 @@
         };
         flyIn();
     }, 500);
+
+    animate(0);
 
     // --- Interactions ---
     const raycaster = new THREE.Raycaster();

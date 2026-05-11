@@ -72,56 +72,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const aiInput = document.getElementById('ai-input');
     const aiChatBody = document.getElementById('ai-chat-body');
 
-    let chatInitialized = false;
-
-    function initAiChat() {
-        if (chatInitialized) return;
-
-        if (aiChatForm) {
-            aiChatForm.addEventListener('submit', async (e) => {
-                e.preventDefault();
-                const text = aiInput.value.trim();
-                if (!text) return;
-
-                // Add user message
-                addChatMessage(text, 'user');
-                aiInput.value = '';
-
-                try {
-                    const token = localStorage.getItem('access_token');
-                    const headers = { 'Content-Type': 'application/json' };
-                    if (token) headers['Authorization'] = `Bearer ${token}`;
-
-                    const response = await fetch('/api/chat', {
-                        method: 'POST',
-                        headers: headers,
-                        body: JSON.stringify({ message: text }),
-                    });
-
-                    if (!response.ok) {
-                        const errorData = await response.json();
-                        throw new Error(errorData.detail || 'Failed to connect');
-                    }
-
-                    const result = await response.json();
-                    addChatMessage(result.response || "I'm sorry, I couldn't process that.", 'ai');
-                } catch (error) {
-                    addChatMessage("Sorry, I'm having trouble connecting to the NAIRA brain right now. Please try again later.", 'ai');
-                }
-            });
-        }
-
-        chatInitialized = true;
-        console.log("NAIRA AI Chat Initialized lazily.");
-    }
-
     window.openAiAgent = () => {
         const modal = document.getElementById('ai-modal');
         if (modal) {
             modal.classList.remove('hidden');
             modal.classList.add('flex');
             document.body.classList.add('overflow-hidden');
-            initAiChat();
         }
     };
 
@@ -146,6 +102,40 @@ document.addEventListener('DOMContentLoaded', () => {
             window.closeAiAgent();
         }
     });
+
+    if (aiChatForm) {
+        aiChatForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const text = aiInput.value.trim();
+            if (!text) return;
+
+            // Add user message
+            addChatMessage(text, 'user');
+            aiInput.value = '';
+
+            try {
+                const token = localStorage.getItem('access_token');
+                const headers = { 'Content-Type': 'application/json' };
+                if (token) headers['Authorization'] = `Bearer ${token}`;
+
+                const response = await fetch('/api/chat', {
+                    method: 'POST',
+                    headers: headers,
+                    body: JSON.stringify({ message: text }),
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.detail || 'Failed to connect');
+                }
+
+                const result = await response.json();
+                addChatMessage(result.response || "I'm sorry, I couldn't process that.", 'ai');
+            } catch (error) {
+                addChatMessage("Sorry, I'm having trouble connecting to the NAIRA brain right now. Please try again later.", 'ai');
+            }
+        });
+    }
 
     function addChatMessage(text, sender) {
         if (!aiChatBody) return;
@@ -211,7 +201,6 @@ document.addEventListener('DOMContentLoaded', () => {
         'en': {
             'nav-home': 'Home',
             'nav-vision': 'Vision',
-            'nav-services': 'Services',
             'nav-pillars': 'Pillars',
             'nav-architecture': 'Architecture',
             'nav-revenue': 'Revenue',
@@ -232,7 +221,6 @@ document.addEventListener('DOMContentLoaded', () => {
         'yo': {
             'nav-home': 'Ile',
             'nav-vision': 'Iriran',
-            'nav-services': 'Awọn iṣẹ',
             'nav-pillars': 'Awọn Opó',
             'nav-architecture': 'Imọ-iṣelọpọ',
             'nav-revenue': 'Owo-wiwọle',
@@ -253,7 +241,6 @@ document.addEventListener('DOMContentLoaded', () => {
         'sw': {
             'nav-home': 'Nyumbani',
             'nav-vision': 'Maono',
-            'nav-services': 'Huduma',
             'nav-pillars': 'Nguzo',
             'nav-architecture': 'Usanifu',
             'nav-revenue': 'Mapato',
@@ -274,7 +261,6 @@ document.addEventListener('DOMContentLoaded', () => {
         'ig': {
             'nav-home': 'Ụlọ',
             'nav-vision': 'Ọhụụ',
-            'nav-services': 'Ọrụ',
             'nav-pillars': 'Ogidi',
             'nav-architecture': 'Nhazi',
             'nav-revenue': 'Ego nwetara',
@@ -295,7 +281,6 @@ document.addEventListener('DOMContentLoaded', () => {
         'ha': {
             'nav-home': 'Gida',
             'nav-vision': 'Hasashe',
-            'nav-services': 'Ayyuka',
             'nav-pillars': 'Shika-shikai',
             'nav-architecture': 'Tsarin Gini',
             'nav-revenue': 'Kudaden Shiga',

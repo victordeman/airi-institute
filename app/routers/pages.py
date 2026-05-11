@@ -58,12 +58,6 @@ async def vision_detail(slug: str, request: Request, db: libsql_client.Client = 
         return templates.TemplateResponse("vision.html", {"request": request, "vision_missions": []})
     return templates.TemplateResponse("vision_detail.html", {"request": request, "item": vision_mission[0]})
 
-@router.get("/services")
-async def services(request: Request, db: libsql_client.Client = Depends(get_db)):
-    res = await db.execute("SELECT * FROM services ORDER BY id")
-    services_list = to_dict_list(res)
-    return templates.TemplateResponse("services.html", {"request": request, "services": services_list})
-
 @router.get("/pillars")
 async def pillars(request: Request, db: libsql_client.Client = Depends(get_db)):
     pillars_res = await db.execute("SELECT * FROM pillars ORDER BY number")

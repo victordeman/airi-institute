@@ -5,9 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}NAIRA - African AI & XR Excellence Hub{% endblock %}</title>
     <meta name="description" content="NAIRA transforms education and innovation through AI and XR technologies, embedding African knowledge systems into global tech solutions.">
-    <link rel="icon" href="/static/images/favicon.ico" type="image/x-icon">
-    <link rel="icon" href="/static/images/favicon.png" type="image/png">
-    {% block extra_meta %}{% endblock %}
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Feather Icons -->
@@ -47,19 +44,7 @@
                         }
                     }
                 }
-            },
-            safelist: [
-                {
-                    pattern: /(bg|text|border|shadow)-(indigo|blue|amber|purple|emerald|rose|orange|cyan)-(500|600)/,
-                    variants: ['hover'],
-                },
-                'hover:border-indigo-500/30', 'hover:border-blue-500/30', 'hover:border-amber-500/30', 'hover:border-purple-500/30',
-                'hover:border-emerald-500/30', 'hover:border-rose-500/30', 'hover:border-orange-500/30', 'hover:border-cyan-500/30',
-                'bg-indigo-500/10', 'bg-blue-500/10', 'bg-amber-500/10', 'bg-purple-500/10',
-                'bg-emerald-500/10', 'bg-rose-500/10', 'bg-orange-500/10', 'bg-cyan-500/10',
-                'hover:shadow-indigo-500/10', 'hover:shadow-blue-500/10', 'hover:shadow-amber-500/10', 'hover:shadow-purple-500/10',
-                'hover:shadow-emerald-500/10', 'hover:shadow-rose-500/10', 'hover:shadow-orange-500/10', 'hover:shadow-cyan-500/10'
-            ]
+            }
         }
     </script>
 </head>
@@ -96,7 +81,6 @@
                 <nav class="flex items-center gap-6">
                     <a href="/" class="text-sm font-medium text-slate-600 hover:text-primary transition-colors {% if request.url.path == '/' %}text-primary font-bold{% endif %}" data-key="nav-home">Home</a>
                     <a href="/vision" class="text-sm font-medium text-slate-600 hover:text-primary transition-colors {% if request.url.path == '/vision' %}text-primary font-bold{% endif %}" data-key="nav-vision">Vision</a>
-                    <a href="/services" class="text-sm font-medium text-slate-600 hover:text-primary transition-colors {% if request.url.path == '/services' %}text-primary font-bold{% endif %}" data-key="nav-services">Services</a>
                     <a href="/pillars" class="text-sm font-medium text-slate-600 hover:text-primary transition-colors {% if request.url.path == '/pillars' %}text-primary font-bold{% endif %}" data-key="nav-pillars">Pillars</a>
                     <a href="/architecture" class="text-sm font-medium text-slate-600 hover:text-primary transition-colors {% if request.url.path == '/architecture' %}text-primary font-bold{% endif %}" data-key="nav-architecture">Architecture</a>
                     <a href="/projects" class="text-sm font-medium text-slate-600 hover:text-primary transition-colors {% if request.url.path == '/projects' %}text-primary font-bold{% endif %}" data-key="nav-projects">Projects</a>
@@ -136,13 +120,12 @@
 
         <!-- Mobile Navigation -->
         <div id="mobile-menu" class="hidden md:hidden border-t bg-white p-6 flex flex-col gap-4 animate-in slide-in-from-top-2">
-            <a href="/" class="text-sm font-medium py-2 border-b border-slate-50" data-key="nav-home">Home</a>
-            <a href="/vision" class="text-sm font-medium py-2 border-b border-slate-50" data-key="nav-vision">Vision</a>
-            <a href="/services" class="text-sm font-medium py-2 border-b border-slate-50" data-key="nav-services">Services</a>
-            <a href="/pillars" class="text-sm font-medium py-2 border-b border-slate-50" data-key="nav-pillars">Pillars</a>
-            <a href="/architecture" class="text-sm font-medium py-2 border-b border-slate-50" data-key="nav-architecture">Architecture</a>
-            <a href="/projects" class="text-sm font-medium py-2 border-b border-slate-50" data-key="nav-projects">Projects</a>
-            <a href="/immersive-learning" class="text-sm font-medium py-2 border-b border-slate-50" data-key="nav-immersive">Immersive</a>
+            <a href="/" class="text-sm font-medium py-2 border-b border-slate-50">Home</a>
+            <a href="/vision" class="text-sm font-medium py-2 border-b border-slate-50">Vision</a>
+            <a href="/pillars" class="text-sm font-medium py-2 border-b border-slate-50">Pillars</a>
+            <a href="/architecture" class="text-sm font-medium py-2 border-b border-slate-50">Architecture</a>
+            <a href="/projects" class="text-sm font-medium py-2 border-b border-slate-50">Projects</a>
+            <a href="/immersive-learning" class="text-sm font-medium py-2 border-b border-slate-50">Immersive</a>
             <a href="/login" class="auth-link text-sm font-medium py-2 border-b border-slate-50" data-key="nav-auth"><span class="auth-text">Login</span></a>
 
             <div class="flex items-center justify-between pt-4">
@@ -186,13 +169,12 @@
                 <div>
                     <h4 class="font-bold text-white mb-6 uppercase tracking-wider text-sm">Quick Links</h4>
                     <ul class="space-y-3 text-sm">
-                        <li><a href="/" class="text-slate-400 hover:text-white transition-colors flex items-center gap-2" data-key="nav-home"><i data-feather="chevron-right" class="w-3 h-3"></i> Home</a></li>
-                        <li><a href="/vision" class="text-slate-400 hover:text-white transition-colors flex items-center gap-2" data-key="nav-vision"><i data-feather="chevron-right" class="w-3 h-3"></i> Vision & Mission</a></li>
-                        <li><a href="/services" class="text-slate-400 hover:text-white transition-colors flex items-center gap-2" data-key="nav-services"><i data-feather="chevron-right" class="w-3 h-3"></i> Services We Offer</a></li>
-                        <li><a href="/pillars" class="text-slate-400 hover:text-white transition-colors flex items-center gap-2" data-key="nav-pillars"><i data-feather="chevron-right" class="w-3 h-3"></i> Strategic Pillars</a></li>
-                        <li><a href="/architecture" class="text-slate-400 hover:text-white transition-colors flex items-center gap-2" data-key="nav-architecture"><i data-feather="chevron-right" class="w-3 h-3"></i> Architecture</a></li>
-                        <li><a href="/projects" class="text-slate-400 hover:text-white transition-colors flex items-center gap-2" data-key="nav-projects"><i data-feather="chevron-right" class="w-3 h-3"></i> Projects</a></li>
-                        <li><a href="/immersive-learning" class="text-slate-400 hover:text-white transition-colors flex items-center gap-2" data-key="nav-immersive"><i data-feather="chevron-right" class="w-3 h-3"></i> Immersive Learning</a></li>
+                        <li><a href="/" class="text-slate-400 hover:text-white transition-colors flex items-center gap-2"><i data-feather="chevron-right" class="w-3 h-3"></i> Home</a></li>
+                        <li><a href="/vision" class="text-slate-400 hover:text-white transition-colors flex items-center gap-2"><i data-feather="chevron-right" class="w-3 h-3"></i> Vision & Mission</a></li>
+                        <li><a href="/pillars" class="text-slate-400 hover:text-white transition-colors flex items-center gap-2"><i data-feather="chevron-right" class="w-3 h-3"></i> Strategic Pillars</a></li>
+                        <li><a href="/architecture" class="text-slate-400 hover:text-white transition-colors flex items-center gap-2"><i data-feather="chevron-right" class="w-3 h-3"></i> Architecture</a></li>
+                        <li><a href="/projects" class="text-slate-400 hover:text-white transition-colors flex items-center gap-2"><i data-feather="chevron-right" class="w-3 h-3"></i> Projects</a></li>
+                        <li><a href="/immersive-learning" class="text-slate-400 hover:text-white transition-colors flex items-center gap-2"><i data-feather="chevron-right" class="w-3 h-3"></i> Immersive Learning</a></li>
                     </ul>
                 </div>
 

@@ -11,6 +11,6 @@ python-jose[cryptography]
 passlib[bcrypt]
 bcrypt==4.0.1
 slowapi
-google-genai
+google-generativeai
 huggingface_hub
 numpy
