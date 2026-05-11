@@ -7,7 +7,8 @@ from app.seed_data import (
     REVENUE_STREAMS_DATA,
     PROJECTS_DATA,
     VISION_MISSIONS_DATA,
-    CONTENT_MODEL_DATA
+    CONTENT_MODEL_DATA,
+    SERVICES_DATA
 )
 
 # Configure logging
@@ -136,6 +137,15 @@ async def init_db():
                     role TEXT DEFAULT 'user'
                 )
             """)
+            await client.execute("""
+                CREATE TABLE IF NOT EXISTS services (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    title TEXT NOT NULL,
+                    items TEXT NOT NULL,
+                    icon TEXT NOT NULL,
+                    color TEXT NOT NULL
+                )
+            """)
 
             # Seed users if empty
             cursor = await client.execute("SELECT COUNT(*) FROM users")
@@ -218,6 +228,16 @@ async def init_db():
                     ("INSERT INTO content_model (slug, title, summary, description, icon, color) VALUES (?, ?, ?, ?, ?, ?)", c)
                     for c in CONTENT_MODEL_DATA
                 ])
+
+            # Seed services if empty
+            cursor = await client.execute("SELECT COUNT(*) FROM services")
+            count = cursor.rows[0][0]
+            if count == 0:
+                logger.info("Seeding services...")
+                await client.batch([
+                    ("INSERT INTO services (title, items, icon, color) VALUES (?, ?, ?, ?)", s)
+                    for s in SERVICES_DATA
+                ])
         logger.info("Database initialization successful.")
     except Exception as e:
         logger.error(f"Failed to initialize database: {e}")
@@ -258,5 +278,10 @@ async def get_all_naira_data():
         content_model = await client.execute("SELECT title, summary, description FROM content_model")
         for cm in content_model.rows:
             data.append(f"Content Model: {cm[0]}. Summary: {cm[1]} Description: {cm[2]}")
+
+        # Services
+        services = await client.execute("SELECT title, items FROM services")
+        for s in services.rows:
+            data.append(f"Service Category: {s[0]}. Services: {s[1]}")
 
     return data

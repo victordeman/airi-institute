@@ -8,7 +8,8 @@ from app.seed_data import (
     REVENUE_STREAMS_DATA,
     PROJECTS_DATA,
     VISION_MISSIONS_DATA,
-    CONTENT_MODEL_DATA
+    CONTENT_MODEL_DATA,
+    SERVICES_DATA
 )
 
 # Configure logging
@@ -37,7 +38,8 @@ async def migrate():
             "projects",
             "vision_missions",
             "content_model",
-            "users"
+            "users",
+            "services"
         ]
         for table in tables:
             await client.execute(f"DROP TABLE IF EXISTS {table}")
@@ -145,6 +147,16 @@ async def migrate():
             )
         """)
 
+        await client.execute("""
+            CREATE TABLE IF NOT EXISTS services (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                title TEXT NOT NULL,
+                items TEXT NOT NULL,
+                icon TEXT NOT NULL,
+                color TEXT NOT NULL
+            )
+        """)
+
         # Seeding
         logger.info("Seeding users...")
         from passlib.context import CryptContext
@@ -198,6 +210,12 @@ async def migrate():
         await client.batch([
             ("INSERT INTO content_model (slug, title, summary, description, icon, color) VALUES (?, ?, ?, ?, ?, ?)", c)
             for c in CONTENT_MODEL_DATA
+        ])
+
+        logger.info("Seeding services...")
+        await client.batch([
+            ("INSERT INTO services (title, items, icon, color) VALUES (?, ?, ?, ?)", s)
+            for s in SERVICES_DATA
         ])
 
         logger.info("Migration and seeding completed successfully!")

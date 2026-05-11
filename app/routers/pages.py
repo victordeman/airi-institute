@@ -50,6 +50,14 @@ async def vision(request: Request, db: libsql_client.Client = Depends(get_db)):
     vision_missions = to_dict_list(res)
     return templates.TemplateResponse("vision.html", {"request": request, "vision_missions": vision_missions})
 
+@router.get("/services")
+async def services(request: Request, db: libsql_client.Client = Depends(get_db)):
+    res = await db.execute("SELECT * FROM services ORDER BY id")
+    services_list = to_dict_list(res)
+    for s in services_list:
+        s["items"] = json.loads(s["items"])
+    return templates.TemplateResponse("services.html", {"request": request, "services": services_list})
+
 @router.get("/vision/{slug}")
 async def vision_detail(slug: str, request: Request, db: libsql_client.Client = Depends(get_db)):
     res = await db.execute("SELECT * FROM vision_missions WHERE slug = ?", (slug,))
