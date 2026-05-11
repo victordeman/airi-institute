@@ -351,3 +351,66 @@ CONTENT_MODEL_DATA = [
         "emerald"
     )
 ]
+
+SERVICES_DATA = [
+    (
+        "Research & Innovation",
+        '["Foundational and applied AI research", "Machine learning, computer vision, NLP, robotics", "Ethical and trustworthy AI research", "Climate modeling, agriculture, healthcare, and cybersecurity applications", "Materials discovery and optimization"]',
+        "search",
+        "indigo"
+    ),
+    (
+        "Collaboration & Partnerships",
+        '["Multi-institutional research projects", "University, government, and industry partnerships", "Sector-specific challenge programs (agriculture, sustainability, education)", "Knowledge sharing and consortium building"]',
+        "users",
+        "amber"
+    ),
+    (
+        "Workforce Development & Education",
+        '["Degree programs and professional certifications", "Workshops and training for students and faculty", "AI literacy programs for underrepresented groups", "Lifelong learning and AI-augmented learning platforms", "Custom professional development programs"]',
+        "book-open",
+        "emerald"
+    ),
+    (
+        "Open Tools, Datasets & Resources",
+        '["Open-source AI models and language models", "Public datasets and simulation environments", "Research platforms and developer tools", "Community resources for researchers and practitioners"]',
+        "database",
+        "purple"
+    ),
+    (
+        "Technology Transfer & Translation",
+        '["Moving research into practical products and services", "Startup support and incubation", "Prototype development and industry pilots", "Commercialization of AI innovations"]',
+        "zap",
+        "rose"
+    ),
+    (
+        "Policy, Ethics & Societal Impact",
+        '["Trustworthy AI frameworks and verification programs", "Fairness, transparency, and safety governance", "Regulatory compliance and certification", "Societal impact assessment and reporting"]',
+        "shield",
+        "cyan"
+    ),
+    (
+        "AI Consulting & Strategy",
+        '["Identifying high-impact AI use cases for organizations", "AI strategy and roadmap development", "Risk assessment and governance planning", "AI integration into existing operations"]',
+        "briefcase",
+        "blue"
+    ),
+    (
+        "Custom AI Solution Development",
+        '["Design, build, and deploy AI applications", "Machine learning models and neural networks", "Computer vision and NLP systems", "Generative AI solutions and prototyping (POCs)", "Optimization, scaling, and maintenance"]',
+        "cpu",
+        "indigo"
+    ),
+    (
+        "Data Services",
+        '["Data analytics and preparation", "AI-powered insights for decision-making", "Data infrastructure setup and management", "Cloud AI solutions and integration"]',
+        "hard-drive",
+        "emerald"
+    ),
+    (
+        "Training & Capacity Building",
+        '["Hands-on AI workshops for professionals", "Custom training tools and certification programs", "Faculty development and institutional capacity building", "Practical AI skills for business and industry"]',
+        "award",
+        "amber"
+    )
+]
