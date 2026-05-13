@@ -84,14 +84,14 @@ class CellForgeApp {
                 body: formData
             });
             const data = await resp.json();
-            if (data.status === 'success' && data.model_url) {
+            if (data.success && data.model_url) {
                 await this.viewer.loadModel(data.model_url, true);
                 document.getElementById('active-cell-name').textContent = "Custom Specimen";
                 document.getElementById('active-cell-type').textContent = "AI-Generated 3D Reconstruct";
                 document.getElementById('status-text').textContent = "AI Generation Success";
                 document.getElementById('status-dot').style.background = "#10b981";
             } else {
-                alert(data.detail || data.message || "Generation failed");
+                alert(data.error || data.detail || data.message || "Generation failed");
             }
         } catch (err) {
             console.error(err);
