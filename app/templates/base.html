@@ -85,7 +85,15 @@
                     <a href="/architecture" class="text-sm font-medium text-slate-600 hover:text-primary transition-colors {% if request.url.path == '/architecture' %}text-primary font-bold{% endif %}" data-key="nav-architecture">Architecture</a>
                     <a href="/services" class="text-sm font-medium text-slate-600 hover:text-primary transition-colors {% if request.url.path == '/services' %}text-primary font-bold{% endif %}" data-key="nav-services">Services</a>
                     <a href="/projects" class="text-sm font-medium text-slate-600 hover:text-primary transition-colors {% if request.url.path == '/projects' %}text-primary font-bold{% endif %}" data-key="nav-projects">Projects</a>
-                    <a href="/immersive-learning" class="text-sm font-medium text-slate-600 hover:text-primary transition-colors {% if request.url.path == '/immersive-learning' %}text-primary font-bold{% endif %}" data-key="nav-immersive">Immersive</a>
+                    <div class="relative group">
+                        <a href="/immersive-learning" class="text-sm font-medium text-slate-600 hover:text-primary transition-colors {% if request.url.path == '/immersive-learning' %}text-primary font-bold{% endif %}" data-key="nav-immersive">Immersive</a>
+                        <div class="absolute left-0 mt-2 w-48 bg-white rounded-xl border border-slate-200 shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible overflow-hidden transition-all z-[70]">
+                            <a href="/immersive-learning" class="block px-4 py-2 text-xs text-slate-600 hover:bg-slate-50 hover:text-primary">All Experiences</a>
+                            <a href="/cellforge" class="block px-4 py-2 text-xs text-slate-600 hover:bg-slate-50 hover:text-primary font-bold text-emerald-600">3D Cell Forge ✨</a>
+                            <a href="/computer-history-tour" class="block px-4 py-2 text-xs text-slate-600 hover:bg-slate-50 hover:text-primary">Computer History</a>
+                            <a href="/ai-agents-tour" class="block px-4 py-2 text-xs text-slate-600 hover:bg-slate-50 hover:text-primary">AI Agents Tour</a>
+                        </div>
+                    </div>
                 </nav>
 
                 <div class="flex items-center gap-4 pl-6 border-l border-slate-200">
