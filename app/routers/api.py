@@ -4,6 +4,7 @@ import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from fastapi import APIRouter, Depends, HTTPException, Request, BackgroundTasks, File, UploadFile, Form
+from fastapi.responses import JSONResponse
 import libsql_client
 import httpx
 import asyncio
@@ -329,9 +330,15 @@ async def generate_3d_cell(
 ):
     api_key = os.getenv("TRIPO_API_KEY")
     if not api_key:
-        raise HTTPException(status_code=503, detail="Tripo API key not configured")
+        return JSONResponse(
+            status_code=500,
+            content={"error": "TRIPO_API_KEY not configured. Add it to environment variables."}
+        )
 
-    headers = {"Authorization": f"Bearer {api_key}"}
+    headers = {
+        "Authorization": f"Bearer {api_key}",
+        "Content-Type": "application/json"
+    }
     async with httpx.AsyncClient() as client:
         # Step 1: Get/Upload Image
         if file:
@@ -343,7 +350,10 @@ async def generate_3d_cell(
                 json={"format": file.content_type.split("/")[-1]}
             )
             if not sts_resp.is_success:
-                raise HTTPException(status_code=502, detail="Failed to get Tripo STS token")
+                return JSONResponse(
+                    status_code=502,
+                    content={"error": f"Failed to get Tripo STS token: {sts_resp.json() if sts_resp.status_code != 500 else sts_resp.text}"}
+                )
 
             sts_data = sts_resp.json()["data"]
             await upload_to_tripo_s3(
@@ -355,13 +365,13 @@ async def generate_3d_cell(
         elif url:
             input_file = {"type": url.split(".")[-1].split("?")[0], "url": url}
         else:
-            raise HTTPException(status_code=400, detail="Either file or URL must be provided")
+            return JSONResponse(status_code=400, content={"error": "Either file or URL must be provided"})
 
         # Step 2: Create Task
         task_payload = {
             "type": "image_to_model",
             "file": input_file,
-            "model_version": "v2.0"
+            "model_version": "v2.5-20250123"
         }
         task_resp = await client.post(
             "https://api.tripo3d.ai/v2/openapi/task",
@@ -369,13 +379,16 @@ async def generate_3d_cell(
             json=task_payload
         )
         if not task_resp.is_success:
-            raise HTTPException(status_code=502, detail=f"Tripo task creation failed: {task_resp.text}")
+            return JSONResponse(
+                status_code=502,
+                content={"error": f"Tripo task creation failed: {task_resp.json() if task_resp.status_code != 500 else task_resp.text}"}
+            )
 
         task_id = task_resp.json()["data"]["task_id"]
 
-        # Step 3: Polling (up to 120 seconds)
-        for _ in range(24):
-            await asyncio.sleep(5)
+        # Step 3: Polling (up to 120 seconds: 40 attempts * 3s)
+        for _ in range(40):
+            await asyncio.sleep(3)
             poll_resp = await client.get(
                 f"https://api.tripo3d.ai/v2/openapi/task/{task_id}",
                 headers=headers
@@ -383,20 +396,20 @@ async def generate_3d_cell(
             if not poll_resp.is_success:
                 continue
 
-            data = poll_resp.json()["data"]
+            poll_data = poll_resp.json()
+            data = poll_data.get("data", {})
             status = data.get("status")
+
             if status == "success":
-                # Find GLB URL
                 model_url = data.get("output", {}).get("model")
-                if not model_url:
-                    # Check in other places if nested differently
-                    model_url = data.get("result", {}).get("model")
-
                 return {"success": True, "model_url": model_url, "task_id": task_id}
-            elif status == "failed":
-                raise HTTPException(status_code=502, detail=f"Tripo generation failed: {data.get('error')}")
+            elif status in ["failed", "cancelled", "banned", "expired", "unknown"]:
+                return JSONResponse(
+                    status_code=502,
+                    content={"error": f"Tripo generation {status}: {data.get('error', 'No error message provided')}"}
+                )
 
-        raise HTTPException(status_code=504, detail="3D generation timed out")
+        return JSONResponse(status_code=504, content={"error": "3D generation timed out"})
 
 # --- AI Chat ---
 import google.generativeai as genai
