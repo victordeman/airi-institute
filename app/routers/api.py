@@ -3,8 +3,14 @@ import os
 import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
-from fastapi import APIRouter, Depends, HTTPException, Request, BackgroundTasks
+from fastapi import APIRouter, Depends, HTTPException, Request, BackgroundTasks, File, UploadFile, Form
 import libsql_client
+import httpx
+import asyncio
+import hashlib
+import hmac
+import time
+from datetime import datetime
 from app.limiter import limiter
 from app.database import get_db, to_dict_list
 from app.rag import rag_manager
@@ -256,6 +262,141 @@ async def get_stats(db: libsql_client.Client = Depends(get_db)):
         "xr_label": "XR",
         "ai_label": "AI",
     }
+
+# --- 3D Cell Forge AI Pipeline ---
+
+async def upload_to_tripo_s3(buffer: bytes, mime: str, host: str, bucket: str, key: str, access_key: str, secret_key: str, session_token: str):
+    region = "us-west-2"
+    if "s3." in host:
+        region = host.split("s3.")[1].split(".")[0]
+
+    amz_date = datetime.utcnow().strftime("%Y%m%dT%H%M%SZ")
+    date_stamp = amz_date[:8]
+
+    payload_hash = hashlib.sha256(buffer).hexdigest()
+    canonical_uri = f"/{bucket}/{key}"
+
+    headers = {
+        "content-type": mime,
+        "host": host,
+        "x-amz-content-sha256": payload_hash,
+        "x-amz-date": amz_date,
+        "x-amz-security-token": session_token,
+    }
+
+    signed_headers = "content-type;host;x-amz-content-sha256;x-amz-date;x-amz-security-token"
+    canonical_headers = (
+        f"content-type:{mime}\n"
+        f"host:{host}\n"
+        f"x-amz-content-sha256:{payload_hash}\n"
+        f"x-amz-date:{amz_date}\n"
+        f"x-amz-security-token:{session_token}\n"
+    )
+
+    canonical_request = f"PUT\n{canonical_uri}\n\n{canonical_headers}\n{signed_headers}\n{payload_hash}"
+
+    algorithm = "AWS4-HMAC-SHA256"
+    credential_scope = f"{date_stamp}/{region}/s3/aws4_request"
+    string_to_sign = f"{algorithm}\n{amz_date}\n{credential_scope}\n{hashlib.sha256(canonical_request.encode('utf-8')).hexdigest()}"
+
+    def sign(key, msg):
+        return hmac.new(key, msg.encode("utf-8"), hashlib.sha256).digest()
+
+    def get_signature_key(key, date_stamp, region_name, service_name):
+        k_date = sign(("AWS4" + key).encode("utf-8"), date_stamp)
+        k_region = sign(k_date, region_name)
+        k_service = sign(k_region, service_name)
+        k_signing = sign(k_service, "aws4_request")
+        return k_signing
+
+    signing_key = get_signature_key(secret_key, date_stamp, region, "s3")
+    signature = hmac.new(signing_key, string_to_sign.encode("utf-8"), hashlib.sha256).hexdigest()
+
+    authorization_header = f"{algorithm} Credential={access_key}/{credential_scope}, SignedHeaders={signed_headers}, Signature={signature}"
+    headers["Authorization"] = authorization_header
+
+    async with httpx.AsyncClient() as client:
+        resp = await client.put(f"https://{host}{canonical_uri}", content=buffer, headers=headers)
+        if not resp.is_success:
+            raise HTTPException(status_code=502, detail=f"S3 upload failed: {resp.text}")
+
+@router.post("/cellforge/generate")
+@limiter.limit("2/minute")
+async def generate_3d_cell(
+    request: Request,
+    file: UploadFile = File(None),
+    url: str = Form(None)
+):
+    api_key = os.getenv("TRIPO_API_KEY")
+    if not api_key:
+        raise HTTPException(status_code=503, detail="Tripo API key not configured")
+
+    headers = {"Authorization": f"Bearer {api_key}"}
+    async with httpx.AsyncClient() as client:
+        # Step 1: Get/Upload Image
+        if file:
+            content = await file.read()
+            # Get STS Token
+            sts_resp = await client.post(
+                "https://api.tripo3d.ai/v2/openapi/upload/sts/token",
+                headers=headers,
+                json={"format": file.content_type.split("/")[-1]}
+            )
+            if not sts_resp.is_success:
+                raise HTTPException(status_code=502, detail="Failed to get Tripo STS token")
+
+            sts_data = sts_resp.json()["data"]
+            await upload_to_tripo_s3(
+                content, file.content_type,
+                sts_data["s3_host"], sts_data["resource_bucket"], sts_data["resource_uri"],
+                sts_data["sts_ak"], sts_data["sts_sk"], sts_data["session_token"]
+            )
+            input_file = {"type": sts_data["resource_uri"].split(".")[-1], "object": {"bucket": sts_data["resource_bucket"], "key": sts_data["resource_uri"]}}
+        elif url:
+            input_file = {"type": url.split(".")[-1].split("?")[0], "url": url}
+        else:
+            raise HTTPException(status_code=400, detail="Either file or URL must be provided")
+
+        # Step 2: Create Task
+        task_payload = {
+            "type": "image_to_model",
+            "file": input_file,
+            "model_version": "v2.0"
+        }
+        task_resp = await client.post(
+            "https://api.tripo3d.ai/v2/openapi/task",
+            headers=headers,
+            json=task_payload
+        )
+        if not task_resp.is_success:
+            raise HTTPException(status_code=502, detail=f"Tripo task creation failed: {task_resp.text}")
+
+        task_id = task_resp.json()["data"]["task_id"]
+
+        # Step 3: Polling (up to 120 seconds)
+        for _ in range(24):
+            await asyncio.sleep(5)
+            poll_resp = await client.get(
+                f"https://api.tripo3d.ai/v2/openapi/task/{task_id}",
+                headers=headers
+            )
+            if not poll_resp.is_success:
+                continue
+
+            data = poll_resp.json()["data"]
+            status = data.get("status")
+            if status == "success":
+                # Find GLB URL
+                model_url = data.get("output", {}).get("model")
+                if not model_url:
+                    # Check in other places if nested differently
+                    model_url = data.get("result", {}).get("model")
+
+                return {"success": True, "model_url": model_url, "task_id": task_id}
+            elif status == "failed":
+                raise HTTPException(status_code=502, detail=f"Tripo generation failed: {data.get('error')}")
+
+        raise HTTPException(status_code=504, detail="3D generation timed out")
 
 # --- AI Chat ---
 import google.generativeai as genai

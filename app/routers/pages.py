@@ -188,6 +188,10 @@ async def terracotta_tour_test(request: Request):
 async def computer_history_tour(request: Request):
     return templates.TemplateResponse("computer_history_tour.html", {"request": request})
 
+@router.get("/cellforge")
+async def cellforge(request: Request):
+    return templates.TemplateResponse("cellforge.html", {"request": request})
+
 @router.get("/privacy")
 async def privacy(request: Request):
     return templates.TemplateResponse("privacy.html", {"request": request})
