@@ -14,3 +14,4 @@ slowapi
 google-generativeai
 huggingface_hub
 numpy
+gradio_client>=1.0.0

@@ -46,7 +46,7 @@ class CellForgeApp {
         document.getElementById('btn-export-glb').onclick = () => this.exportGLB();
     }
 
-    setLoading(loading, message = "Generating your 3D model...") {
+    setLoading(loading, message = "Generating with TRELLIS.2 (Microsoft) — this may take 30–90 seconds...") {
         this.isLoading = loading;
         const loader = document.getElementById('studio-loading');
         const msgElem = document.getElementById('loading-message');
@@ -84,8 +84,20 @@ class CellForgeApp {
                 body: formData
             });
             const data = await resp.json();
-            if (data.success && data.model_url) {
-                await this.viewer.loadModel(data.model_url, true);
+
+            if (data.success && data.model_data) {
+                // Decode base64 GLB and load into Three.js viewer
+                const binary = atob(data.model_data);
+                const bytes = new Uint8Array(binary.length);
+                for (let i = 0; i < binary.length; i++) {
+                    bytes[i] = binary.charCodeAt(i);
+                }
+                const blob = new Blob([bytes], { type: 'model/gltf-binary' });
+                const blobUrl = URL.createObjectURL(blob);
+
+                await this.viewer.loadModel(blobUrl, true);
+                URL.revokeObjectURL(blobUrl);
+
                 document.getElementById('active-cell-name').textContent = "Custom Specimen";
                 document.getElementById('active-cell-type').textContent = "AI-Generated 3D Reconstruct";
                 document.getElementById('status-text').textContent = "AI Generation Success";
