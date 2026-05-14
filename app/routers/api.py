@@ -281,29 +281,49 @@ async def generate_3d_cell(
     if not hf_token:
         return JSONResponse(
             status_code=500,
-            content={"error": "HF_API_TOKEN not configured. Add it to Vercel environment variables."}
+            content={"error": "HF_API_TOKEN not configured in Vercel Environment Variables."}
         )
 
     if not file and not url:
         return JSONResponse(
             status_code=400,
-            content={"error": "Provide either a file upload or an image URL."}
+            content={"error": "Provide a file upload or image URL."}
+        )
+
+    # Connect to TRELLIS Space with fallback
+    SPACE_URLS = [
+        "https://microsoft--trellis-2.hf.space",
+        "JeffreyXiang/TRELLIS",
+    ]
+    client = None
+    last_error = None
+    for space_url in SPACE_URLS:
+        try:
+            os.environ["HUGGING_FACE_HUB_TOKEN"] = hf_token
+            client = Client(space_url)
+            logger.info(f"Connected to TRELLIS Space: {space_url}")
+            break
+        except Exception as e:
+            last_error = e
+            logger.warning(f"Could not connect to {space_url}: {e}")
+
+    if client is None:
+        return JSONResponse(
+            status_code=502,
+            content={
+                "error": "Could not connect to any TRELLIS Space. "
+                f"Last error: {str(last_error)}"
+            }
         )
 
     try:
-        # Initialize Hugging Face Gradio Client pointing to Microsoft's TRELLIS.2 Space
-        # Pass HF token via headers — works across all gradio_client versions
-        client = Client(
-            "microsoft/TRELLIS.2",
-            headers={"Authorization": f"Bearer {hf_token}"}
-        )
-
-        # First try to view the API to confirm endpoint name
+        # Log available API endpoints
         try:
-            api_info = client.view_api(return_format="dict")
-            logger.info(f"TRELLIS.2 API endpoints: {api_info}")
+            api_info = client.view_api(return_format="dict", print_info=False)
+            endpoints = list(api_info.get("named_endpoints", {}).keys())
+            logger.info(f"Available endpoints: {endpoints}")
         except Exception as e:
-            logger.warning(f"Could not fetch API info: {e}")
+            logger.warning(f"view_api failed: {e}")
 
         # Handle file upload vs URL input
         if file:
@@ -313,7 +333,7 @@ async def generate_3d_cell(
                 tmp.write(content)
                 tmp_path = tmp.name
             image_input = handle_file(tmp_path)
-        elif url:
+        else:
             suffix = ".jpg"
             for ext in [".png", ".webp", ".jpg", ".jpeg"]:
                 if url.lower().endswith(ext):
@@ -324,7 +344,7 @@ async def generate_3d_cell(
                 tmp_path = tmp.name
             image_input = handle_file(tmp_path)
 
-        # Call TRELLIS.2 Gradio API
+        # Generate 3D model
         try:
             result = client.predict(
                 image=image_input,
@@ -341,40 +361,43 @@ async def generate_3d_cell(
             return JSONResponse(
                 status_code=504,
                 content={
-                    "error": "TRELLIS.2 generation timed out. "
-                    "The model is busy — please try again "
-                    "in 30 seconds."
+                    "error": "Generation timed out. "
+                    "Please try again in 30 seconds."
                 }
             )
         except Exception as e:
             return JSONResponse(
                 status_code=502,
-                content={
-                    "error": f"TRELLIS.2 generation failed: "
-                    f"{str(e)}"
-                }
+                content={"error": f"TRELLIS generation failed: {str(e)}"}
             )
 
         # Extract GLB path from result
         glb_path = None
         if isinstance(result, (list, tuple)):
             for item in result:
-                if isinstance(item, str) and item.lower().endswith(".glb"):
+                if isinstance(item, str) and (
+                    item.lower().endswith(".glb")
+                ):
                     glb_path = item
                     break
                 if isinstance(item, dict):
                     for v in item.values():
-                        if isinstance(v, str) and v.lower().endswith(".glb"):
+                        if isinstance(v, str) and (
+                            v.lower().endswith(".glb")
+                        ):
                             glb_path = v
                             break
-        
+
         if not glb_path:
             return JSONResponse(
                 status_code=502,
-                content={"error": f"TRELLIS.2 did not return a GLB file. Raw result: {str(result)[:500]}"}
+                content={
+                    "error": "No GLB returned. Raw result: "
+                    + str(result)[:500]
+                }
             )
 
-        # Read the GLB file and return as base64
+        # Return GLB as base64
         with open(glb_path, "rb") as f:
             glb_bytes = f.read()
         glb_b64 = base64.b64encode(glb_bytes).decode()
@@ -382,17 +405,16 @@ async def generate_3d_cell(
         return JSONResponse(
             status_code=200,
             content={
-                "success": True,
                 "model_data": glb_b64,
                 "format": "glb",
-                "provider": "TRELLIS.2 (Microsoft)"
+                "provider": "TRELLIS (Microsoft)"
             }
         )
 
     except Exception as e:
         return JSONResponse(
             status_code=502,
-            content={"error": f"TRELLIS.2 generation failed: {str(e)}"}
+            content={"error": f"TRELLIS generation failed: {str(e)}"}
         )
 
 # --- AI Chat ---
