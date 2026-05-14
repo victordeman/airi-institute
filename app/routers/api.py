@@ -8,10 +8,12 @@ from fastapi.responses import JSONResponse
 import libsql_client
 import httpx
 import asyncio
-import hashlib
-import hmac
 import time
+import tempfile
+import urllib.request
+import base64
 from datetime import datetime
+from gradio_client import Client, handle_file
 from app.limiter import limiter
 from app.database import get_db, to_dict_list
 from app.rag import rag_manager
@@ -264,62 +266,7 @@ async def get_stats(db: libsql_client.Client = Depends(get_db)):
         "ai_label": "AI",
     }
 
-# --- 3D Cell Forge AI Pipeline ---
-
-async def upload_to_tripo_s3(buffer: bytes, mime: str, host: str, bucket: str, key: str, access_key: str, secret_key: str, session_token: str):
-    region = "us-west-2"
-    if "s3." in host:
-        region = host.split("s3.")[1].split(".")[0]
-
-    amz_date = datetime.utcnow().strftime("%Y%m%dT%H%M%SZ")
-    date_stamp = amz_date[:8]
-
-    payload_hash = hashlib.sha256(buffer).hexdigest()
-    canonical_uri = f"/{bucket}/{key}"
-
-    headers = {
-        "content-type": mime,
-        "host": host,
-        "x-amz-content-sha256": payload_hash,
-        "x-amz-date": amz_date,
-        "x-amz-security-token": session_token,
-    }
-
-    signed_headers = "content-type;host;x-amz-content-sha256;x-amz-date;x-amz-security-token"
-    canonical_headers = (
-        f"content-type:{mime}\n"
-        f"host:{host}\n"
-        f"x-amz-content-sha256:{payload_hash}\n"
-        f"x-amz-date:{amz_date}\n"
-        f"x-amz-security-token:{session_token}\n"
-    )
-
-    canonical_request = f"PUT\n{canonical_uri}\n\n{canonical_headers}\n{signed_headers}\n{payload_hash}"
-
-    algorithm = "AWS4-HMAC-SHA256"
-    credential_scope = f"{date_stamp}/{region}/s3/aws4_request"
-    string_to_sign = f"{algorithm}\n{amz_date}\n{credential_scope}\n{hashlib.sha256(canonical_request.encode('utf-8')).hexdigest()}"
-
-    def sign(key, msg):
-        return hmac.new(key, msg.encode("utf-8"), hashlib.sha256).digest()
-
-    def get_signature_key(key, date_stamp, region_name, service_name):
-        k_date = sign(("AWS4" + key).encode("utf-8"), date_stamp)
-        k_region = sign(k_date, region_name)
-        k_service = sign(k_region, service_name)
-        k_signing = sign(k_service, "aws4_request")
-        return k_signing
-
-    signing_key = get_signature_key(secret_key, date_stamp, region, "s3")
-    signature = hmac.new(signing_key, string_to_sign.encode("utf-8"), hashlib.sha256).hexdigest()
-
-    authorization_header = f"{algorithm} Credential={access_key}/{credential_scope}, SignedHeaders={signed_headers}, Signature={signature}"
-    headers["Authorization"] = authorization_header
-
-    async with httpx.AsyncClient() as client:
-        resp = await client.put(f"https://{host}{canonical_uri}", content=buffer, headers=headers)
-        if not resp.is_success:
-            raise HTTPException(status_code=502, detail=f"S3 upload failed: {resp.text}")
+# --- 3D Cell Forge AI Pipeline (TRELLIS.2) ---
 
 @router.post("/cellforge/generate")
 @limiter.limit("2/minute")
@@ -328,88 +275,94 @@ async def generate_3d_cell(
     file: UploadFile = File(None),
     url: str = Form(None)
 ):
-    api_key = os.getenv("TRIPO_API_KEY")
-    if not api_key:
+    hf_token = os.getenv("HF_API_TOKEN")
+    if not hf_token:
         return JSONResponse(
             status_code=500,
-            content={"error": "TRIPO_API_KEY not configured. Add it to environment variables."}
+            content={"error": "HF_API_TOKEN not configured. Add it to Vercel environment variables."}
         )
 
-    headers = {
-        "Authorization": f"Bearer {api_key}",
-        "Content-Type": "application/json"
-    }
-    async with httpx.AsyncClient() as client:
-        # Step 1: Get/Upload Image
+    if not file and not url:
+        return JSONResponse(
+            status_code=400,
+            content={"error": "Provide either a file upload or an image URL."}
+        )
+
+    try:
+        # Initialize Hugging Face Gradio Client pointing to Microsoft's TRELLIS.2 Space
+        client = Client("microsoft/TRELLIS.2", hf_token=hf_token)
+
+        # Handle file upload vs URL input
         if file:
-            content = await file.read()
-            # Get STS Token
-            sts_resp = await client.post(
-                "https://api.tripo3d.ai/v2/openapi/upload/sts/token",
-                headers=headers,
-                json={"format": file.content_type.split("/")[-1]}
-            )
-            if not sts_resp.is_success:
-                return JSONResponse(
-                    status_code=502,
-                    content={"error": f"Failed to get Tripo STS token: {sts_resp.json() if sts_resp.status_code != 500 else sts_resp.text}"}
-                )
-
-            sts_data = sts_resp.json()["data"]
-            await upload_to_tripo_s3(
-                content, file.content_type,
-                sts_data["s3_host"], sts_data["resource_bucket"], sts_data["resource_uri"],
-                sts_data["sts_ak"], sts_data["sts_sk"], sts_data["session_token"]
-            )
-            input_file = {"type": sts_data["resource_uri"].split(".")[-1], "object": {"bucket": sts_data["resource_bucket"], "key": sts_data["resource_uri"]}}
+            suffix = "." + (file.filename.split(".")[-1] if "." in file.filename else "jpg")
+            with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp:
+                content = await file.read()
+                tmp.write(content)
+                tmp_path = tmp.name
+            image_input = handle_file(tmp_path)
         elif url:
-            input_file = {"type": url.split(".")[-1].split("?")[0], "url": url}
-        else:
-            return JSONResponse(status_code=400, content={"error": "Either file or URL must be provided"})
+            suffix = ".jpg"
+            for ext in [".png", ".webp", ".jpg", ".jpeg"]:
+                if url.lower().endswith(ext):
+                    suffix = ext
+                    break
+            with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp:
+                urllib.request.urlretrieve(url, tmp.name)
+                tmp_path = tmp.name
+            image_input = handle_file(tmp_path)
 
-        # Step 2: Create Task
-        task_payload = {
-            "type": "image_to_model",
-            "file": input_file,
-            "model_version": "v2.5-20250123"
-        }
-        task_resp = await client.post(
-            "https://api.tripo3d.ai/v2/openapi/task",
-            headers=headers,
-            json=task_payload
+        # Call TRELLIS.2 Gradio API
+        result = client.predict(
+            image=image_input,
+            multiimages=[],
+            seed=0,
+            ss_guidance_strength=7.5,
+            ss_sampling_steps=12,
+            slat_guidance_strength=3,
+            slat_sampling_steps=12,
+            multiimage_algo="stochastic",
+            api_name="/image_to_3d"
         )
-        if not task_resp.is_success:
+
+        # Extract GLB path from result
+        glb_path = None
+        if isinstance(result, (list, tuple)):
+            for item in result:
+                if isinstance(item, str) and item.lower().endswith(".glb"):
+                    glb_path = item
+                    break
+                if isinstance(item, dict):
+                    for v in item.values():
+                        if isinstance(v, str) and v.lower().endswith(".glb"):
+                            glb_path = v
+                            break
+        
+        if not glb_path:
             return JSONResponse(
                 status_code=502,
-                content={"error": f"Tripo task creation failed: {task_resp.json() if task_resp.status_code != 500 else task_resp.text}"}
+                content={"error": f"TRELLIS.2 did not return a GLB file. Raw result: {str(result)[:500]}"}
             )
 
-        task_id = task_resp.json()["data"]["task_id"]
+        # Read the GLB file and return as base64
+        with open(glb_path, "rb") as f:
+            glb_bytes = f.read()
+        glb_b64 = base64.b64encode(glb_bytes).decode()
 
-        # Step 3: Polling (up to 120 seconds: 40 attempts * 3s)
-        for _ in range(40):
-            await asyncio.sleep(3)
-            poll_resp = await client.get(
-                f"https://api.tripo3d.ai/v2/openapi/task/{task_id}",
-                headers=headers
-            )
-            if not poll_resp.is_success:
-                continue
+        return JSONResponse(
+            status_code=200,
+            content={
+                "success": True,
+                "model_data": glb_b64,
+                "format": "glb",
+                "provider": "TRELLIS.2 (Microsoft)"
+            }
+        )
 
-            poll_data = poll_resp.json()
-            data = poll_data.get("data", {})
-            status = data.get("status")
-
-            if status == "success":
-                model_url = data.get("output", {}).get("model")
-                return {"success": True, "model_url": model_url, "task_id": task_id}
-            elif status in ["failed", "cancelled", "banned", "expired", "unknown"]:
-                return JSONResponse(
-                    status_code=502,
-                    content={"error": f"Tripo generation {status}: {data.get('error', 'No error message provided')}"}
-                )
-
-        return JSONResponse(status_code=504, content={"error": "3D generation timed out"})
+    except Exception as e:
+        return JSONResponse(
+            status_code=502,
+            content={"error": f"TRELLIS.2 generation failed: {str(e)}"}
+        )
 
 # --- AI Chat ---
 import google.generativeai as genai
