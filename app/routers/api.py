@@ -9,11 +9,16 @@ import libsql_client
 import httpx
 import asyncio
 import time
+import logging
+import gradio_client
 import tempfile
 import urllib.request
 import base64
 from datetime import datetime
 from gradio_client import Client, handle_file
+
+logger = logging.getLogger(__name__)
+logger.info(f"gradio_client version: {gradio_client.__version__}")
 from app.limiter import limiter
 from app.database import get_db, to_dict_list
 from app.rag import rag_manager
@@ -289,8 +294,18 @@ async def generate_3d_cell(
         )
 
     try:
-        # Initialize Hugging Face Gradio Client pointing to Microsoft's TRELLIS.2 Space
-        client = Client("microsoft/TRELLIS.2", hf_token=hf_token)
+        # Pass HF token via headers — works across all gradio_client versions
+        client = Client(
+            "microsoft/TRELLIS.2",
+            headers={"Authorization": f"Bearer {hf_token}"}
+        )
+
+        # First try to view the API to confirm endpoint name
+        try:
+            api_info = client.view_api(return_format="dict")
+            logger.info(f"TRELLIS.2 API endpoints: {api_info}")
+        except Exception as e:
+            logger.warning(f"Could not fetch API info: {e}")
 
         # Handle file upload vs URL input
         if file:
@@ -312,17 +327,25 @@ async def generate_3d_cell(
             image_input = handle_file(tmp_path)
 
         # Call TRELLIS.2 Gradio API
-        result = client.predict(
-            image=image_input,
-            multiimages=[],
-            seed=0,
-            ss_guidance_strength=7.5,
-            ss_sampling_steps=12,
-            slat_guidance_strength=3,
-            slat_sampling_steps=12,
-            multiimage_algo="stochastic",
-            api_name="/image_to_3d"
-        )
+        try:
+            result = client.predict(
+                image=image_input,
+                multiimages=[],
+                seed=0,
+                ss_guidance_strength=7.5,
+                ss_sampling_steps=12,
+                slat_guidance_strength=3,
+                slat_sampling_steps=12,
+                multiimage_algo="stochastic",
+                api_name="/image_to_3d"
+            )
+        except TimeoutError:
+            return JSONResponse(
+                status_code=504,
+                content={
+                    "error": "TRELLIS.2 generation timed out. The model is busy — please try again in 30 seconds."
+                }
+            )
 
         # Extract GLB path from result
         glb_path = None
