@@ -1,5 +1,6 @@
 import json
 import os
+import logging
 import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
@@ -38,6 +39,7 @@ from app.models.schemas import (
 from app.security import get_current_user
 
 router = APIRouter(prefix="/api", tags=["api"])
+logger = logging.getLogger(__name__)
 
 @router.get("/me", response_model=User)
 async def get_me(current_user: User = Depends(get_current_user)):
@@ -290,7 +292,18 @@ async def generate_3d_cell(
 
     try:
         # Initialize Hugging Face Gradio Client pointing to Microsoft's TRELLIS.2 Space
-        client = Client("microsoft/TRELLIS.2", hf_token=hf_token)
+        # Pass HF token via headers — works across all gradio_client versions
+        client = Client(
+            "microsoft/TRELLIS.2",
+            headers={"Authorization": f"Bearer {hf_token}"}
+        )
+
+        # First try to view the API to confirm endpoint name
+        try:
+            api_info = client.view_api(return_format="dict")
+            logger.info(f"TRELLIS.2 API endpoints: {api_info}")
+        except Exception as e:
+            logger.warning(f"Could not fetch API info: {e}")
 
         # Handle file upload vs URL input
         if file:
@@ -312,17 +325,35 @@ async def generate_3d_cell(
             image_input = handle_file(tmp_path)
 
         # Call TRELLIS.2 Gradio API
-        result = client.predict(
-            image=image_input,
-            multiimages=[],
-            seed=0,
-            ss_guidance_strength=7.5,
-            ss_sampling_steps=12,
-            slat_guidance_strength=3,
-            slat_sampling_steps=12,
-            multiimage_algo="stochastic",
-            api_name="/image_to_3d"
-        )
+        try:
+            result = client.predict(
+                image=image_input,
+                multiimages=[],
+                seed=0,
+                ss_guidance_strength=7.5,
+                ss_sampling_steps=12,
+                slat_guidance_strength=3,
+                slat_sampling_steps=12,
+                multiimage_algo="stochastic",
+                api_name="/image_to_3d"
+            )
+        except TimeoutError:
+            return JSONResponse(
+                status_code=504,
+                content={
+                    "error": "TRELLIS.2 generation timed out. "
+                    "The model is busy — please try again "
+                    "in 30 seconds."
+                }
+            )
+        except Exception as e:
+            return JSONResponse(
+                status_code=502,
+                content={
+                    "error": f"TRELLIS.2 generation failed: "
+                    f"{str(e)}"
+                }
+            )
 
         # Extract GLB path from result
         glb_path = None
