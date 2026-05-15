@@ -2,11 +2,6 @@ import json
 import os
 import logging
 import smtplib
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
-from fastapi import APIRouter, Depends, HTTPException, Request, BackgroundTasks, File, UploadFile, Form
-from fastapi.responses import JSONResponse
-import libsql_client
 import httpx
 import asyncio
 import time
@@ -14,7 +9,13 @@ import tempfile
 import urllib.request
 import base64
 from datetime import datetime
-from gradio_client import Client, handle_file
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+
+from fastapi import APIRouter, Depends, HTTPException, Request, BackgroundTasks, File, UploadFile, Form
+from fastapi.responses import JSONResponse
+import libsql_client
+
 from app.limiter import limiter
 from app.database import get_db, to_dict_list
 from app.rag import rag_manager
@@ -40,6 +41,8 @@ from app.security import get_current_user
 
 router = APIRouter(prefix="/api", tags=["api"])
 logger = logging.getLogger(__name__)
+
+STABILITY_API_KEY = os.environ.get("STABILITY_API_KEY", "")
 
 @router.get("/me", response_model=User)
 async def get_me(current_user: User = Depends(get_current_user)):
@@ -268,113 +271,7 @@ async def get_stats(db: libsql_client.Client = Depends(get_db)):
         "ai_label": "AI",
     }
 
-# --- 3D Cell Forge AI Pipeline (Hybrid approach) ---
-
-async def prepare_image(file=None, url=None) -> str:
-    """Save image to temp file, return path."""
-    if file:
-        suffix = "." + (file.filename.split(".")[-1] if "." in file.filename else "jpg")
-        with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp:
-            content = await file.read()
-            tmp.write(content)
-            return tmp.name
-    elif url:
-        suffix = ".jpg"
-        for ext in [".png", ".webp", ".jpg", ".jpeg"]:
-            if url.lower().endswith(ext):
-                suffix = ext
-                break
-        with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp:
-            urllib.request.urlretrieve(url, tmp.name)
-            return tmp.name
-    return None
-
-async def try_stable_fast_3d(image_path: str, hf_token: str) -> bytes | None:
-    """
-    Call stabilityai/stable-fast-3d via HF Inference API. Returns GLB bytes or None.
-    """
-    try:
-        url = "https://api-inference.huggingface.co/models/stabilityai/stable-fast-3d"
-        headers = {"Authorization": f"Bearer {hf_token}"}
-        with open(image_path, "rb") as f:
-            image_bytes = f.read()
-        
-        async with httpx.AsyncClient(timeout=120.0) as client:
-            response = await client.post(
-                url,
-                headers=headers,
-                content=image_bytes,
-                params={
-                    "remesh": "none",
-                    "foreground_ratio": 0.85,
-                    "texture_resolution": 1024
-                }
-            )
-        
-        if response.status_code == 200:
-            # Returns GLB binary directly
-            if b"glb" in response.content[:4] or len(response.content) > 1000:
-                logger.info("Stable Fast 3D succeeded")
-                return response.content
-        
-        logger.warning(f"SF3D failed: {response.status_code} {response.text[:200]}")
-        return None
-    except Exception as e:
-        logger.warning(f"SF3D exception: {e}")
-        return None
-
-def try_trellis_spaces(image_path: str, hf_token: str) -> bytes | None:
-    """
-    Try multiple TRELLIS Gradio Spaces in order. Returns GLB bytes or None.
-    """
-    SPACES = [
-        "trellis-community/TRELLIS",
-        "theseanlavery/TRELLIS-3D",
-        "crevelop/Trellis",
-    ]
-    os.environ["HUGGING_FACE_HUB_TOKEN"] = hf_token
-
-    for space in SPACES:
-        try:
-            logger.info(f"Trying Space: {space}")
-            client = Client(space)
-            image_input = handle_file(image_path)
-            
-            result = client.predict(
-                image=image_input,
-                multiimages=[],
-                seed=0,
-                ss_guidance_strength=7.5,
-                ss_sampling_steps=12,
-                slat_guidance_strength=3,
-                slat_sampling_steps=12,
-                multiimage_algo="stochastic",
-                api_name="/image_to_3d"
-            )
-            
-            # Extract GLB path from result
-            glb_path = None
-            if isinstance(result, (list, tuple)):
-                for item in result:
-                    if isinstance(item, str) and item.lower().endswith(".glb"):
-                        glb_path = item
-                        break
-                    if isinstance(item, dict):
-                        for v in item.values():
-                            if isinstance(v, str) and v.lower().endswith(".glb"):
-                                glb_path = v
-                                break
-
-            if glb_path:
-                with open(glb_path, "rb") as f:
-                    glb_bytes = f.read()
-                logger.info(f"Space {space} succeeded")
-                return glb_bytes
-            logger.warning(f"{space}: no GLB in result: {str(result)[:300]}")
-        except Exception as e:
-            logger.warning(f"{space} failed: {str(e)[:200]}")
-            continue
-    return None
+# --- 3D Cell Forge AI Pipeline (Stability AI REST API) ---
 
 @router.post("/cellforge/generate")
 @limiter.limit("2/minute")
@@ -383,59 +280,124 @@ async def generate_3d_cell(
     file: UploadFile = File(None),
     url: str = Form(None)
 ):
-    hf_token = os.getenv("HF_API_TOKEN")
-    if not hf_token:
+    # Validate API key
+    if not STABILITY_API_KEY:
         return JSONResponse(
             status_code=500,
-            content={
-                "error": "HF_API_TOKEN not configured. Add it to Vercel Dashboard → Settings → Environment Variables."
+            content={"error":
+                "STABILITY_API_KEY not configured. "
+                "Add it to Vercel Dashboard → "
+                "Settings → Environment Variables. "
+                "Get your key at: "
+                "platform.stability.ai"
             }
         )
 
     if not file and not url:
         return JSONResponse(
             status_code=400,
-            content={"error": "Provide a file upload or an image URL."}
+            content={"error":
+                "Please provide an image file "
+                "upload or an image URL."
+            }
         )
 
     try:
-        # Prepare image
-        image_path = await prepare_image(file=file, url=url)
-        if not image_path:
-            return JSONResponse(
-                status_code=400,
-                content={"error": "Could not process image."}
+        # Get image bytes
+        if file:
+            image_bytes = await file.read()
+            filename = file.filename or "image.jpg"
+            content_type = (
+                file.content_type or "image/jpeg"
             )
+        else:
+            # Download from URL
+            with tempfile.NamedTemporaryFile(
+                delete=False, suffix=".jpg"
+            ) as tmp:
+                urllib.request.urlretrieve(
+                    url, tmp.name
+                )
+                with open(tmp.name, "rb") as f:
+                    image_bytes = f.read()
+            filename = url.split("/")[-1] or (
+                "image.jpg"
+            )
+            content_type = "image/jpeg"
+            for ext, ct in {
+                ".png": "image/png",
+                ".webp": "image/webp"
+            }.items():
+                if url.lower().endswith(ext):
+                    content_type = ct
+                    break
 
-        glb_bytes = None
-        provider_used = None
+        # Call Stability AI SF3D API
+        logger.info(
+            f"Calling SF3D API with image: "
+            f"{filename} ({len(image_bytes)} bytes)"
+        )
 
-        # APPROACH A: Stable Fast 3D (fastest, most reliable)
-        glb_bytes = await try_stable_fast_3d(image_path, hf_token)
-        if glb_bytes:
-            provider_used = "Stable Fast 3D"
-
-        # APPROACH B: TRELLIS Gradio Spaces (fallback)
-        if not glb_bytes:
-            glb_bytes = await asyncio.to_thread(try_trellis_spaces, image_path, hf_token)
-            if glb_bytes:
-                provider_used = "TRELLIS"
-
-        # Clean up temp file
-        try:
-            os.unlink(image_path)
-        except Exception:
-            pass
-
-        if not glb_bytes:
-            return JSONResponse(
-                status_code=502,
-                content={
-                    "error": "All 3D generation providers are currently unavailable. Please try again in a few minutes."
+        async with httpx.AsyncClient(
+            timeout=120.0
+        ) as client:
+            response = await client.post(
+                "https://api.stability.ai/v2beta/3d/stable-fast-3d",
+                headers={
+                    "Authorization":
+                        f"Bearer {STABILITY_API_KEY}"
+                },
+                files={
+                    "image": (
+                        filename,
+                        image_bytes,
+                        content_type
+                    )
+                },
+                data={
+                    "texture_resolution": "1024",
+                    "foreground_ratio": "0.85",
+                    "remesh": "none"
                 }
             )
 
-        # Return GLB as base64
+        logger.info(
+            f"SF3D API response: {response.status_code}"
+        )
+
+        # Handle API errors
+        if response.status_code == 401:
+            return JSONResponse(
+                status_code=500,
+                content={"error":
+                    "Invalid STABILITY_API_KEY. "
+                    "Check your key at "
+                    "platform.stability.ai"
+                }
+            )
+
+        if response.status_code == 402:
+            return JSONResponse(
+                status_code=500,
+                content={"error":
+                    "Insufficient Stability AI credits. "
+                    "Top up at platform.stability.ai"
+                }
+            )
+
+        if response.status_code != 200:
+            error_detail = response.text
+            try:
+                error_detail = response.json()
+            except Exception:
+                pass
+            return JSONResponse(
+                status_code=response.status_code,
+                content={"error": f"Stability AI Error: {error_detail}"}
+            )
+
+        # Success - response.content is the binary GLB
+        glb_bytes = response.content
         glb_b64 = base64.b64encode(glb_bytes).decode()
 
         return JSONResponse(
@@ -443,7 +405,7 @@ async def generate_3d_cell(
             content={
                 "model_data": glb_b64,
                 "format": "glb",
-                "provider": provider_used
+                "provider": "Stable Fast 3D"
             }
         )
 
