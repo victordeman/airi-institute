@@ -7,6 +7,7 @@ class CellForgeApp {
     constructor() {
         this.viewer = new CellViewer('three-canvas-container');
         this.selectedOrganelle = 'membrane';
+        this.selectedModel = 'stable_fast_3d';
         this.isLoading = false;
 
         this.init();
@@ -34,9 +35,51 @@ class CellForgeApp {
         if (window.feather) feather.replace();
     }
 
+    handleModelSelect(modelId) {
+        this.selectedModel = modelId;
+
+        // Update UI
+        document.querySelectorAll('.model-card').forEach(card => {
+            const isSelected = card.dataset.model === modelId;
+            card.classList.toggle('selected', isSelected);
+            card.querySelector('.check-mark').classList.toggle('hidden', !isSelected);
+        });
+
+        // Update button text
+        const modelNames = {
+            'stable_fast_3d': 'Stable Fast 3D ⚡',
+            'trellis2': 'TRELLIS.2 🏆',
+            'hunyuan3d': 'Hunyuan3D 🎨',
+            'hi3dgen': 'HI3DGEN 📐',
+            'triposr': 'TRIPOSR 🌍'
+        };
+        const name = modelNames[modelId] || 'AI Model';
+        document.querySelectorAll('.btn-text').forEach(span => {
+            span.textContent = `Generate with ${name}`;
+        });
+
+        // Clear any previous error suggestion
+        document.getElementById('fallback-suggestion').classList.add('hidden');
+    }
+
     bindEvents() {
         document.getElementById('close-inspector').onclick = () => {
             document.getElementById('organelle-info').classList.remove('open');
+        };
+
+        // Model selection
+        document.querySelectorAll('.model-card').forEach(card => {
+            card.onclick = () => this.handleModelSelect(card.dataset.model);
+        });
+
+        // Try Different Model button
+        document.getElementById('btn-try-different').onclick = () => {
+            document.getElementById('model-selector').scrollIntoView({ behavior: 'smooth', block: 'center' });
+            document.getElementById('fallback-suggestion').classList.add('hidden');
+            // Shake effect
+            const selector = document.getElementById('model-selector');
+            selector.classList.add('animate-pulse');
+            setTimeout(() => selector.classList.remove('animate-pulse'), 2000);
         };
 
         document.getElementById('cell-upload').onchange = (e) => this.handleUpload(e);
@@ -46,13 +89,23 @@ class CellForgeApp {
         document.getElementById('btn-export-glb').onclick = () => this.exportGLB();
     }
 
-    setLoading(loading, message = "Generating your 3D model — this may take up to 60 seconds...") {
+    setLoading(loading) {
         this.isLoading = loading;
         const loader = document.getElementById('studio-loading');
         const msgElem = document.getElementById('loading-message');
+
         if (loader) {
             loader.classList.toggle('hidden', !loading);
-            if (message) msgElem.textContent = message;
+            if (loading) {
+                const messages = {
+                    'stable_fast_3d': 'Generating — usually 5–15s...',
+                    'trellis2': 'Generating — usually 30–90s...',
+                    'hunyuan3d': 'Generating — usually 30–60s...',
+                    'hi3dgen': 'Generating — usually 20–60s...',
+                    'triposr': 'Generating — usually 5–20s...'
+                };
+                msgElem.textContent = messages[this.selectedModel] || "Generating your 3D model...";
+            }
         }
     }
 
@@ -62,6 +115,7 @@ class CellForgeApp {
 
         const formData = new FormData();
         formData.append('file', file);
+        formData.append('model_id', this.selectedModel);
 
         await this.generate3D(formData);
     }
@@ -72,6 +126,7 @@ class CellForgeApp {
 
         const formData = new FormData();
         formData.append('url', url);
+        formData.append('model_id', this.selectedModel);
 
         await this.generate3D(formData);
     }
@@ -86,6 +141,9 @@ class CellForgeApp {
             const data = await resp.json();
             
             if (data.model_data) {
+                // Hide error suggestion on success
+                document.getElementById('fallback-suggestion').classList.add('hidden');
+
                 // Decode base64 GLB and load into Three.js viewer
                 const binary = atob(data.model_data);
                 const bytes = new Uint8Array(binary.length);
@@ -103,7 +161,12 @@ class CellForgeApp {
                 document.getElementById('status-text').textContent = "AI Generation Success";
                 document.getElementById('status-dot').style.background = "#10b981";
             } else {
-                alert(data.error || data.detail || data.message || "Generation failed");
+                if (data.suggestion) {
+                    document.getElementById('suggestion-text').textContent = data.error || "Generation failed";
+                    document.getElementById('fallback-suggestion').classList.remove('hidden');
+                } else {
+                    alert(data.error || data.detail || data.message || "Generation failed");
+                }
             }
         } catch (err) {
             console.error(err);

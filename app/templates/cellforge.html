@@ -8,6 +8,11 @@
         background: transparent !important;
         padding: 0 !important;
     }
+    .model-card.selected {
+        border-color: #0ea5e9 !important; /* primary color */
+        background-color: #f0f9ff !important;
+        box-shadow: 0 10px 15px -3px rgba(14, 165, 233, 0.1);
+    }
     .studio-window {
         margin: 2rem auto !important;
     }
@@ -28,6 +33,93 @@
             Generate real 3D biological cell models from uploaded images or web links — powered by AI.
         </p>
 
+        <!-- Model Selection -->
+        <div class="mb-12">
+            <h3 class="text-sm font-bold text-slate-500 uppercase tracking-wider mb-4 text-center">Select 3D Generation Model</h3>
+            <div id="model-selector" class="grid grid-cols-1 md:grid-cols-5 gap-4 max-w-6xl mx-auto">
+                <!-- Stable Fast 3D -->
+                <div class="model-card group relative p-4 rounded-2xl border-2 border-slate-200 bg-white/50 cursor-pointer hover:border-primary/30 transition-all selected" data-model="stable_fast_3d">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="flex h-2 w-2 rounded-full bg-green-500" title="Stability AI API - High Availability"></span>
+                        <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-yellow-100 text-yellow-700 uppercase">⚡ Fastest</span>
+                    </div>
+                    <h4 class="font-bold text-slate-800 text-sm mb-1">Stable Fast 3D</h4>
+                    <p class="text-[10px] text-slate-500 mb-2">Stability AI</p>
+                    <p class="text-[11px] text-slate-600 leading-tight">Sub-second generation. Best for quick previews.</p>
+                    <div class="absolute top-2 right-2 check-mark">
+                        <i data-feather="check-circle" class="w-4 h-4 text-primary"></i>
+                    </div>
+                </div>
+
+                <!-- TRELLIS.2 -->
+                <div class="model-card group relative p-4 rounded-2xl border-2 border-slate-200 bg-white/50 cursor-pointer hover:border-primary/30 transition-all" data-model="trellis2">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="flex h-2 w-2 rounded-full bg-yellow-500" title="Community-hosted Space — availability may vary"></span>
+                        <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-100 text-blue-700 uppercase">🏆 Best Quality</span>
+                    </div>
+                    <h4 class="font-bold text-slate-800 text-sm mb-1">TRELLIS.2-4B</h4>
+                    <p class="text-[10px] text-slate-500 mb-2">Microsoft</p>
+                    <p class="text-[11px] text-slate-600 leading-tight">Highest fidelity PBR materials and complex topology.</p>
+                    <div class="absolute top-2 right-2 check-mark hidden">
+                        <i data-feather="check-circle" class="w-4 h-4 text-primary"></i>
+                    </div>
+                </div>
+
+                <!-- Hunyuan3D -->
+                <div class="model-card group relative p-4 rounded-2xl border-2 border-slate-200 bg-white/50 cursor-pointer hover:border-primary/30 transition-all" data-model="hunyuan3d">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="flex h-2 w-2 rounded-full bg-yellow-500" title="Community-hosted Space — availability may vary"></span>
+                        <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-purple-100 text-purple-700 uppercase">🎨 Best Textures</span>
+                    </div>
+                    <h4 class="font-bold text-slate-800 text-sm mb-1">Hunyuan3D 2.1</h4>
+                    <p class="text-[10px] text-slate-500 mb-2">Tencent</p>
+                    <p class="text-[11px] text-slate-600 leading-tight">Richest texture detail and surface fidelity.</p>
+                    <div class="absolute top-2 right-2 check-mark hidden">
+                        <i data-feather="check-circle" class="w-4 h-4 text-primary"></i>
+                    </div>
+                </div>
+
+                <!-- HI3DGEN -->
+                <div class="model-card group relative p-4 rounded-2xl border-2 border-slate-200 bg-white/50 cursor-pointer hover:border-primary/30 transition-all" data-model="hi3dgen">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="flex h-2 w-2 rounded-full bg-yellow-500" title="Community-hosted Space — availability may vary"></span>
+                        <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-cyan-100 text-cyan-700 uppercase">📐 Best Geometry</span>
+                    </div>
+                    <h4 class="font-bold text-slate-800 text-sm mb-1">HI3DGEN</h4>
+                    <p class="text-[10px] text-slate-500 mb-2">Community</p>
+                    <p class="text-[11px] text-slate-600 leading-tight">Most geometrically precise output for technical use.</p>
+                    <div class="absolute top-2 right-2 check-mark hidden">
+                        <i data-feather="check-circle" class="w-4 h-4 text-primary"></i>
+                    </div>
+                </div>
+
+                <!-- TRIPOSR -->
+                <div class="model-card group relative p-4 rounded-2xl border-2 border-slate-200 bg-white/50 cursor-pointer hover:border-primary/30 transition-all" data-model="triposr">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="flex h-2 w-2 rounded-full bg-yellow-500" title="Community-hosted Space — availability may vary"></span>
+                        <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-700 uppercase">🌍 Most Popular</span>
+                    </div>
+                    <h4 class="font-bold text-slate-800 text-sm mb-1">TRIPOSR</h4>
+                    <p class="text-[10px] text-slate-500 mb-2">Tripo + Stability AI</p>
+                    <p class="text-[11px] text-slate-600 leading-tight">Huge community, reliable, MIT licensed.</p>
+                    <div class="absolute top-2 right-2 check-mark hidden">
+                        <i data-feather="check-circle" class="w-4 h-4 text-primary"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Error Suggestion Toast -->
+        <div id="fallback-suggestion" class="hidden max-w-2xl mx-auto mb-8 p-4 bg-amber-50 border border-amber-200 rounded-2xl flex flex-col md:flex-row items-center justify-between gap-4">
+            <div class="flex items-center gap-3">
+                <i data-feather="alert-triangle" class="text-amber-500"></i>
+                <p id="suggestion-text" class="text-amber-800 text-sm"></p>
+            </div>
+            <button id="btn-try-different" class="px-4 py-2 bg-amber-500 text-white rounded-xl text-sm font-bold hover:bg-amber-600 transition-all">
+                Try Different Model
+            </button>
+        </div>
+
         <div class="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto mb-12">
             <!-- Mode 1: Upload -->
             <div class="glass-card p-8 rounded-3xl border border-slate-200 bg-white/50 text-left">
@@ -39,9 +131,9 @@
                 </div>
                 <p class="text-slate-600 text-sm mb-6">Drag and drop or select a cell image (.jpg, .png, .webp) to generate a 3D model.</p>
                 <input type="file" id="cell-upload" class="hidden" accept="image/*">
-                <button onclick="document.getElementById('cell-upload').click()" class="w-full py-4 bg-primary text-white rounded-2xl font-bold hover:bg-primary/90 transition-all flex items-center justify-center gap-2">
+                <button id="btn-generate-upload" onclick="document.getElementById('cell-upload').click()" class="w-full py-4 bg-primary text-white rounded-2xl font-bold hover:bg-primary/90 transition-all flex items-center justify-center gap-2">
                     <i data-feather="image" class="w-4 h-4"></i>
-                    Generate 3D Model from Image
+                    <span class="btn-text">Generate with Stable Fast 3D ⚡</span>
                 </button>
             </div>
 
@@ -59,7 +151,7 @@
                 </div>
                 <button id="generate-from-url" class="w-full py-4 bg-indigo-600 text-white rounded-2xl font-bold hover:bg-indigo-700 transition-all flex items-center justify-center gap-2">
                     <i data-feather="zap" class="w-4 h-4"></i>
-                    Generate 3D Model from Link
+                    <span class="btn-text">Generate with Stable Fast 3D ⚡</span>
                 </button>
             </div>
         </div>
