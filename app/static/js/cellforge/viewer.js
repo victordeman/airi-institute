@@ -64,13 +64,16 @@ class CellViewer {
     }
 
     initResizeHandler() {
-        window.addEventListener('resize', () => {
+        const resizeObserver = new ResizeObserver(() => {
             const width = this.container.clientWidth;
             const height = this.container.clientHeight;
+            if (width === 0 || height === 0) return;
+            
             this.camera.aspect = width / height;
             this.camera.updateProjectionMatrix();
             this.renderer.setSize(width, height);
         });
+        resizeObserver.observe(this.container);
     }
 
     animate() {
