@@ -268,7 +268,113 @@ async def get_stats(db: libsql_client.Client = Depends(get_db)):
         "ai_label": "AI",
     }
 
-# --- 3D Cell Forge AI Pipeline (TRELLIS.2) ---
+# --- 3D Cell Forge AI Pipeline (Hybrid approach) ---
+
+async def prepare_image(file=None, url=None) -> str:
+    """Save image to temp file, return path."""
+    if file:
+        suffix = "." + (file.filename.split(".")[-1] if "." in file.filename else "jpg")
+        with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp:
+            content = await file.read()
+            tmp.write(content)
+            return tmp.name
+    elif url:
+        suffix = ".jpg"
+        for ext in [".png", ".webp", ".jpg", ".jpeg"]:
+            if url.lower().endswith(ext):
+                suffix = ext
+                break
+        with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp:
+            urllib.request.urlretrieve(url, tmp.name)
+            return tmp.name
+    return None
+
+async def try_stable_fast_3d(image_path: str, hf_token: str) -> bytes | None:
+    """
+    Call stabilityai/stable-fast-3d via HF Inference API. Returns GLB bytes or None.
+    """
+    try:
+        url = "https://api-inference.huggingface.co/models/stabilityai/stable-fast-3d"
+        headers = {"Authorization": f"Bearer {hf_token}"}
+        with open(image_path, "rb") as f:
+            image_bytes = f.read()
+
+        async with httpx.AsyncClient(timeout=120.0) as client:
+            response = await client.post(
+                url,
+                headers=headers,
+                content=image_bytes,
+                params={
+                    "remesh": "none",
+                    "foreground_ratio": 0.85,
+                    "texture_resolution": 1024
+                }
+            )
+
+        if response.status_code == 200:
+            # Returns GLB binary directly
+            if b"glb" in response.content[:4] or len(response.content) > 1000:
+                logger.info("Stable Fast 3D succeeded")
+                return response.content
+
+        logger.warning(f"SF3D failed: {response.status_code} {response.text[:200]}")
+        return None
+    except Exception as e:
+        logger.warning(f"SF3D exception: {e}")
+        return None
+
+def try_trellis_spaces(image_path: str, hf_token: str) -> bytes | None:
+    """
+    Try multiple TRELLIS Gradio Spaces in order. Returns GLB bytes or None.
+    """
+    SPACES = [
+        "trellis-community/TRELLIS",
+        "theseanlavery/TRELLIS-3D",
+        "crevelop/Trellis",
+    ]
+    os.environ["HUGGING_FACE_HUB_TOKEN"] = hf_token
+
+    for space in SPACES:
+        try:
+            logger.info(f"Trying Space: {space}")
+            client = Client(space)
+            image_input = handle_file(image_path)
+
+            result = client.predict(
+                image=image_input,
+                multiimages=[],
+                seed=0,
+                ss_guidance_strength=7.5,
+                ss_sampling_steps=12,
+                slat_guidance_strength=3,
+                slat_sampling_steps=12,
+                multiimage_algo="stochastic",
+                api_name="/image_to_3d"
+            )
+
+            # Extract GLB path from result
+            glb_path = None
+            if isinstance(result, (list, tuple)):
+                for item in result:
+                    if isinstance(item, str) and item.lower().endswith(".glb"):
+                        glb_path = item
+                        break
+                    if isinstance(item, dict):
+                        for v in item.values():
+                            if isinstance(v, str) and v.lower().endswith(".glb"):
+                                glb_path = v
+                                break
+
+            if glb_path:
+                with open(glb_path, "rb") as f:
+                    glb_bytes = f.read()
+                logger.info(f"Space {space} succeeded")
+                return glb_bytes
+            logger.warning(f"{space}: no GLB in result: {str(result)[:300]}")
+        except Exception as e:
+            logger.warning(f"{space} failed: {str(e)[:200]}")
+            continue
+    return None
 
 @router.post("/cellforge/generate")
 @limiter.limit("2/minute")
@@ -281,125 +387,55 @@ async def generate_3d_cell(
     if not hf_token:
         return JSONResponse(
             status_code=500,
-            content={"error": "HF_API_TOKEN not configured in Vercel Environment Variables."}
+            content={
+                "error": "HF_API_TOKEN not configured. Add it to Vercel Dashboard → Settings → Environment Variables."
+            }
         )
 
     if not file and not url:
         return JSONResponse(
             status_code=400,
-            content={"error": "Provide a file upload or image URL."}
-        )
-
-    # Connect to TRELLIS Space with fallback
-    SPACE_URLS = [
-        "https://microsoft--trellis-2.hf.space",
-        "JeffreyXiang/TRELLIS",
-    ]
-    client = None
-    last_error = None
-    for space_url in SPACE_URLS:
-        try:
-            os.environ["HUGGING_FACE_HUB_TOKEN"] = hf_token
-            client = Client(space_url)
-            logger.info(f"Connected to TRELLIS Space: {space_url}")
-            break
-        except Exception as e:
-            last_error = e
-            logger.warning(f"Could not connect to {space_url}: {e}")
-
-    if client is None:
-        return JSONResponse(
-            status_code=502,
-            content={
-                "error": "Could not connect to any TRELLIS Space. "
-                f"Last error: {str(last_error)}"
-            }
+            content={"error": "Provide a file upload or an image URL."}
         )
 
     try:
-        # Log available API endpoints
-        try:
-            api_info = client.view_api(return_format="dict", print_info=False)
-            endpoints = list(api_info.get("named_endpoints", {}).keys())
-            logger.info(f"Available endpoints: {endpoints}")
-        except Exception as e:
-            logger.warning(f"view_api failed: {e}")
-
-        # Handle file upload vs URL input
-        if file:
-            suffix = "." + (file.filename.split(".")[-1] if "." in file.filename else "jpg")
-            with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp:
-                content = await file.read()
-                tmp.write(content)
-                tmp_path = tmp.name
-            image_input = handle_file(tmp_path)
-        else:
-            suffix = ".jpg"
-            for ext in [".png", ".webp", ".jpg", ".jpeg"]:
-                if url.lower().endswith(ext):
-                    suffix = ext
-                    break
-            with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp:
-                urllib.request.urlretrieve(url, tmp.name)
-                tmp_path = tmp.name
-            image_input = handle_file(tmp_path)
-
-        # Generate 3D model
-        try:
-            result = client.predict(
-                image=image_input,
-                multiimages=[],
-                seed=0,
-                ss_guidance_strength=7.5,
-                ss_sampling_steps=12,
-                slat_guidance_strength=3,
-                slat_sampling_steps=12,
-                multiimage_algo="stochastic",
-                api_name="/image_to_3d"
-            )
-        except TimeoutError:
+        # Prepare image
+        image_path = await prepare_image(file=file, url=url)
+        if not image_path:
             return JSONResponse(
-                status_code=504,
-                content={
-                    "error": "Generation timed out. "
-                    "Please try again in 30 seconds."
-                }
-            )
-        except Exception as e:
-            return JSONResponse(
-                status_code=502,
-                content={"error": f"TRELLIS generation failed: {str(e)}"}
+                status_code=400,
+                content={"error": "Could not process image."}
             )
 
-        # Extract GLB path from result
-        glb_path = None
-        if isinstance(result, (list, tuple)):
-            for item in result:
-                if isinstance(item, str) and (
-                    item.lower().endswith(".glb")
-                ):
-                    glb_path = item
-                    break
-                if isinstance(item, dict):
-                    for v in item.values():
-                        if isinstance(v, str) and (
-                            v.lower().endswith(".glb")
-                        ):
-                            glb_path = v
-                            break
+        glb_bytes = None
+        provider_used = None
 
-        if not glb_path:
+        # APPROACH A: Stable Fast 3D (fastest, most reliable)
+        glb_bytes = await try_stable_fast_3d(image_path, hf_token)
+        if glb_bytes:
+            provider_used = "Stable Fast 3D"
+
+        # APPROACH B: TRELLIS Gradio Spaces (fallback)
+        if not glb_bytes:
+            glb_bytes = await asyncio.to_thread(try_trellis_spaces, image_path, hf_token)
+            if glb_bytes:
+                provider_used = "TRELLIS"
+
+        # Clean up temp file
+        try:
+            os.unlink(image_path)
+        except Exception:
+            pass
+
+        if not glb_bytes:
             return JSONResponse(
                 status_code=502,
                 content={
-                    "error": "No GLB returned. Raw result: "
-                    + str(result)[:500]
+                    "error": "All 3D generation providers are currently unavailable. Please try again in a few minutes."
                 }
             )
 
         # Return GLB as base64
-        with open(glb_path, "rb") as f:
-            glb_bytes = f.read()
         glb_b64 = base64.b64encode(glb_bytes).decode()
 
         return JSONResponse(
@@ -407,14 +443,15 @@ async def generate_3d_cell(
             content={
                 "model_data": glb_b64,
                 "format": "glb",
-                "provider": "TRELLIS (Microsoft)"
+                "provider": provider_used
             }
         )
 
     except Exception as e:
+        logger.error(f"generate_3d error: {str(e)}")
         return JSONResponse(
-            status_code=502,
-            content={"error": f"TRELLIS generation failed: {str(e)}"}
+            status_code=500,
+            content={"error": f"Server error: {str(e)}"}
         )
 
 # --- AI Chat ---
