@@ -1,31 +1,21 @@
-import { CellViewer } from './viewer.js';
 import { ORGANELLES } from './utils/cellData.js';
-import { renderOrganelleList, updateInspector } from './components/UIComponents.js';
-import { exportObjectAsGlb } from './utils/downloads.js';
+import { updateInspector } from './viewer.js';
 
-class CellForgeApp {
+export class CellForge {
     constructor() {
-        this.viewer = new CellViewer('three-canvas-container');
-        this.selectedOrganelle = 'membrane';
         this.selectedModel = 'stable_fast_3d';
+        this.selectedOrganelle = null;
         this.isLoading = false;
+        this.viewer = null;
 
         this.init();
+        this.bindEvents();
     }
 
     init() {
-        this.viewer.loadDefaultCell();
-        this.updateUI();
-        this.bindEvents();
+        // Initialize UI components
         if (window.feather) feather.replace();
-    }
-
-    updateUI() {
-        renderOrganelleList(ORGANELLES, this.selectedOrganelle, (id) => this.handleOrganelleSelect(id));
-        const data = ORGANELLES[this.selectedOrganelle];
-        if (data) {
-            document.getElementById('lab-notes').innerHTML = `<p class="text-xs text-slate-600 leading-relaxed">${data.description}</p>`;
-        }
+        this.updateOrganelleList();
     }
 
     handleOrganelleSelect(id) {
@@ -39,27 +29,32 @@ class CellForgeApp {
         this.selectedModel = modelId;
 
         // Update UI
-        document.querySelectorAll('.model-card').forEach(card => {
-            const isSelected = card.dataset.model === modelId;
-            card.classList.toggle('selected', isSelected);
-            card.querySelector('.check-mark').classList.toggle('hidden', !isSelected);
+        document.querySelectorAll('.cf-model-option').forEach(option => {
+            const isSelected = option.dataset.model === modelId;
+            option.classList.toggle('selected', isSelected);
         });
 
-        // Update button text
-        const modelNames = {
-            'stable_fast_3d': 'Stable Fast 3D ⚡',
-            'trellis2': 'TRELLIS.2 🏆',
-            'hunyuan3d': 'Hunyuan3D 🎨',
-            'hi3dgen': 'HI3DGEN 📐',
-            'triposr': 'TRIPOSR 🌍'
+        // Update generate button text
+        this.updateGenerateButtonText(modelId);
+    }
+
+    updateGenerateButtonText(modelId) {
+        const labels = {
+            stable_fast_3d: "Generate with Stable Fast 3D ⚡",
+            trellis2:       "Generate with TRELLIS.2 🏆",
+            hunyuan3d:      "Generate with Hunyuan3D 🎨",
+            hi3dgen:        "Generate with Hi3DGen 📐",
+            triposr:        "Generate with TripoSR 🌍"
         };
-        const name = modelNames[modelId] || 'AI Model';
-        document.querySelectorAll('.btn-text').forEach(span => {
-            span.textContent = `Generate with ${name}`;
+        const btns = document.querySelectorAll('.cf-btn-primary');
+        btns.forEach(btn => {
+            const textSpan = btn.querySelector('.btn-text');
+            if (textSpan) {
+                textSpan.textContent = labels[modelId] || "Generate 3D Model";
+            } else if (btn.textContent.includes("Generate")) {
+                btn.textContent = (labels[modelId] || "Generate 3D Model");
+            }
         });
-
-        // Clear any previous error suggestion
-        document.getElementById('fallback-suggestion').classList.add('hidden');
     }
 
     bindEvents() {
@@ -68,18 +63,14 @@ class CellForgeApp {
         };
 
         // Model selection
-        document.querySelectorAll('.model-card').forEach(card => {
-            card.onclick = () => this.handleModelSelect(card.dataset.model);
+        document.querySelectorAll('.cf-model-option').forEach(option => {
+            option.onclick = () => this.handleModelSelect(option.dataset.model);
         });
 
         // Try Different Model button
         document.getElementById('btn-try-different').onclick = () => {
             document.getElementById('model-selector').scrollIntoView({ behavior: 'smooth', block: 'center' });
             document.getElementById('fallback-suggestion').classList.add('hidden');
-            // Shake effect
-            const selector = document.getElementById('model-selector');
-            selector.classList.add('animate-pulse');
-            setTimeout(() => selector.classList.remove('animate-pulse'), 2000);
         };
 
         document.getElementById('cell-upload').onchange = (e) => this.handleUpload(e);
@@ -92,21 +83,7 @@ class CellForgeApp {
     setLoading(loading) {
         this.isLoading = loading;
         const loader = document.getElementById('studio-loading');
-        const msgElem = document.getElementById('loading-message');
-
-        if (loader) {
-            loader.classList.toggle('hidden', !loading);
-            if (loading) {
-                const messages = {
-                    'stable_fast_3d': 'Generating — usually 5–15s...',
-                    'trellis2': 'Generating — usually 30–90s...',
-                    'hunyuan3d': 'Generating — usually 30–60s...',
-                    'hi3dgen': 'Generating — usually 20–60s...',
-                    'triposr': 'Generating — usually 5–20s...'
-                };
-                msgElem.textContent = messages[this.selectedModel] || "Generating your 3D model...";
-            }
-        }
+        if (loader) loader.classList.toggle('hidden', !loading);
     }
 
     async handleUpload(event) {
@@ -114,87 +91,97 @@ class CellForgeApp {
         if (!file) return;
 
         const formData = new FormData();
-        formData.append('file', file);
+        formData.append('image', file);
         formData.append('model_id', this.selectedModel);
 
-        await this.generate3D(formData);
+        await this.generateModel(formData);
     }
 
     async handleUrlGenerate() {
-        const url = document.getElementById('cell-url').value.trim();
+        const url = document.getElementById('cell-url').value;
         if (!url) return;
 
         const formData = new FormData();
-        formData.append('url', url);
+        formData.append('image_url', url);
         formData.append('model_id', this.selectedModel);
 
-        await this.generate3D(formData);
+        await this.generateModel(formData);
     }
 
-    async generate3D(formData) {
+    async generateModel(formData) {
         this.setLoading(true);
         try {
-            const resp = await fetch('/api/cellforge/generate', {
+            const response = await fetch('/api/cellforge/generate', {
                 method: 'POST',
                 body: formData
             });
-            const data = await resp.json();
-            
-            if (data.model_data) {
-                // Hide error suggestion on success
-                document.getElementById('fallback-suggestion').classList.add('hidden');
 
-                // Decode base64 GLB and load into Three.js viewer
-                const binary = atob(data.model_data);
-                const bytes = new Uint8Array(binary.length);
-                for (let i = 0; i < binary.length; i++) {
-                    bytes[i] = binary.charCodeAt(i);
-                }
-                const blob = new Blob([bytes], { type: 'model/gltf-binary' });
-                const blobUrl = URL.createObjectURL(blob);
-
-                await this.viewer.loadModel(blobUrl, true);
-                URL.revokeObjectURL(blobUrl);
-
-                document.getElementById('active-cell-name').textContent = "Custom Specimen";
-                document.getElementById('active-cell-type').textContent = data.provider ? `Generated by ${data.provider}` : "AI-Generated 3D Reconstruct";
-                document.getElementById('status-text').textContent = "AI Generation Success";
-                document.getElementById('status-dot').style.background = "#10b981";
+            const data = await response.json();
+            if (data.status === 'success') {
+                this.loadModel(data.model_data);
             } else {
-                if (data.suggestion) {
-                    document.getElementById('suggestion-text').textContent = data.error || "Generation failed";
-                    document.getElementById('fallback-suggestion').classList.remove('hidden');
-                } else {
-                    alert(data.error || data.detail || data.message || "Generation failed");
-                }
+                this.showError(data.message, data.fallback_suggestion);
             }
-        } catch (err) {
-            console.error(err);
-            alert("Error connecting to AI pipeline");
+        } catch (error) {
+            this.showError("Generation failed. Please try again.");
         } finally {
             this.setLoading(false);
         }
     }
 
-    takeScreenshot() {
-        const link = document.createElement('a');
-        link.download = 'cellforge-screenshot.png';
-        link.href = this.viewer.renderer.domElement.toDataURL('image/png');
-        link.click();
+    loadModel(base64Data) {
+        if (window.loadCellModel) {
+            window.loadCellModel(base64Data);
+        }
     }
 
-    async exportGLB() {
-        if (!this.viewer.currentModel) return;
-        try {
-            await exportObjectAsGlb(this.viewer.currentModel, 'cell-model');
-        } catch (err) {
-            console.error(err);
-            alert("GLB Export failed");
+    showError(message, fallback) {
+        if (fallback) {
+            const suggestion = document.getElementById('fallback-suggestion');
+            const text = document.getElementById('suggestion-text');
+            text.textContent = `Tip: ${fallback}`;
+            suggestion.classList.remove('hidden');
         }
+        alert(message);
+    }
+
+    updateOrganelleList() {
+        const list = document.getElementById('organelle-list');
+        if (!list) return;
+
+        list.innerHTML = '';
+        Object.keys(ORGANELLES).forEach(id => {
+            const organelle = ORGANELLES[id];
+            const item = document.createElement('div');
+            item.className = 'organelle-item';
+            item.innerHTML = `
+                <span class="organelle-dot" style="background: ${organelle.color}"></span>
+                <span class="organelle-name">${organelle.name}</span>
+            `;
+            item.onclick = () => this.handleOrganelleSelect(id);
+            list.appendChild(item);
+        });
+    }
+
+    updateUI() {
+        document.querySelectorAll('.organelle-item').forEach(item => {
+            const name = item.querySelector('.organelle-name').textContent;
+            const organelle = Object.values(ORGANELLES).find(o => o.name === name);
+            const isSelected = organelle && organelle.id === this.selectedOrganelle;
+            item.classList.toggle('active', isSelected);
+        });
+    }
+
+    takeScreenshot() {
+        if (window.takeStudioScreenshot) window.takeStudioScreenshot();
+    }
+
+    exportGLB() {
+        if (window.exportStudioGLB) window.exportStudioGLB();
     }
 }
 
-// Start app
-window.addEventListener('DOMContentLoaded', () => {
-    window.cellForgeApp = new CellForgeApp();
+// Initialize
+document.addEventListener('DOMContentLoaded', () => {
+    window.cellForge = new CellForge();
 });
