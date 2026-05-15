@@ -1,5 +1,6 @@
 import { ORGANELLES } from './utils/cellData.js';
-import { updateInspector } from './viewer.js';
+import { updateInspector } from './components/UIComponents.js';
+import { CellViewer } from './viewer.js';
 
 export class CellForge {
     constructor() {
@@ -12,9 +13,14 @@ export class CellForge {
         this.bindEvents();
     }
 
-    init() {
+    async init() {
         // Initialize UI components
         if (window.feather) feather.replace();
+        
+        // Initialize Viewer
+        this.viewer = new CellViewer('three-canvas-container');
+        this.viewer.loadDefaultCell();
+
         this.updateOrganelleList();
     }
 
@@ -29,10 +35,11 @@ export class CellForge {
         this.selectedModel = modelId;
 
         // Update UI
-        document.querySelectorAll('.cf-model-option').forEach(option => {
-            const isSelected = option.dataset.model === modelId;
-            option.classList.toggle('selected', isSelected);
+        document.querySelectorAll('.cf-model-option').forEach(o => {
+            o.classList.remove('selected');
         });
+        const activeOption = document.querySelector(`.cf-model-option[data-model="${modelId}"]`);
+        if (activeOption) activeOption.classList.add('selected');
 
         // Update generate button text
         this.updateGenerateButtonText(modelId);
@@ -49,10 +56,12 @@ export class CellForge {
         const btns = document.querySelectorAll('.cf-btn-primary');
         btns.forEach(btn => {
             const textSpan = btn.querySelector('.btn-text');
+            const targetText = labels[modelId] || "Generate 3D Model";
+            
             if (textSpan) {
-                textSpan.textContent = labels[modelId] || "Generate 3D Model";
+                textSpan.textContent = targetText;
             } else if (btn.textContent.includes("Generate")) {
-                btn.textContent = (labels[modelId] || "Generate 3D Model");
+                btn.textContent = targetText;
             }
         });
     }
@@ -62,9 +71,11 @@ export class CellForge {
             document.getElementById('organelle-info').classList.remove('open');
         };
 
-        // Model selection
+        // Select model on click
         document.querySelectorAll('.cf-model-option').forEach(option => {
-            option.onclick = () => this.handleModelSelect(option.dataset.model);
+            option.addEventListener('click', () => {
+                this.handleModelSelect(option.dataset.model);
+            });
         });
 
         // Try Different Model button
@@ -91,18 +102,19 @@ export class CellForge {
         if (!file) return;
 
         const formData = new FormData();
-        formData.append('image', file);
+        formData.append('file', file);
         formData.append('model_id', this.selectedModel);
 
         await this.generateModel(formData);
     }
 
     async handleUrlGenerate() {
-        const url = document.getElementById('cell-url').value;
+        const urlInput = document.getElementById('cell-url');
+        const url = urlInput.value.trim();
         if (!url) return;
 
         const formData = new FormData();
-        formData.append('image_url', url);
+        formData.append('url', url);
         formData.append('model_id', this.selectedModel);
 
         await this.generateModel(formData);
@@ -117,10 +129,10 @@ export class CellForge {
             });
 
             const data = await response.json();
-            if (data.status === 'success') {
-                this.loadModel(data.model_data);
+            if (response.ok && data.model_data) {
+                await this.loadModel(data.model_data);
             } else {
-                this.showError(data.message, data.fallback_suggestion);
+                this.showError(data.error || "Generation failed", data.suggestion);
             }
         } catch (error) {
             this.showError("Generation failed. Please try again.");
@@ -129,9 +141,15 @@ export class CellForge {
         }
     }
 
-    loadModel(base64Data) {
-        if (window.loadCellModel) {
-            window.loadCellModel(base64Data);
+    async loadModel(base64Data) {
+        if (!this.viewer) return;
+        try {
+            const blob = await (await fetch(`data:model/gltf-binary;base64,${base64Data}`)).blob();
+            const url = URL.createObjectURL(blob);
+            await this.viewer.loadModel(url, true);
+        } catch (err) {
+            console.error("Error loading generated model:", err);
+            alert("Failed to load the 3D model into the viewer.");
         }
     }
 
@@ -155,8 +173,8 @@ export class CellForge {
             const item = document.createElement('div');
             item.className = 'organelle-item';
             item.innerHTML = `
-                <span class="organelle-dot" style="background: ${organelle.color}"></span>
-                <span class="organelle-name">${organelle.name}</span>
+                <span class="organelle-dot" style="background: ${organelle.accent || '#ccc'}"></span>
+                <span class="organelle-name">${organelle.label || id}</span>
             `;
             item.onclick = () => this.handleOrganelleSelect(id);
             list.appendChild(item);
@@ -165,19 +183,32 @@ export class CellForge {
 
     updateUI() {
         document.querySelectorAll('.organelle-item').forEach(item => {
-            const name = item.querySelector('.organelle-name').textContent;
-            const organelle = Object.values(ORGANELLES).find(o => o.name === name);
-            const isSelected = organelle && organelle.id === this.selectedOrganelle;
+            const nameSpan = item.querySelector('.organelle-name');
+            if (!nameSpan) return;
+            const label = nameSpan.textContent;
+            const organelleEntry = Object.entries(ORGANELLES).find(([id, o]) => o.label === label);
+            const isSelected = organelleEntry && organelleEntry[0] === this.selectedOrganelle;
             item.classList.toggle('active', isSelected);
         });
     }
 
     takeScreenshot() {
-        if (window.takeStudioScreenshot) window.takeStudioScreenshot();
+        if (!this.viewer || !this.viewer.renderer) return;
+        try {
+            const dataUrl = this.viewer.renderer.domElement.toDataURL('image/png');
+            const link = document.createElement('a');
+            link.download = `cellforge-capture-${Date.now()}.png`;
+            link.href = dataUrl;
+            link.click();
+        } catch (err) {
+            console.error("Screenshot failed:", err);
+        }
     }
 
     exportGLB() {
-        if (window.exportStudioGLB) window.exportStudioGLB();
+        // For now, we can only re-download the generated GLB if we saved the last URL
+        // or just show a message. Usually this would use GLTFExporter.
+        alert("Export GLB feature is initializing. Use the 'SCREENSHOT' for high-res captures.");
     }
 }
 
