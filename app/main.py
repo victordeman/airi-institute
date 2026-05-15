@@ -19,9 +19,6 @@ from app.routers.auth import router as auth_router
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-import gradio_client
-logger.info(f"gradio_client version: {gradio_client.__version__}")
-
 # Define the base directory
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
