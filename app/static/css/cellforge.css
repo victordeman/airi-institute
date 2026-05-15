@@ -3278,3 +3278,180 @@ input:focus-visible + i {
     width: min(440px, calc(100% - 38px));
   }
 }
+
+/* NEW TWO-COLUMN LAYOUT */
+.cellforge-header {
+  text-align: center;
+  padding: 40px 24px 24px;
+}
+.cellforge-header h1 {
+  font-size: 2rem;
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: #1a202c;
+}
+.cellforge-header p {
+  color: #64748b;
+  font-size: 1rem;
+  max-width: 560px;
+  margin: 0 auto;
+}
+
+.cellforge-layout {
+  display: grid;
+  grid-template-columns: 40% 60%;
+  gap: 24px;
+  align-items: start;
+  min-height: 80vh;
+  padding: 0 24px 40px;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.cellforge-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  position: sticky;
+  top: 80px;  /* accounts for navbar height */
+}
+
+.cellforge-viewer-col {
+  position: sticky;
+  top: 80px;
+  height: calc(100vh - 120px);
+  min-height: 500px;
+}
+
+/* Make the canvas fill the right column */
+.cellforge-viewer-col #cellforge-app,
+.cellforge-viewer-col .studio-window,
+.cellforge-viewer-col canvas,
+.cellforge-viewer-col #three-canvas-container,
+.cellforge-viewer-col .cell-viewer,
+.cellforge-viewer-col > div:first-child {
+  width: 100% !important;
+  height: 100% !important;
+  min-height: 500px;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+/* Input Cards */
+.cellforge-controls .input-card {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 24px;
+  border-radius: 16px;
+  border: 1px solid #e2e8f0;
+  background: rgba(255, 255, 255, 0.5);
+  backdrop-filter: blur(8px);
+}
+
+.cellforge-controls .input-card h3 {
+  font-weight: 700;
+  font-size: 1.1rem;
+  margin-bottom: 8px;
+  color: #1e293b;
+}
+
+.cellforge-controls .input-card p {
+  font-size: 0.875rem;
+  color: #64748b;
+  margin-bottom: 16px;
+}
+
+.cellforge-controls .input-card button {
+  width: 100%;
+  margin-top: 12px;
+  padding: 12px;
+  background: #4f46e5;
+  color: white;
+  font-weight: 600;
+  border-radius: 12px;
+  transition: all 0.2s;
+}
+
+.cellforge-controls .input-card button:hover {
+  background: #4338ca;
+}
+
+/* Model Selector */
+.model-selector-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.model-option {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  border: 1.5px solid #e2e8f0;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+  background: white;
+}
+
+.model-option:hover {
+  border-color: #6366f1;
+  background: #f8fafc;
+}
+
+.model-option.selected {
+  border-color: #6366f1;
+  background: #eef2ff;
+}
+
+.model-option-radio {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 2px solid #cbd5e1;
+  flex-shrink: 0;
+}
+
+.model-option.selected .model-option-radio {
+  border-color: #6366f1;
+  background: #6366f1;
+}
+
+.model-option-name {
+  font-weight: 500;
+  font-size: 14px;
+  color: #1e293b;
+}
+
+.model-option-badge {
+  font-size: 11px;
+  color: #64748b;
+  margin-left: auto;
+}
+
+/* Mobile — stack vertically */
+@media (max-width: 768px) {
+  .cellforge-layout {
+    grid-template-columns: 1fr;
+    padding: 0 16px 40px;
+  }
+
+  .cellforge-controls {
+    position: static;
+  }
+
+  .cellforge-viewer-col {
+    position: static;
+    height: 420px;
+    min-height: 420px;
+  }
+
+  .cellforge-viewer-col #cellforge-app,
+  .cellforge-viewer-col .studio-window,
+  .cellforge-viewer-col canvas,
+  .cellforge-viewer-col #three-canvas-container,
+  .cellforge-viewer-col .cell-viewer {
+    min-height: 420px;
+  }
+}
