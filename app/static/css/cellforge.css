@@ -34,113 +34,76 @@ button, input, textarea, select {
   }
 }
 
-/* ── PAGE WRAPPER ── */
-.cf-page {
-  width: 100%;
-  max-width: 100vw;
-  overflow-x: hidden;
-  box-sizing: border-box;
-  padding: 0 !important;
-  max-width: 100% !important;
-}
-
 /* ── HEADER ── */
 .cf-header {
   text-align: center;
-  padding: 28px 24px 16px;
-  max-width: 680px;
+  padding: 32px 24px 20px;
+  max-width: 700px;
   margin: 0 auto;
 }
 .cf-header h1 {
-  font-size: clamp(1.4rem, 3vw, 2rem);
+  font-size: clamp(1.6rem, 4vw, 2.4rem);
   font-weight: 700;
-  margin: 0 0 8px;
-  color: var(--color-text-primary, #111);
+  margin-bottom: 10px;
+  color: #111;
 }
 .cf-header p {
-  font-size: 0.9rem;
-  color: var(--color-text-secondary, #666);
+  font-size: 1rem;
+  color: #555;
   line-height: 1.5;
-  margin: 0;
 }
 
 /* ── TWO-COLUMN BODY ── */
 .cf-body {
   display: grid;
-  grid-template-columns: 320px 1fr;
-  grid-template-rows: 1fr;
-  gap: 16px;
-  padding: 0 16px 32px;
-  width: 100%;
-  max-width: 100%;
-  box-sizing: border-box;
-  height: calc(100vh - 140px);
-  min-height: 600px;
-  overflow: hidden;
+  grid-template-columns: 380px 1fr;
+  gap: 20px;
+  padding: 0 20px 40px;
+  max-width: 1400px;
   margin: 0 auto;
+  min-height: calc(100vh - 200px);
+}
+
+/* ── COLUMN OVERFLOW FIX ── */
+.cf-left, .cf-right {
+  min-width: 0;
 }
 
 /* ── LEFT COLUMN ── */
 .cf-left {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 16px;
   overflow-y: auto;
-  overflow-x: hidden;
-  height: 100%;
+  max-height: calc(100vh - 160px);
   padding-right: 4px;
   scrollbar-width: thin;
-  min-width: 0;
-}
-
-/* ── RIGHT COLUMN (VIEWER) ── */
-.cf-right {
-  height: 100%;
-  min-height: 0;
-  min-width: 0;
-  width: 100%;
-  border-radius: 12px;
-  overflow: hidden;
-  border: 1px solid var(--color-border-tertiary, #e5e5e5);
-  position: relative;
-}
-
-/* Force canvas/viewer to fill right column */
-.cf-right > *,
-.cf-right > div,
-.cf-right iframe,
-.cf-right canvas {
-  width: 100% !important;
-  height: 100% !important;
-  max-width: 100% !important;
-  display: block;
 }
 
 /* ── SECTIONS / CARDS ── */
 .cf-section {
-  background: var(--color-background-secondary, #f9f9f9);
-  border: 1px solid var(--color-border-tertiary, #e5e5e5);
-  border-radius: 10px;
-  padding: 14px;
-  flex-shrink: 0;
+  background: #f9f9f9;
+  border: 1px solid #e5e5e5;
+  border-radius: 12px;
+  padding: 16px;
 }
 .cf-section-title {
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.1em;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--color-text-secondary, #999);
-  margin: 0 0 10px;
+  color: #888;
+  margin: 0 0 12px;
 }
 .cf-section h3 {
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 600;
-  margin: 0 0 4px;
+  margin: 0 0 6px;
 }
 .cf-section p {
-  font-size: 12px;
-  color: var(--color-text-secondary, #777);
-  margin: 0 0 10px;
+  font-size: 13px;
+  color: #666;
+  margin: 0 0 12px;
   line-height: 1.4;
 }
 
@@ -148,92 +111,87 @@ button, input, textarea, select {
 .cf-model-list {
   display: flex;
   flex-direction: column;
-  gap: 5px;
+  gap: 6px;
 }
 .cf-model-option {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 8px 10px;
-  border-radius: 7px;
-  border: 1.5px solid var(--color-border-tertiary, #e0e0e0);
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1.5px solid #e0e0e0;
   cursor: pointer;
   transition: all 0.15s ease;
   background: white;
-  min-width: 0;
 }
 .cf-model-option:hover {
-  border-color: var(--color-accent, #4f46e5);
-  background: var(--color-background-info, #eef2ff);
+  border-color: #4f46e5;
+  background: #eef2ff;
 }
 .cf-model-option.selected {
-  border-color: var(--color-accent, #4f46e5);
-  background: var(--color-background-info, #eef2ff);
+  border-color: #4f46e5;
+  background: #eef2ff;
 }
 .cf-radio {
-  width: 13px;
-  height: 13px;
+  width: 14px;
+  height: 14px;
   border-radius: 50%;
   border: 2px solid #ccc;
   flex-shrink: 0;
   transition: all 0.15s;
 }
 .cf-model-option.selected .cf-radio {
-  border-color: var(--color-accent, #4f46e5);
-  background: var(--color-accent, #4f46e5);
+  border-color: #4f46e5;
+  background: #4f46e5;
 }
 .cf-model-name {
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 500;
   flex: 1;
-  min-width: 0;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  color: var(--color-text-primary, #111);
+  color: #111;
 }
 .cf-model-tag {
-  font-size: 10px;
-  color: var(--color-text-secondary, #999);
-  white-space: nowrap;
+  font-size: 11px;
+  color: #888;
 }
 .cf-model-dot {
-  width: 7px;
-  height: 7px;
+  width: 8px;
+  height: 8px;
   border-radius: 50%;
   flex-shrink: 0;
 }
-.cf-model-dot.green { background: #22c55e; }
-.cf-model-dot.yellow { background: #eab308; }
-
+.cf-model-dot.green {
+  background: #22c55e;
+}
+.cf-model-dot.yellow {
+  background: #eab308;
+}
 .cf-availability-note {
-  font-size: 10px;
-  color: var(--color-text-secondary, #bbb);
-  margin: 8px 0 0;
+  font-size: 11px;
+  color: #aaa;
+  margin: 10px 0 0;
   text-align: center;
 }
 
 /* ── INPUT CARDS ── */
 .cf-input-card input[type="file"],
-.cf-input-card input[type="text"],
-.cf-input-card input[type="url"] {
+.cf-input-card input[type="text"] {
   width: 100%;
   box-sizing: border-box;
-  font-size: 12px;
-  padding: 7px 10px;
-  border-radius: 7px;
-  border: 1px solid var(--color-border-tertiary, #ddd);
-  margin-bottom: 8px;
+  font-size: 13px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+  margin-bottom: 10px;
   background: white;
-  min-width: 0;
 }
 .cf-btn-primary {
   width: 100%;
-  padding: 10px;
-  border-radius: 7px;
-  background: var(--color-accent, #4f46e5);
+  padding: 11px;
+  border-radius: 8px;
+  background: #4f46e5;
   color: white;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 600;
   border: none;
   cursor: pointer;
@@ -241,57 +199,63 @@ button, input, textarea, select {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
-  box-sizing: border-box;
+  gap: 8px;
 }
-.cf-btn-primary:hover { opacity: 0.88; }
-
-/* ── TABLET (900px-1100px) ── */
-@media (max-width: 1100px) {
-  .cf-body {
-    grid-template-columns: 280px 1fr;
-  }
+.cf-btn-primary:hover {
+  opacity: 0.88;
 }
 
-/* ── MOBILE (< 900px) ── */
+/* ── RIGHT COLUMN (VIEWER) ── */
+.cf-right {
+  position: sticky;
+  top: 70px;
+  height: calc(100vh - 110px);
+  min-height: 500px;
+  border-radius: 16px;
+  overflow: hidden;
+  border: 1px solid #e5e5e5;
+}
+.cf-right > *,
+.cf-right #cell-forge-container,
+.cf-right .cell-forge-wrapper,
+.cf-right > div {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+/* ── MOBILE ── */
 @media (max-width: 900px) {
   .cf-body {
     grid-template-columns: 1fr;
-    grid-template-rows: auto auto;
-    height: auto;
-    overflow: visible;
+    padding: 0 16px 32px;
   }
   .cf-left {
-    height: auto;
-    overflow-y: visible;
     max-height: none;
+    overflow-y: visible;
   }
   .cf-right {
+    position: static;
     height: 420px;
     min-height: 380px;
   }
 }
 
 @media (max-width: 480px) {
-  .cf-body {
-    padding: 0 12px 24px;
-    gap: 12px;
+  .cf-header {
+    padding: 20px 16px 16px;
+  }
+  .cf-header h1 {
+    font-size: 1.5rem;
   }
   .cf-right {
     height: 360px;
   }
-  .cf-header h1 {
-    font-size: 1.3rem;
-  }
 }
 
-/* Additional mobile fix to ensure no horizontal scroll */
-body {
-  overflow-x: hidden;
-}
-
-/* Rest of the original CellForge styles (Studio specific) */
+/* ── STUDIO INTERNALS ── */
 .studio-shell {
+  width: 100%;
+  height: 100%;
   color: #1d2b34;
   background: radial-gradient(circle at 12% 8%, rgba(89, 197, 217, 0.22), transparent 26%),
               radial-gradient(circle at 86% 14%, rgba(143, 104, 214, 0.16), transparent 24%),
@@ -300,6 +264,8 @@ body {
 }
 
 .studio-window {
+  width: 100%;
+  height: 100%;
   border-color: rgba(86, 130, 150, 0.3);
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.84), rgba(244, 249, 248, 0.78)),
               rgba(246, 250, 249, 0.9);
@@ -338,13 +304,17 @@ body {
 }
 
 .studio-brand strong {
-  font-size: 18px;
+  font-size: 14px;
   font-weight: 700;
+  display: block;
+  line-height: 1;
 }
 
 .studio-brand span {
-  font-size: 10px;
+  font-size: 9px;
   color: #6b6fd6;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
 .studio-nav {
@@ -398,6 +368,7 @@ body {
   flex: 1;
   position: relative;
   overflow: hidden;
+  min-width: 0;
 }
 
 .stage-panel {
@@ -411,11 +382,13 @@ body {
   top: 16px;
   left: 16px;
   z-index: 10;
+  pointer-events: none;
 }
 
 .stage-title h1 {
   font-size: 24px;
   margin: 0;
+  font-weight: 700;
 }
 
 .stage-title p {
@@ -440,20 +413,32 @@ body {
 }
 
 .stage-toolbar button {
-  padding: 8px 16px;
+  padding: 8px 12px;
   border-radius: 8px;
-  font-size: 11px;
-  font-weight: 600;
-  background: rgba(255, 255, 255, 0.8);
-  border: 1px solid rgba(0,0,0,0.1);
+  font-size: 10px;
+  font-weight: 700;
+  background: rgba(255, 255, 255, 0.85);
+  border: 1px solid rgba(0,0,0,0.08);
   cursor: pointer;
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s;
+}
+
+.stage-toolbar button:hover {
+  background: white;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
 }
 
 .selection-shelf {
   width: 240px;
-  border-right: 1px solid rgba(0,0,0,0.05);
+  border-left: 1px solid rgba(0,0,0,0.05);
   display: flex;
   flex-direction: column;
+  background: rgba(255, 255, 255, 0.4);
 }
 
 .left-rail {
@@ -465,8 +450,9 @@ body {
 
 .panel {
   border-radius: 12px;
-  background: rgba(255, 255, 255, 0.5);
+  background: rgba(255, 255, 255, 0.7);
   overflow: hidden;
+  border: 1px solid rgba(0,0,0,0.03);
 }
 
 .panel-title {
@@ -475,36 +461,49 @@ body {
   font-weight: 700;
   text-transform: uppercase;
   background: rgba(0,0,0,0.02);
+  color: #666;
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .organelle-list {
-  padding: 8px;
+  padding: 6px;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 2px;
 }
 
 .organelle-item {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 6px 12px;
-  border-radius: 6px;
+  gap: 10px;
+  padding: 8px 12px;
+  border-radius: 8px;
   cursor: pointer;
+  transition: all 0.15s;
 }
 
-.organelle-item:hover, .organelle-item.active {
-  background: rgba(255, 255, 255, 0.8);
+.organelle-item:hover {
+  background: rgba(255, 255, 255, 0.9);
+}
+
+.organelle-item.active {
+  background: white;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
 }
 
 .organelle-dot {
   width: 8px;
   height: 8px;
   border-radius: 50%;
+  flex-shrink: 0;
 }
 
 .organelle-name {
   font-size: 12px;
+  font-weight: 500;
+  color: #334155;
 }
 
 .inspector-zone {
@@ -512,29 +511,48 @@ body {
   top: 0;
   right: 0;
   bottom: 0;
-  width: 300px;
-  background: rgba(255, 255, 255, 0.95);
-  border-left: 1px solid rgba(0,0,0,0.1);
+  width: 280px;
+  background: rgba(255, 255, 255, 0.98);
+  border-left: 1px solid rgba(0,0,0,0.08);
   transform: translateX(100%);
-  transition: transform 0.3s ease;
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   z-index: 100;
+  box-shadow: -10px 0 30px rgba(0,0,0,0.05);
 }
 
 .inspector-zone.open {
   transform: translateX(0);
 }
 
+.right-rail {
+  height: 100%;
+}
+
 .detail-title {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 12px 16px;
+  padding: 14px 20px;
   border-bottom: 1px solid rgba(0,0,0,0.05);
+  font-size: 11px;
+  font-weight: 700;
+  color: #64748b;
+  letter-spacing: 0.05em;
 }
 
 .inspector-close {
-  background: none;
+  background: #f1f5f9;
   border: none;
   cursor: pointer;
-  padding: 4px;
+  padding: 6px;
+  border-radius: 6px;
+  color: #64748b;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.inspector-close:hover {
+  background: #e2e8f0;
+  color: #0f172a;
 }

@@ -24,9 +24,7 @@
   <!-- Full-width header -->
   <div class="cf-header">
     <h1>3D Cell Forge</h1>
-    <p>Generate real 3D biological cell models
-    from uploaded images or web links —
-    powered by AI.</p>
+    <p>Generate real 3D biological cell models from uploaded images or web links — powered by AI.</p>
   </div>
 
   <!-- Error Suggestion Toast (Preserved ID) -->
@@ -48,81 +46,48 @@
 
       <!-- Model selector -->
       <div class="cf-section" id="model-selector">
-        <h3 class="cf-section-title">
-          Select Model
-        </h3>
+        <h3 class="cf-section-title">Select Model</h3>
         <!-- compact radio list — ONE version only -->
         <div class="cf-model-list">
           <!-- Stable Fast 3D -->
-          <div class="cf-model-option selected"
-               data-model="stable_fast_3d">
+          <div class="cf-model-option selected" data-model="stable_fast_3d">
             <span class="cf-radio"></span>
-            <span class="cf-model-name">
-              Stable Fast 3D
-            </span>
-            <span class="cf-model-tag">
-              ⚡ Fastest
-            </span>
-            <span class="cf-model-dot green">
-            </span>
+            <span class="cf-model-name">Stable Fast 3D</span>
+            <span class="cf-model-tag">⚡ Fastest</span>
+            <span class="cf-model-dot green"></span>
           </div>
           <!-- TRELLIS.2 -->
-          <div class="cf-model-option"
-               data-model="trellis2">
+          <div class="cf-model-option" data-model="trellis2">
             <span class="cf-radio"></span>
-            <span class="cf-model-name">
-              TRELLIS.2-4B
-            </span>
-            <span class="cf-model-tag">
-              🏆 Best Quality
-            </span>
-            <span class="cf-model-dot yellow">
-            </span>
+            <span class="cf-model-name">TRELLIS.2-4B</span>
+            <span class="cf-model-tag">🏆 Best Quality</span>
+            <span class="cf-model-dot yellow"></span>
           </div>
           <!-- Hunyuan3D -->
-          <div class="cf-model-option"
-               data-model="hunyuan3d">
+          <div class="cf-model-option" data-model="hunyuan3d">
             <span class="cf-radio"></span>
-            <span class="cf-model-name">
-              Hunyuan3D 2.1
-            </span>
-            <span class="cf-model-tag">
-              🎨 Best Textures
-            </span>
-            <span class="cf-model-dot yellow">
-            </span>
+            <span class="cf-model-name">Hunyuan3D 2.1</span>
+            <span class="cf-model-tag">🎨 Best Textures</span>
+            <span class="cf-model-dot yellow"></span>
           </div>
           <!-- Hi3DGen -->
-          <div class="cf-model-option"
-               data-model="hi3dgen">
+          <div class="cf-model-option" data-model="hi3dgen">
             <span class="cf-radio"></span>
-            <span class="cf-model-name">
-              Hi3DGen
-            </span>
-            <span class="cf-model-tag">
-              📐 Best Geometry
-            </span>
-            <span class="cf-model-dot yellow">
-            </span>
+            <span class="cf-model-name">Hi3DGen</span>
+            <span class="cf-model-tag">📐 Best Geometry</span>
+            <span class="cf-model-dot yellow"></span>
           </div>
           <!-- TripoSR -->
-          <div class="cf-model-option"
-               data-model="triposr">
+          <div class="cf-model-option" data-model="triposr">
             <span class="cf-radio"></span>
-            <span class="cf-model-name">
-              TripoSR
-            </span>
-            <span class="cf-model-tag">
-              🌍 Most Popular
-            </span>
-            <span class="cf-model-dot yellow">
-            </span>
+            <span class="cf-model-name">TripoSR</span>
+            <span class="cf-model-tag">🌍 Most Popular</span>
+            <span class="cf-model-dot yellow"></span>
           </div>
         </div>
         <!-- availability note -->
         <p class="cf-availability-note">
-          🟢 Stable API &nbsp;|&nbsp;
-          🟡 Community Space (may vary)
+          🟢 Stable API &nbsp;|&nbsp; 🟡 Community Space (may vary)
         </p>
       </div>
 
@@ -130,10 +95,11 @@
       <div class="cf-section cf-input-card">
         <h3>📷 Upload Reference</h3>
         <p>Drag and drop or select a cell image (.jpg, .png, .webp)</p>
+        <!-- Existing file input element -->
         <input type="file" id="cell-upload" class="hidden" accept="image/*">
         <button class="cf-btn-primary" id="btn-generate-upload" onclick="document.getElementById('cell-upload').click()">
-            <i data-feather="image" class="w-4 h-4"></i>
-            <span class="btn-text">Generate with Stable Fast 3D ⚡</span>
+          <i data-feather="image" class="w-4 h-4"></i>
+          <span class="btn-text">Generate 3D Model from Image</span>
         </button>
       </div>
 
@@ -141,10 +107,11 @@
       <div class="cf-section cf-input-card">
         <h3>🔗 Web Link Input</h3>
         <p>Paste an image URL of a biological specimen to reconstruct in 3D</p>
+        <!-- Existing URL input element -->
         <input type="text" id="cell-url" placeholder="Paste image URL here..." class="w-full px-4 py-2 mb-2 bg-white border border-slate-200 rounded-lg focus:outline-none focus:border-indigo-500 text-slate-800">
         <button class="cf-btn-primary" id="generate-from-url">
-            <i data-feather="zap" class="w-4 h-4"></i>
-            <span class="btn-text">Generate with Stable Fast 3D ⚡</span>
+          <i data-feather="zap" class="w-4 h-4"></i>
+          <span class="btn-text">Generate 3D Model from Link</span>
         </button>
       </div>
 
@@ -152,7 +119,7 @@
 
     <!-- RIGHT: 3D viewer (60%) -->
     <div class="cf-right">
-        <!-- Studio Window Container -->
+        <!-- Existing canvas/viewer container -->
         <div id="cellforge-app" class="studio-shell">
             <!-- This will be populated by CellForge.js -->
             <div id="studio-loading" class="hidden fixed inset-0 z-[100] bg-white/80 backdrop-blur flex flex-col items-center justify-center">
