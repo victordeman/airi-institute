@@ -127,7 +127,7 @@
                 <p class="text-slate-800 font-bold" id="loading-message">Generating your 3D model — this may take up to 60 seconds...</p>
             </div>
 
-            <div class="studio-window workbench-v2" id="main-studio">
+            <div class="studio-window workbench-v2 flex flex-col min-h-screen overflow-y-auto pb-8" id="main-studio">
                 <!-- Header -->
                 <header class="studio-header">
                     <div class="studio-brand">
@@ -153,7 +153,7 @@
                     </div>
                 </header>
 
-                <div class="studio-workbench-v2">
+                <div class="studio-workbench-v2 flex-1">
                     <!-- Stage (WebGL Canvas) -->
                     <div class="stage-zone">
                         <div class="stage-panel" id="canvas-container">
@@ -163,7 +163,9 @@
                             </div>
 
                             <!-- WebGL Canvas will be injected here -->
-                            <div id="three-canvas-container" class="cell-viewer"></div>
+                            <div id="three-canvas-container" class="cell-viewer" style="width: 400px; height: 520px; margin: 0 auto; overflow: hidden;">
+                                <canvas data-engine="three.js r160" width="400" height="520" style="display: block; width: 400px; height: 520px; touch-action: none;"></canvas>
+                            </div>
 
                             <!-- Stage Toolbar -->
                             <div class="stage-toolbar">
