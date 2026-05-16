@@ -495,6 +495,10 @@ async def analyse_biology_image(
     """
     Analyse a biology image using Open Source Vision Models (via HF Inference).
     Returns structured list of identified biological components.
+    Analyse a biology image using Google Gemini
+    Vision API. Returns structured list of 
+    identified biological components with 
+    descriptions, functions, and 3D rendering hints.
     """
     from huggingface_hub import AsyncInferenceClient
     import base64
@@ -546,6 +550,67 @@ async def analyse_biology_image(
             messages=messages,
             model="Qwen/Qwen2-VL-7B-Instruct",
             max_tokens=1000
+        image_b64 = base64.b64encode(
+            image_bytes
+        ).decode()
+
+        # Structured prompt for component extraction
+        prompt = """
+        Analyse this biological/microscopy image.
+        Identify ALL visible biological components,
+        organelles, structures, or specimens.
+
+        Return ONLY a valid JSON array. 
+        No markdown, no explanation, just JSON.
+
+        Format:
+        [
+          {
+            "id": "nucleus",
+            "name": "Nucleus",
+            "type": "nucleus",
+            "color": "#6366f1",
+            "size": "large",
+            "description": "The control center of the cell containing DNA",
+            "function": "Controls cell activities and contains genetic material",
+            "facts": [
+              "Contains DNA organized into chromosomes",
+              "Surrounded by nuclear envelope with pores",
+              "Directs protein synthesis"
+            ],
+            "position_hint": "center"
+          }
+        ]
+
+        Types must be one of:
+        nucleus, mitochondria, membrane, 
+        chloroplast, vacuole, ribosome,
+        golgi, endoplasmic_reticulum,
+        lysosome, cytoplasm, rod, sphere,
+        tissue, bacteria, unknown
+
+        Size must be: large, medium, small
+
+        Position_hint must be: 
+        center, inner, outer, scattered
+
+        If this is not a biology image, return:
+        [{"error": "not_biology", 
+          "message": "Please upload a biological image such as a cell diagram, microscope slide, or anatomy illustration"}]
+        """
+
+        response = await model.generate_content_async([
+            {"mime_type": mime_type,
+             "data": image_b64},
+            prompt
+        ])
+
+        # Parse JSON response
+        import json
+        text = response.text.strip()
+        # Strip any accidental markdown
+        text = re.sub(
+            r'^```json\s*', '', text
         )
 
         text = response.choices[0].message.content.strip()
@@ -563,6 +628,15 @@ async def analyse_biology_image(
                 components = json.loads(match.group())
             else:
                 raise ValueError("Could not parse AI response as JSON")
+        # Check for error response
+        if (isinstance(components, list) and 
+            len(components) > 0 and
+            isinstance(components[0], dict) and
+            "error" in components[0]):
+            return JSONResponse(
+                status_code=400,
+                content=components[0]
+            )
 
         return JSONResponse(
             status_code=200,
@@ -606,6 +680,54 @@ async def biology_lab_chat(request: Request):
             messages=messages,
             model="mistralai/Mistral-7B-Instruct-v0.3",
             max_tokens=250
+    try:
+        body = await request.json()
+        user_message = body.get("message", "")
+        scene_context = body.get(
+            "components", []
+        )
+        
+        context_str = ", ".join([
+            c.get("name", "") 
+            for c in scene_context
+        ]) if scene_context else "general biology"
+
+        system_prompt = f"""
+        You are an expert Biology Guide in an 
+        immersive XR biology laboratory at the 
+        NAIRA Institute. You are helping a student
+        explore a 3D visualization of biological
+        components identified from their uploaded
+        image.
+
+        Currently visible in the 3D scene:
+        {context_str}
+
+        Your role:
+        - Explain biological structures clearly
+        - Connect concepts to African examples 
+          where relevant (e.g. malaria parasites,
+          African plant cells, local organisms)
+        - Use analogies appropriate for students
+        - Be enthusiastic and encouraging
+        - Keep responses under 150 words
+        - Always relate back to what is visible 
+          in their scene
+
+        Respond conversationally, not with lists.
+        """
+
+        genai.configure(api_key=GOOGLE_API_KEY)
+        model = genai.GenerativeModel(
+            "gemini-1.5-flash",
+            system_instruction=system_prompt
+        )
+        response = await model.generate_content_async(
+            user_message
+        )
+        return JSONResponse(
+            status_code=200,
+            content={"response": response.text}
         )
         return JSONResponse(status_code=200, content={"response": response.choices[0].message.content})
     except Exception as e:

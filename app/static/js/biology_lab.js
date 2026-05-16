@@ -149,6 +149,22 @@ async function handleUpload(file, url = null) {
     const modelId = document.querySelector('.model-option.selected').dataset.model;
 
     // First, identify biological components
+function loadDemo() {
+    document.getElementById('upload-panel').style.display = 'none';
+    document.getElementById('bio-viewport').style.display = 'block';
+    document.getElementById('build-section').style.display = 'block';
+    window.currentComponents = DEMO_COMPONENTS;
+    buildBioScene(DEMO_COMPONENTS);
+    populateComponentList(DEMO_COMPONENTS);
+    populateComponentTags(DEMO_COMPONENTS);
+    
+    document.getElementById('guide-intro-text').textContent = 
+      "I've loaded a demo human cell for you. It contains the essential organelles: Nucleus, Mitochondria, Golgi Apparatus, and more. Click any of them in 3D to explore!";
+}
+
+async function handleImageUpload(fileOrUrl) {
+    showLoading("Uploading & Analysing image with AI...");
+    
     const formData = new FormData();
     if (file) formData.append('file', file);
     if (url) formData.append('url', url);
@@ -177,6 +193,9 @@ async function handleUpload(file, url = null) {
                 addGuideMessage(`I've also generated a reconstructed 3D model using ${modelData.provider}. Processing complete.`);
             }
         }).catch(err => console.warn("3D generation skipped or failed:", err));
+        const names = data.components.map(c => c.name).join(', ');
+        document.getElementById('guide-intro-text').textContent = 
+          `I can see ${data.count} biological structures in your image: ${names}. Click any component in the 3D view to learn more, or ask me anything!`;
 
     } catch (err) {
         alert("Analysis Error: " + err.message);
@@ -251,13 +270,15 @@ function enterImmersiveMode(data) {
 function buildScene(componentsData) {
     // Clear previous
     while(scene.children.length > 0) {
+function clearScene() {
+    while(scene.children.length > 0){ 
         const obj = scene.children[0];
         if (obj.geometry) obj.geometry.dispose();
         if (obj.material) {
             if (Array.isArray(obj.material)) obj.material.forEach(m => m.dispose());
             else obj.material.dispose();
         }
-        scene.remove(obj);
+        scene.remove(obj); 
     }
 
     createStarfield();
@@ -336,13 +357,16 @@ function addLabel(mesh, text, color) {
     const ctx = canvas.getContext('2d');
 
     ctx.fillStyle = 'rgba(2, 6, 23, 0.8)';
+    
+    ctx.fillStyle = `#${color.getHexString()}22`;
     ctx.beginPath();
     ctx.roundRect(0, 0, 512, 128, 20);
     ctx.fill();
+    
     ctx.strokeStyle = `#${color.getHexString()}`;
     ctx.lineWidth = 10;
     ctx.stroke();
-
+    
     ctx.fillStyle = '#ffffff';
     ctx.font = 'bold 64px Inter, sans-serif';
     ctx.textAlign = 'center';
@@ -366,6 +390,12 @@ function onCanvasClick(e) {
     raycaster.setFromCamera(mouse, camera);
     const intersects = raycaster.intersectObjects(scene.children.filter(o => o.userData.isComponent));
 
+    mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+    mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+    
+    raycaster.setFromCamera(mouse, camera);
+    const intersects = raycaster.intersectObjects(scene.children.filter(obj => obj.type === 'Mesh' && !obj.userData.isLabel));
+    
     if (intersects.length > 0) {
         selectComponent(intersects[0].object.userData.id);
     }
@@ -453,6 +483,25 @@ function startTour() {
 
     runTourStep();
     tourInterval = setInterval(runTourStep, 6000);
+    document.getElementById('guided-tour-btn').textContent = '⏹ Stop Tour';
+    
+    function next() {
+        if (tourIndex >= meshes.length) {
+            stopGuidedTour();
+            return;
+        }
+        const mesh = meshes[tourIndex];
+        highlightComponent(mesh);
+        showComponentDetail(mesh.userData);
+        animateCameraTo(mesh.position);
+        
+        addGuideMessage(`Focusing on ${mesh.userData.componentName}. ${mesh.userData.description}`);
+        
+        tourIndex++;
+    }
+
+    next();
+    tourInterval = setInterval(next, 8000);
 }
 
 function stopTour() {
@@ -482,6 +531,10 @@ async function sendChatMessage(msg) {
     body.appendChild(userDiv);
     body.scrollTop = body.scrollHeight;
 
+
+async function sendGuideMessage(message) {
+    addUserMessage(message);
+    
     try {
         const res = await fetch('/api/biology-lab/chat', {
             method: 'POST',
@@ -510,6 +563,9 @@ function animate() {
 
     scene.children.forEach(o => {
         if (o.userData.pulse) {
+    
+    scene.children.forEach(obj => {
+        if (obj.userData.pulse) {
             const scale = 1 + Math.sin(Date.now() * 0.002) * 0.05;
             o.scale.setScalar(scale);
         }
