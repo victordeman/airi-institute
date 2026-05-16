@@ -48,7 +48,7 @@
         }
     </script>
 </head>
-<body class="font-sans antialiased selection:bg-primary selection:text-white overflow-x-hidden min-h-screen flex flex-col transition-colors duration-300 {% if request.url.path.rstrip('/') in ['', '/transformer-tour', '/economics-tour', '/terracotta-tour', '/immersive-learning', '/ai-agents-tour', '/computer-history-tour', '/biology-lab'] %}page-home{% else %}page-sub{% endif %}">
+<body class="font-sans antialiased selection:bg-primary selection:text-white overflow-x-hidden min-h-screen flex flex-col transition-colors duration-300 {% if request.url.path.rstrip('/') in ['', '/transformer-tour', '/economics-tour', '/terracotta-tour', '/immersive-learning', '/ai-agents-tour', '/computer-history-tour'] %}page-home{% else %}page-sub{% endif %}">
     <!-- Top Bar -->
     <div id="top-bar" class="bg-primary text-white py-2 text-xs hidden md:block z-[60] relative">
         <div class="container mx-auto px-6 flex justify-between items-center">
@@ -90,7 +90,6 @@
                         <div class="absolute left-0 mt-2 w-48 bg-white rounded-xl border border-slate-200 shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible overflow-hidden transition-all z-[70]">
                             <a href="/immersive-learning" class="block px-4 py-2 text-xs text-slate-600 hover:bg-slate-50 hover:text-primary">All Experiences</a>
                             <a href="/cellforge" class="block px-4 py-2 text-xs text-slate-600 hover:bg-slate-50 hover:text-primary font-bold text-emerald-600">3D Cell Forge ✨</a>
-                            <a href="/biology-lab" class="block px-4 py-2 text-xs text-slate-600 hover:bg-slate-50 hover:text-primary font-bold text-indigo-600">AI Biology Lab 🔬</a>
                             <a href="/computer-history-tour" class="block px-4 py-2 text-xs text-slate-600 hover:bg-slate-50 hover:text-primary">Computer History</a>
                             <a href="/ai-agents-tour" class="block px-4 py-2 text-xs text-slate-600 hover:bg-slate-50 hover:text-primary">AI Agents Tour</a>
                         </div>

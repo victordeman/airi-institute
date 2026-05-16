@@ -188,10 +188,6 @@ async def terracotta_tour_test(request: Request):
 async def computer_history_tour(request: Request):
     return templates.TemplateResponse("computer_history_tour.html", {"request": request})
 
-@router.get("/biology-lab")
-async def biology_lab(request: Request):
-    return templates.TemplateResponse("biology_lab.html", {"request": request})
-
 @router.get("/cellforge")
 async def cellforge(request: Request):
     return templates.TemplateResponse("cellforge.html", {"request": request})
