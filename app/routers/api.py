@@ -482,6 +482,234 @@ async def generate_3d_cell(
             content={"error": f"Server error: {str(e)}"}
         )
 
+# --- AI Biology Lab Endpoints ---
+
+@router.post("/biology-lab/analyse")
+async def analyse_biology_image(
+    file: UploadFile = File(None),
+    url: str = Form(None)
+):
+    """
+    Analyse a biology image using Google Gemini
+    Vision API. Returns structured list of
+    identified biological components with
+    descriptions, functions, and 3D rendering hints.
+    """
+    import google.generativeai as genai
+    import base64
+    import re
+
+    GOOGLE_API_KEY = os.environ.get(
+        "GOOGLE_API_KEY", ""
+    )
+    if not GOOGLE_API_KEY:
+        return JSONResponse(
+            status_code=500,
+            content={"error":
+                "GOOGLE_API_KEY not configured."
+            }
+        )
+
+    try:
+        genai.configure(api_key=GOOGLE_API_KEY)
+        model = genai.GenerativeModel(
+            "gemini-1.5-flash"
+        )
+
+        # Get image bytes
+        if file:
+            image_bytes = await file.read()
+            mime_type = (
+                file.content_type or "image/jpeg"
+            )
+        elif url:
+            import urllib.request
+            with urllib.request.urlopen(url) as r:
+                image_bytes = r.read()
+            mime_type = "image/jpeg"
+        else:
+            return JSONResponse(
+                status_code=400,
+                content={"error": "No image or URL provided"}
+            )
+
+        image_b64 = base64.b64encode(
+            image_bytes
+        ).decode()
+
+        # Structured prompt for component extraction
+        prompt = """
+        Analyse this biological/microscopy image.
+        Identify ALL visible biological components,
+        organelles, structures, or specimens.
+
+        Return ONLY a valid JSON array.
+        No markdown, no explanation, just JSON.
+
+        Format:
+        [
+          {
+            "id": "nucleus",
+            "name": "Nucleus",
+            "type": "nucleus",
+            "color": "#6366f1",
+            "size": "large",
+            "description": "The control center of the cell containing DNA",
+            "function": "Controls cell activities and contains genetic material",
+            "facts": [
+              "Contains DNA organized into chromosomes",
+              "Surrounded by nuclear envelope with pores",
+              "Directs protein synthesis"
+            ],
+            "position_hint": "center"
+          }
+        ]
+
+        Types must be one of:
+        nucleus, mitochondria, membrane,
+        chloroplast, vacuole, ribosome,
+        golgi, endoplasmic_reticulum,
+        lysosome, cytoplasm, rod, sphere,
+        tissue, bacteria, unknown
+
+        Size must be: large, medium, small
+
+        Position_hint must be:
+        center, inner, outer, scattered
+
+        If this is not a biology image, return:
+        [{"error": "not_biology",
+          "message": "Please upload a biological image such as a cell diagram, microscope slide, or anatomy illustration"}]
+        """
+
+        response = await model.generate_content_async([
+            {"mime_type": mime_type,
+             "data": image_b64},
+            prompt
+        ])
+
+        # Parse JSON response
+        import json
+        text = response.text.strip()
+        # Strip any accidental markdown
+        text = re.sub(
+            r'^```json\s*', '', text
+        )
+        text = re.sub(r'\s*```$', '', text)
+        components = json.loads(text)
+
+        # Check for error response
+        if (isinstance(components, list) and
+            len(components) > 0 and
+            isinstance(components[0], dict) and
+            "error" in components[0]):
+            return JSONResponse(
+                status_code=400,
+                content=components[0]
+            )
+
+        return JSONResponse(
+            status_code=200,
+            content={
+                "components": components,
+                "count": len(components),
+                "image_type": "biology"
+            }
+        )
+
+    except json.JSONDecodeError as e:
+        return JSONResponse(
+            status_code=502,
+            content={
+                "error": "AI response parse error",
+                "raw": response.text[:500] if 'response' in locals() else "No response"
+            }
+        )
+    except Exception as e:
+        return JSONResponse(
+            status_code=500,
+            content={
+                "error": f"Analysis failed: {str(e)}"
+            }
+        )
+
+@router.post("/biology-lab/chat")
+async def biology_lab_chat(
+    request: Request
+):
+    """
+    AI Biology Guide chat. Receives user message
+    + current scene context (what components are
+    visible) and responds as a biology expert.
+    """
+    import google.generativeai as genai
+
+    GOOGLE_API_KEY = os.environ.get(
+        "GOOGLE_API_KEY", ""
+    )
+    if not GOOGLE_API_KEY:
+        return JSONResponse(
+            status_code=500,
+            content={"error": "GOOGLE_API_KEY not configured."}
+        )
+
+    try:
+        body = await request.json()
+        user_message = body.get("message", "")
+        scene_context = body.get(
+            "components", []
+        )
+
+        context_str = ", ".join([
+            c.get("name", "")
+            for c in scene_context
+        ]) if scene_context else "general biology"
+
+        system_prompt = f"""
+        You are an expert Biology Guide in an
+        immersive XR biology laboratory at the
+        NAIRA Institute. You are helping a student
+        explore a 3D visualization of biological
+        components identified from their uploaded
+        image.
+
+        Currently visible in the 3D scene:
+        {context_str}
+
+        Your role:
+        - Explain biological structures clearly
+        - Connect concepts to African examples
+          where relevant (e.g. malaria parasites,
+          African plant cells, local organisms)
+        - Use analogies appropriate for students
+        - Be enthusiastic and encouraging
+        - Keep responses under 150 words
+        - Always relate back to what is visible
+          in their scene
+
+        Respond conversationally, not with lists.
+        """
+
+        genai.configure(api_key=GOOGLE_API_KEY)
+        model = genai.GenerativeModel(
+            "gemini-1.5-flash",
+            system_instruction=system_prompt
+        )
+        response = await model.generate_content_async(
+            user_message
+        )
+        return JSONResponse(
+            status_code=200,
+            content={"response": response.text}
+        )
+    except Exception as e:
+        return JSONResponse(
+            status_code=500,
+            content={
+                "error": f"Guide error: {str(e)}"
+            }
+        )
+
 # --- AI Chat ---
 import google.generativeai as genai
 from huggingface_hub import AsyncInferenceClient
