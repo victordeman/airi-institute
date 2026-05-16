@@ -482,233 +482,134 @@ async def generate_3d_cell(
             content={"error": f"Server error: {str(e)}"}
         )
 
-# --- AI Biology Lab Endpoints ---
+# --- AI Biology Lab Endpoints (Open Source) ---
 
 @router.post("/biology-lab/analyse")
+@limiter.limit("5/minute")
 async def analyse_biology_image(
+    request: Request,
     file: UploadFile = File(None),
-    url: str = Form(None)
+    url: str = Form(None),
+    model_id: str = Form("stable_fast_3d") # Use as model hint for analysis
 ):
     """
-    Analyse a biology image using Google Gemini
-    Vision API. Returns structured list of
-    identified biological components with
-    descriptions, functions, and 3D rendering hints.
+    Analyse a biology image using Open Source Vision Models (via HF Inference).
+    Returns structured list of identified biological components.
     """
-    import google.generativeai as genai
+    from huggingface_hub import AsyncInferenceClient
     import base64
     import re
+    import json
 
-    GOOGLE_API_KEY = os.environ.get(
-        "GOOGLE_API_KEY", ""
-    )
-    if not GOOGLE_API_KEY:
-        return JSONResponse(
-            status_code=500,
-            content={"error":
-                "GOOGLE_API_KEY not configured."
-            }
-        )
+    HF_TOKEN = os.environ.get("HF_TOKEN") or os.environ.get("HF_API_TOKEN")
+    if not HF_TOKEN:
+        return JSONResponse(status_code=500, content={"error": "HF_TOKEN not configured."})
 
     try:
-        genai.configure(api_key=GOOGLE_API_KEY)
-        model = genai.GenerativeModel(
-            "gemini-1.5-flash"
-        )
-
         # Get image bytes
         if file:
             image_bytes = await file.read()
-            mime_type = (
-                file.content_type or "image/jpeg"
-            )
+            mime_type = file.content_type or "image/jpeg"
         elif url:
-            import urllib.request
-            with urllib.request.urlopen(url) as r:
-                image_bytes = r.read()
+            async with httpx.AsyncClient() as client:
+                resp = await client.get(url)
+                image_bytes = resp.content
             mime_type = "image/jpeg"
         else:
-            return JSONResponse(
-                status_code=400,
-                content={"error": "No image or URL provided"}
-            )
+            return JSONResponse(status_code=400, content={"error": "No image provided"})
 
-        image_b64 = base64.b64encode(
-            image_bytes
-        ).decode()
+        image_b64 = base64.b64encode(image_bytes).decode()
+        data_url = f"data:{mime_type};base64,{image_b64}"
 
-        # Structured prompt for component extraction
-        prompt = """
-        Analyse this biological/microscopy image.
-        Identify ALL visible biological components,
-        organelles, structures, or specimens.
+        # Using a reliable Vision model for structured output
+        client = AsyncInferenceClient(token=HF_TOKEN)
 
-        Return ONLY a valid JSON array.
-        No markdown, no explanation, just JSON.
+        prompt = """Identify ALL visible biological components/organelles in this image.
+        Return ONLY a JSON array of objects.
+        Format: [{"id": "nucleus", "name": "Nucleus", "type": "nucleus", "color": "#6366f1", "size": "large", "description": "...", "function": "...", "facts": ["...", "..."], "position_hint": "center"}]
+        Types: nucleus, mitochondria, membrane, chloroplast, vacuole, ribosome, golgi, endoplasmic_reticulum, lysosome, cytoplasm, rod, sphere.
+        Size: large, medium, small.
+        Position: center, inner, outer, scattered."""
 
-        Format:
-        [
-          {
-            "id": "nucleus",
-            "name": "Nucleus",
-            "type": "nucleus",
-            "color": "#6366f1",
-            "size": "large",
-            "description": "The control center of the cell containing DNA",
-            "function": "Controls cell activities and contains genetic material",
-            "facts": [
-              "Contains DNA organized into chromosomes",
-              "Surrounded by nuclear envelope with pores",
-              "Directs protein synthesis"
-            ],
-            "position_hint": "center"
-          }
+        messages = [
+            {
+                "role": "user",
+                "content": [
+                    {"type": "text", "text": prompt},
+                    {"type": "image_url", "image_url": {"url": data_url}}
+                ]
+            }
         ]
 
-        Types must be one of:
-        nucleus, mitochondria, membrane,
-        chloroplast, vacuole, ribosome,
-        golgi, endoplasmic_reticulum,
-        lysosome, cytoplasm, rod, sphere,
-        tissue, bacteria, unknown
-
-        Size must be: large, medium, small
-
-        Position_hint must be:
-        center, inner, outer, scattered
-
-        If this is not a biology image, return:
-        [{"error": "not_biology",
-          "message": "Please upload a biological image such as a cell diagram, microscope slide, or anatomy illustration"}]
-        """
-
-        response = await model.generate_content_async([
-            {"mime_type": mime_type,
-             "data": image_b64},
-            prompt
-        ])
-
-        # Parse JSON response
-        import json
-        text = response.text.strip()
-        # Strip any accidental markdown
-        text = re.sub(
-            r'^```json\s*', '', text
+        # Use Qwen2-VL or similar for best vision results
+        response = await client.chat_completion(
+            messages=messages,
+            model="Qwen/Qwen2-VL-7B-Instruct",
+            max_tokens=1000
         )
-        text = re.sub(r'\s*```$', '', text)
-        components = json.loads(text)
 
-        # Check for error response
-        if (isinstance(components, list) and
-            len(components) > 0 and
-            isinstance(components[0], dict) and
-            "error" in components[0]):
-            return JSONResponse(
-                status_code=400,
-                content=components[0]
-            )
+        text = response.choices[0].message.content.strip()
+        # Strip markdown
+        text = re.sub(r'^```json\s*', '', text)
+        text = re.sub(r'\s*```$', '', text)
+
+        try:
+            components = json.loads(text)
+        except:
+            # Fallback if parsing fails - sometimes VLMs struggle with strict JSON
+            # We'll try to find any array in the text
+            match = re.search(r'\[.*\]', text, re.DOTALL)
+            if match:
+                components = json.loads(match.group())
+            else:
+                raise ValueError("Could not parse AI response as JSON")
 
         return JSONResponse(
             status_code=200,
             content={
                 "components": components,
                 "count": len(components),
-                "image_type": "biology"
+                "image_type": "biology",
+                "model_used": "Qwen2-VL-7B"
             }
         )
 
-    except json.JSONDecodeError as e:
-        return JSONResponse(
-            status_code=502,
-            content={
-                "error": "AI response parse error",
-                "raw": response.text[:500] if 'response' in locals() else "No response"
-            }
-        )
     except Exception as e:
-        return JSONResponse(
-            status_code=500,
-            content={
-                "error": f"Analysis failed: {str(e)}"
-            }
-        )
+        logger.error(f"Biology analysis error: {str(e)}")
+        return JSONResponse(status_code=500, content={"error": f"Analysis failed: {str(e)}"})
 
 @router.post("/biology-lab/chat")
-async def biology_lab_chat(
-    request: Request
-):
-    """
-    AI Biology Guide chat. Receives user message
-    + current scene context (what components are
-    visible) and responds as a biology expert.
-    """
-    import google.generativeai as genai
+@limiter.limit("10/minute")
+async def biology_lab_chat(request: Request):
+    """Context-aware AI Biology Guide using Open Source models."""
+    from huggingface_hub import AsyncInferenceClient
 
-    GOOGLE_API_KEY = os.environ.get(
-        "GOOGLE_API_KEY", ""
-    )
-    if not GOOGLE_API_KEY:
-        return JSONResponse(
-            status_code=500,
-            content={"error": "GOOGLE_API_KEY not configured."}
-        )
+    HF_TOKEN = os.environ.get("HF_TOKEN") or os.environ.get("HF_API_TOKEN")
+    body = await request.json()
+    user_message = body.get("message", "")
+    scene_context = body.get("components", [])
+
+    context_str = ", ".join([c.get("name", "") for c in scene_context]) if scene_context else "general biology"
+
+    system_prompt = f"""You are the NAIRA Biology Specialist, an expert guide in an immersive XR lab.
+    Currently visible in the student's 3D scene: {context_str}.
+    Your role: Explain biological structures clearly, connect to African examples, use analogies, be enthusiastic.
+    Keep responses under 150 words. Respond conversationally."""
 
     try:
-        body = await request.json()
-        user_message = body.get("message", "")
-        scene_context = body.get(
-            "components", []
+        client = AsyncInferenceClient(token=HF_TOKEN)
+        messages = [
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": user_message}
+        ]
+        response = await client.chat_completion(
+            messages=messages,
+            model="mistralai/Mistral-7B-Instruct-v0.3",
+            max_tokens=250
         )
-
-        context_str = ", ".join([
-            c.get("name", "")
-            for c in scene_context
-        ]) if scene_context else "general biology"
-
-        system_prompt = f"""
-        You are an expert Biology Guide in an
-        immersive XR biology laboratory at the
-        NAIRA Institute. You are helping a student
-        explore a 3D visualization of biological
-        components identified from their uploaded
-        image.
-
-        Currently visible in the 3D scene:
-        {context_str}
-
-        Your role:
-        - Explain biological structures clearly
-        - Connect concepts to African examples
-          where relevant (e.g. malaria parasites,
-          African plant cells, local organisms)
-        - Use analogies appropriate for students
-        - Be enthusiastic and encouraging
-        - Keep responses under 150 words
-        - Always relate back to what is visible
-          in their scene
-
-        Respond conversationally, not with lists.
-        """
-
-        genai.configure(api_key=GOOGLE_API_KEY)
-        model = genai.GenerativeModel(
-            "gemini-1.5-flash",
-            system_instruction=system_prompt
-        )
-        response = await model.generate_content_async(
-            user_message
-        )
-        return JSONResponse(
-            status_code=200,
-            content={"response": response.text}
-        )
+        return JSONResponse(status_code=200, content={"response": response.choices[0].message.content})
     except Exception as e:
-        return JSONResponse(
-            status_code=500,
-            content={
-                "error": f"Guide error: {str(e)}"
-            }
-        )
+        return JSONResponse(status_code=500, content={"error": str(e)})
 
 # --- AI Chat ---
 import google.generativeai as genai
