@@ -482,74 +482,57 @@ async def generate_3d_cell(
             content={"error": f"Server error: {str(e)}"}
         )
 
-# --- AI Biology Lab Endpoints (Open Source) ---
+# --- AI Biology Lab Endpoints ---
 
 @router.post("/biology-lab/analyse")
-@limiter.limit("5/minute")
 async def analyse_biology_image(
-    request: Request,
     file: UploadFile = File(None),
-    url: str = Form(None),
-    model_id: str = Form("stable_fast_3d") # Use as model hint for analysis
+    url: str = Form(None)
 ):
     """
-    Analyse a biology image using Open Source Vision Models (via HF Inference).
-    Returns structured list of identified biological components.
     Analyse a biology image using Google Gemini
     Vision API. Returns structured list of 
     identified biological components with 
     descriptions, functions, and 3D rendering hints.
     """
-    from huggingface_hub import AsyncInferenceClient
+    import google.generativeai as genai
     import base64
     import re
-    import json
 
-    HF_TOKEN = os.environ.get("HF_TOKEN") or os.environ.get("HF_API_TOKEN")
-    if not HF_TOKEN:
-        return JSONResponse(status_code=500, content={"error": "HF_TOKEN not configured."})
+    GOOGLE_API_KEY = os.environ.get(
+        "GOOGLE_API_KEY", ""
+    )
+    if not GOOGLE_API_KEY:
+        return JSONResponse(
+            status_code=500,
+            content={"error":
+                "GOOGLE_API_KEY not configured."
+            }
+        )
 
     try:
+        genai.configure(api_key=GOOGLE_API_KEY)
+        model = genai.GenerativeModel(
+            "gemini-1.5-flash"
+        )
+
         # Get image bytes
         if file:
             image_bytes = await file.read()
-            mime_type = file.content_type or "image/jpeg"
+            mime_type = (
+                file.content_type or "image/jpeg"
+            )
         elif url:
-            async with httpx.AsyncClient() as client:
-                resp = await client.get(url)
-                image_bytes = resp.content
+            import urllib.request
+            with urllib.request.urlopen(url) as r:
+                image_bytes = r.read()
             mime_type = "image/jpeg"
         else:
-            return JSONResponse(status_code=400, content={"error": "No image provided"})
+            return JSONResponse(
+                status_code=400,
+                content={"error": "No image or URL provided"}
+            )
 
-        image_b64 = base64.b64encode(image_bytes).decode()
-        data_url = f"data:{mime_type};base64,{image_b64}"
-
-        # Using a reliable Vision model for structured output
-        client = AsyncInferenceClient(token=HF_TOKEN)
-
-        prompt = """Identify ALL visible biological components/organelles in this image.
-        Return ONLY a JSON array of objects.
-        Format: [{"id": "nucleus", "name": "Nucleus", "type": "nucleus", "color": "#6366f1", "size": "large", "description": "...", "function": "...", "facts": ["...", "..."], "position_hint": "center"}]
-        Types: nucleus, mitochondria, membrane, chloroplast, vacuole, ribosome, golgi, endoplasmic_reticulum, lysosome, cytoplasm, rod, sphere.
-        Size: large, medium, small.
-        Position: center, inner, outer, scattered."""
-
-        messages = [
-            {
-                "role": "user",
-                "content": [
-                    {"type": "text", "text": prompt},
-                    {"type": "image_url", "image_url": {"url": data_url}}
-                ]
-            }
-        ]
-
-        # Use Qwen2-VL or similar for best vision results
-        response = await client.chat_completion(
-            messages=messages,
-            model="Qwen/Qwen2-VL-7B-Instruct",
-            max_tokens=1000
         image_b64 = base64.b64encode(
             image_bytes
         ).decode()
@@ -612,22 +595,9 @@ async def analyse_biology_image(
         text = re.sub(
             r'^```json\s*', '', text
         )
-
-        text = response.choices[0].message.content.strip()
-        # Strip markdown
-        text = re.sub(r'^```json\s*', '', text)
         text = re.sub(r'\s*```$', '', text)
+        components = json.loads(text)
 
-        try:
-            components = json.loads(text)
-        except:
-            # Fallback if parsing fails - sometimes VLMs struggle with strict JSON
-            # We'll try to find any array in the text
-            match = re.search(r'\[.*\]', text, re.DOTALL)
-            if match:
-                components = json.loads(match.group())
-            else:
-                raise ValueError("Could not parse AI response as JSON")
         # Check for error response
         if (isinstance(components, list) and 
             len(components) > 0 and
@@ -643,43 +613,46 @@ async def analyse_biology_image(
             content={
                 "components": components,
                 "count": len(components),
-                "image_type": "biology",
-                "model_used": "Qwen2-VL-7B"
+                "image_type": "biology"
             }
         )
 
+    except json.JSONDecodeError as e:
+        return JSONResponse(
+            status_code=502,
+            content={
+                "error": "AI response parse error",
+                "raw": response.text[:500] if 'response' in locals() else "No response"
+            }
+        )
     except Exception as e:
-        logger.error(f"Biology analysis error: {str(e)}")
-        return JSONResponse(status_code=500, content={"error": f"Analysis failed: {str(e)}"})
+        return JSONResponse(
+            status_code=500,
+            content={
+                "error": f"Analysis failed: {str(e)}"
+            }
+        )
 
 @router.post("/biology-lab/chat")
-@limiter.limit("10/minute")
-async def biology_lab_chat(request: Request):
-    """Context-aware AI Biology Guide using Open Source models."""
-    from huggingface_hub import AsyncInferenceClient
+async def biology_lab_chat(
+    request: Request
+):
+    """
+    AI Biology Guide chat. Receives user message
+    + current scene context (what components are
+    visible) and responds as a biology expert.
+    """
+    import google.generativeai as genai
 
-    HF_TOKEN = os.environ.get("HF_TOKEN") or os.environ.get("HF_API_TOKEN")
-    body = await request.json()
-    user_message = body.get("message", "")
-    scene_context = body.get("components", [])
+    GOOGLE_API_KEY = os.environ.get(
+        "GOOGLE_API_KEY", ""
+    )
+    if not GOOGLE_API_KEY:
+        return JSONResponse(
+            status_code=500,
+            content={"error": "GOOGLE_API_KEY not configured."}
+        )
 
-    context_str = ", ".join([c.get("name", "") for c in scene_context]) if scene_context else "general biology"
-
-    system_prompt = f"""You are the NAIRA Biology Specialist, an expert guide in an immersive XR lab.
-    Currently visible in the student's 3D scene: {context_str}.
-    Your role: Explain biological structures clearly, connect to African examples, use analogies, be enthusiastic.
-    Keep responses under 150 words. Respond conversationally."""
-
-    try:
-        client = AsyncInferenceClient(token=HF_TOKEN)
-        messages = [
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": user_message}
-        ]
-        response = await client.chat_completion(
-            messages=messages,
-            model="mistralai/Mistral-7B-Instruct-v0.3",
-            max_tokens=250
     try:
         body = await request.json()
         user_message = body.get("message", "")
@@ -729,9 +702,13 @@ async def biology_lab_chat(request: Request):
             status_code=200,
             content={"response": response.text}
         )
-        return JSONResponse(status_code=200, content={"response": response.choices[0].message.content})
     except Exception as e:
-        return JSONResponse(status_code=500, content={"error": str(e)})
+        return JSONResponse(
+            status_code=500,
+            content={
+                "error": f"Guide error: {str(e)}"
+            }
+        )
 
 # --- AI Chat ---
 import google.generativeai as genai
