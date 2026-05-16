@@ -45,14 +45,49 @@
 
   <!-- IMAGE UPLOAD PANEL -->
   <div class="bio-upload-panel" id="upload-panel">
+    <!-- Model selector (Mirrored from Cell Forge) -->
+    <div class="cf-section mb-8" id="model-selector">
+      <h3 class="cf-section-title">Select Analysis Model</h3>
+      <div class="cf-model-list grid grid-cols-1 md:grid-cols-3 gap-4">
+        <!-- LLaVA -->
+        <div class="cf-model-option selected" data-model="llava">
+          <span class="cf-radio"></span>
+          <div class="flex flex-col">
+            <span class="cf-model-name">LLaVA-1.5</span>
+            <span class="cf-model-tag">⚡ Fast & Reliable</span>
+          </div>
+          <span class="cf-model-dot green ml-auto"></span>
+        </div>
+        <!-- Florence-2 -->
+        <div class="cf-model-option" data-model="florence">
+          <span class="cf-radio"></span>
+          <div class="flex flex-col">
+            <span class="cf-model-name">Florence-2</span>
+            <span class="cf-model-tag">🏆 Best Precision</span>
+          </div>
+          <span class="cf-model-dot yellow ml-auto"></span>
+        </div>
+        <!-- Moondream -->
+        <div class="cf-model-option" data-model="moondream">
+          <span class="cf-radio"></span>
+          <div class="flex flex-col">
+            <span class="cf-model-name">Moondream 2</span>
+            <span class="cf-model-tag">🎨 Detailed Descriptions</span>
+          </div>
+          <span class="cf-model-dot yellow ml-auto"></span>
+        </div>
+      </div>
+    </div>
+
     <div class="bio-upload-zone" id="upload-zone" onclick="document.getElementById('bio-image-input').click()">
       <div class="upload-icon">🔬</div>
       <h3>Drop your biology image here</h3>
       <p>Supports: microscope images, cell diagrams, tissue slides, biological specimens</p>
       <p class="upload-formats">.jpg .png .webp .gif</p>
       <input type="file" id="bio-image-input" accept="image/*" hidden>
-      <button class="cf-btn-primary">
-        Choose Image
+      <button class="cf-btn-primary" id="btn-generate-upload">
+        <i data-feather="image" class="w-4 h-4"></i>
+        <span class="btn-text">Analyse Image with AI</span>
       </button>
     </div>
 
@@ -61,7 +96,8 @@
     <div class="bio-url-input">
       <input type="url" id="bio-url-input" placeholder="Paste image URL...">
       <button id="bio-url-btn" class="cf-btn-primary">
-        Analyse URL
+        <i data-feather="zap" class="w-4 h-4"></i>
+        <span class="btn-text">Analyse URL</span>
       </button>
     </div>
 

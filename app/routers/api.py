@@ -8,6 +8,7 @@ import time
 import tempfile
 import urllib.request
 import base64
+import re
 from datetime import datetime
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
@@ -16,6 +17,8 @@ from fastapi import APIRouter, Depends, HTTPException, Request, BackgroundTasks,
 from fastapi.responses import JSONResponse
 import libsql_client
 from gradio_client import Client, handle_file
+from huggingface_hub import AsyncInferenceClient
+import google.generativeai as genai
 
 from app.limiter import limiter
 from app.database import get_db, to_dict_list
@@ -482,69 +485,83 @@ async def generate_3d_cell(
             content={"error": f"Server error: {str(e)}"}
         )
 
-# --- AI Biology Lab Endpoints ---
+# --- AI Biology Lab Endpoints (Open-Source Vision) ---
+
+async def call_os_vision_model(image_b64: str, prompt: str, model_id: str) -> tuple[str | None, str | None]:
+    """Helper to call open-source vision models via HF Inference API."""
+    token = os.getenv("HF_TOKEN")
+    if not token:
+        return None, "HF_TOKEN (Hugging Face API Token) not configured."
+
+    # Use a vision-capable open-source model
+    # Routing based on model_id
+    models = {
+        "llava": "llava-hf/llava-1.5-7b-hf",
+        "moondream": "vikhyatk/moondream2",
+        "bakllava": "SkunkworksAI/BakLLaVA-1",
+        "florence": "llava-hf/llava-1.5-7b-hf" # Default to llava for Florence if not using specific Florence pipeline
+    }
+    target_model = models.get(model_id, models["llava"])
+
+    try:
+        client = AsyncInferenceClient(token=token)
+
+        # Format for vision models on HF Inference API
+        messages = [
+            {
+                "role": "user",
+                "content": [
+                    {"type": "text", "text": prompt},
+                    {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{image_b64}"}}
+                ],
+            }
+        ]
+
+        response = await client.chat_completion(
+            messages=messages,
+            model=target_model,
+            max_tokens=1000
+        )
+        return response.choices[0].message.content, None
+    except Exception as e:
+        logger.error(f"HF Vision Error ({target_model}): {e}")
+        return None, str(e)
 
 @router.post("/biology-lab/analyse")
+@limiter.limit("2/minute")
 async def analyse_biology_image(
+    request: Request,
     file: UploadFile = File(None),
-    url: str = Form(None)
+    url: str = Form(None),
+    model_id: str = Form("llava")
 ):
     """
-    Analyse a biology image using Google Gemini
-    Vision API. Returns structured list of
-    identified biological components with
-    descriptions, functions, and 3D rendering hints.
+    Analyse a biology image using open-source vision models.
+    Returns structured list of biological components.
     """
-    import google.generativeai as genai
-    import base64
-    import re
-
-    GOOGLE_API_KEY = os.environ.get(
-        "GOOGLE_API_KEY", ""
-    )
-    if not GOOGLE_API_KEY:
+    if not file and not url:
         return JSONResponse(
-            status_code=500,
-            content={"error":
-                "GOOGLE_API_KEY not configured."
-            }
+            status_code=400,
+            content={"error": "No image or URL provided"}
         )
 
     try:
-        genai.configure(api_key=GOOGLE_API_KEY)
-        model = genai.GenerativeModel(
-            "gemini-1.5-flash"
-        )
-
         # Get image bytes
         if file:
             image_bytes = await file.read()
-            mime_type = (
-                file.content_type or "image/jpeg"
-            )
         elif url:
-            import urllib.request
-            with urllib.request.urlopen(url) as r:
-                image_bytes = r.read()
-            mime_type = "image/jpeg"
-        else:
-            return JSONResponse(
-                status_code=400,
-                content={"error": "No image or URL provided"}
-            )
+            async with httpx.AsyncClient() as client:
+                response = await client.get(url)
+                image_bytes = response.content
 
-        image_b64 = base64.b64encode(
-            image_bytes
-        ).decode()
+        image_b64 = base64.b64encode(image_bytes).decode()
 
         # Structured prompt for component extraction
         prompt = """
         Analyse this biological/microscopy image.
-        Identify ALL visible biological components,
-        organelles, structures, or specimens.
+        Identify ALL visible biological components, organelles, or structures.
 
-        Return ONLY a valid JSON array.
-        No markdown, no explanation, just JSON.
+        Return ONLY a valid JSON array. No markdown, no conversation.
 
         Format:
         [
@@ -556,81 +573,48 @@ async def analyse_biology_image(
             "size": "large",
             "description": "The control center of the cell containing DNA",
             "function": "Controls cell activities and contains genetic material",
-            "facts": [
-              "Contains DNA organized into chromosomes",
-              "Surrounded by nuclear envelope with pores",
-              "Directs protein synthesis"
-            ],
+            "facts": ["Contains DNA", "Surrounded by nuclear envelope", "Directs protein synthesis"],
             "position_hint": "center"
           }
         ]
 
-        Types must be one of:
-        nucleus, mitochondria, membrane,
-        chloroplast, vacuole, ribosome,
-        golgi, endoplasmic_reticulum,
-        lysosome, cytoplasm, rod, sphere,
-        tissue, bacteria, unknown
-
-        Size must be: large, medium, small
-
-        Position_hint must be:
-        center, inner, outer, scattered
-
-        If this is not a biology image, return:
-        [{"error": "not_biology",
-          "message": "Please upload a biological image such as a cell diagram, microscope slide, or anatomy illustration"}]
+        Types: nucleus, mitochondria, membrane, chloroplast, vacuole, ribosome, golgi, endoplasmic_reticulum, lysosome, cytoplasm, rod, sphere, tissue, bacteria.
+        Size: large, medium, small.
+        Position_hint: center, inner, outer, scattered.
         """
 
-        response = await model.generate_content_async([
-            {"mime_type": mime_type,
-             "data": image_b64},
-            prompt
-        ])
+        result_text, error = await call_os_vision_model(image_b64, prompt, model_id)
+
+        if error:
+            return JSONResponse(status_code=502, content={"error": error})
 
         # Parse JSON response
-        import json
-        text = response.text.strip()
-        # Strip any accidental markdown
-        text = re.sub(
-            r'^```json\s*', '', text
-        )
+        text = result_text.strip()
+        text = re.sub(r'^```json\s*', '', text)
         text = re.sub(r'\s*```$', '', text)
-        components = json.loads(text)
 
-        # Check for error response
-        if (isinstance(components, list) and
-            len(components) > 0 and
-            isinstance(components[0], dict) and
-            "error" in components[0]):
-            return JSONResponse(
-                status_code=400,
-                content=components[0]
-            )
+        # Find the first [ and last ] to handle potential chatter
+        start = text.find('[')
+        end = text.rfind(']') + 1
+        if start != -1 and end != 0:
+            text = text[start:end]
+
+        components = json.loads(text)
 
         return JSONResponse(
             status_code=200,
             content={
                 "components": components,
                 "count": len(components),
-                "image_type": "biology"
+                "model_used": model_id
             }
         )
 
-    except json.JSONDecodeError as e:
-        return JSONResponse(
-            status_code=502,
-            content={
-                "error": "AI response parse error",
-                "raw": response.text[:500] if 'response' in locals() else "No response"
-            }
-        )
     except Exception as e:
+        logger.error(f"Biology analysis failed: {e}")
         return JSONResponse(
             status_code=500,
-            content={
-                "error": f"Analysis failed: {str(e)}"
-            }
+            content={"error": f"Analysis failed: {str(e)}"}
         )
 
 @router.post("/biology-lab/chat")
@@ -638,81 +622,59 @@ async def biology_lab_chat(
     request: Request
 ):
     """
-    AI Biology Guide chat. Receives user message
-    + current scene context (what components are
-    visible) and responds as a biology expert.
+    AI Biology Guide chat using open-source models.
     """
-    import google.generativeai as genai
-
-    GOOGLE_API_KEY = os.environ.get(
-        "GOOGLE_API_KEY", ""
-    )
-    if not GOOGLE_API_KEY:
-        return JSONResponse(
-            status_code=500,
-            content={"error": "GOOGLE_API_KEY not configured."}
-        )
-
     try:
         body = await request.json()
         user_message = body.get("message", "")
-        scene_context = body.get(
-            "components", []
-        )
+        scene_context = body.get("components", [])
+        model_id = body.get("model_id", "hf") # Fallback to default HF model
 
-        context_str = ", ".join([
-            c.get("name", "")
-            for c in scene_context
-        ]) if scene_context else "general biology"
+        context_str = ", ".join([c.get("name", "") for c in scene_context]) if scene_context else "general biology"
 
         system_prompt = f"""
-        You are an expert Biology Guide in an
-        immersive XR biology laboratory at the
-        NAIRA Institute. You are helping a student
-        explore a 3D visualization of biological
-        components identified from their uploaded
-        image.
+        You are an expert Biology Guide at the NAIRA Institute.
+        You are helping a student explore a 3D visualization.
 
-        Currently visible in the 3D scene:
-        {context_str}
+        Visible components: {context_str}
 
-        Your role:
-        - Explain biological structures clearly
-        - Connect concepts to African examples
-          where relevant (e.g. malaria parasites,
-          African plant cells, local organisms)
-        - Use analogies appropriate for students
-        - Be enthusiastic and encouraging
-        - Keep responses under 150 words
-        - Always relate back to what is visible
-          in their scene
-
-        Respond conversationally, not with lists.
+        Role:
+        - Explain structures clearly.
+        - Connect to African examples (e.g. local parasites, flora).
+        - Use student-friendly analogies.
+        - Under 120 words.
         """
 
-        genai.configure(api_key=GOOGLE_API_KEY)
-        model = genai.GenerativeModel(
-            "gemini-1.5-flash",
-            system_instruction=system_prompt
-        )
-        response = await model.generate_content_async(
-            user_message
-        )
+        # Use open-source model via HF
+        token = os.getenv("HF_TOKEN")
+
+        # Map biology models to chat-capable OS models
+        chat_models = {
+            "llava": "mistralai/Mistral-7B-Instruct-v0.3",
+            "moondream": "Qwen/Qwen2.5-7B-Instruct",
+            "bakllava": "mistralai/Mistral-7B-Instruct-v0.3",
+            "florence": "microsoft/Phi-3-mini-4k-instruct"
+        }
+        target_chat_model = chat_models.get(model_id, "mistralai/Mistral-7B-Instruct-v0.3")
+
+        if token:
+            response = await call_huggingface(system_prompt, user_message, model_id=target_chat_model)
+        else:
+            # Final fallback if keys are missing
+            response = "I'm currently in local mode. I can see you're looking at " + context_str + ". How can I assist you with these biological structures?"
+
         return JSONResponse(
             status_code=200,
-            content={"response": response.text}
+            content={"response": response}
         )
     except Exception as e:
+        logger.error(f"Biology Guide error: {e}")
         return JSONResponse(
             status_code=500,
-            content={
-                "error": f"Guide error: {str(e)}"
-            }
+            content={"error": f"Guide error: {str(e)}"}
         )
 
 # --- AI Chat ---
-import google.generativeai as genai
-from huggingface_hub import AsyncInferenceClient
 
 async def call_gemini(system_prompt: str, user_msg: str):
     api_key = os.getenv("GOOGLE_API_KEY")

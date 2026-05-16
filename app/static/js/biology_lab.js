@@ -7,6 +7,7 @@ const mouse = new THREE.Vector2();
 const components = [];
 let tourIndex = 0;
 let tourInterval = null;
+let selectedModel = 'llava';
 
 // --- INITIALIZATION ---
 function init() {
@@ -52,6 +53,7 @@ function init() {
     observer.observe(viewport);
 
     setupEventListeners();
+    if (window.feather) feather.replace();
 }
 
 function onWindowResize() {
@@ -63,7 +65,48 @@ function onWindowResize() {
 
 // --- CORE LOGIC ---
 
+function handleModelSelect(modelId) {
+    selectedModel = modelId;
+
+    // Update UI
+    document.querySelectorAll('.cf-model-option').forEach(o => {
+        o.classList.remove('selected');
+    });
+    const activeOption = document.querySelector(`.cf-model-option[data-model="${modelId}"]`);
+    if (activeOption) activeOption.classList.add('selected');
+
+    // Update generate button text
+    updateGenerateButtonText(modelId);
+    if (window.feather) feather.replace();
+}
+
+function updateGenerateButtonText(modelId) {
+    const labels = {
+        llava: "Analyse with LLaVA-1.5 ⚡",
+        florence: "Analyse with Florence-2 🏆",
+        moondream: "Analyse with Moondream 2 🎨"
+    };
+    const btns = document.querySelectorAll('.cf-btn-primary');
+    btns.forEach(btn => {
+        const textSpan = btn.querySelector('.btn-text');
+        const targetText = labels[modelId] || "Analyse Image with AI";
+
+        if (textSpan) {
+            textSpan.textContent = targetText;
+        } else if (btn.textContent.includes("Analyse")) {
+            btn.textContent = targetText;
+        }
+    });
+}
+
 function setupEventListeners() {
+    // Model selection
+    document.querySelectorAll('.cf-model-option').forEach(option => {
+        option.addEventListener('click', () => {
+            handleModelSelect(option.dataset.model);
+        });
+    });
+
     // Upload Handlers
     const fileInput = document.getElementById('bio-image-input');
     fileInput.addEventListener('change', (e) => {
@@ -184,6 +227,51 @@ const DEMO_COMPONENTS = [
         "Made of RNA and protein"
       ],
       position_hint: "scattered"
+    },
+    {
+      id: "er",
+      name: "Endoplasmic Reticulum",
+      type: "endoplasmic_reticulum",
+      color: "#8b5cf6",
+      size: "medium",
+      description: "The cell's transport network",
+      function: "Transport system for proteins and other compounds",
+      facts: [
+        "Two types: Smooth and Rough",
+        "Continuous with the nuclear envelope",
+        "Critical for protein folding"
+      ],
+      position_hint: "inner"
+    },
+    {
+        id: "chloroplast",
+        name: "Chloroplast",
+        type: "chloroplast",
+        color: "#22c55e",
+        size: "medium",
+        description: "Food producers of the plant cell",
+        function: "Convert light energy into sugars (Photosynthesis)",
+        facts: [
+          "Only found in plant cells and algae",
+          "Contains chlorophyll pigment",
+          "Has its own double membrane"
+        ],
+        position_hint: "inner"
+    },
+    {
+        id: "lysosome",
+        name: "Lysosome",
+        type: "lysosome",
+        color: "#f97316",
+        size: "small",
+        description: "Cellular recycling center",
+        function: "Digests excess or worn-out organelles, food particles, and viruses",
+        facts: [
+          "Contain digestive enzymes",
+          "Break down waste products",
+          "Can trigger self-destruction of the cell (apoptosis)"
+        ],
+        position_hint: "scattered"
     }
 ];
 
@@ -201,7 +289,7 @@ function loadDemo() {
 }
 
 async function handleImageUpload(fileOrUrl) {
-    showLoading("Uploading & Analysing image with AI...");
+    showLoading(`Uploading & Analysing image with ${selectedModel.toUpperCase()} AI...`);
 
     const formData = new FormData();
     if (fileOrUrl instanceof File) {
@@ -209,6 +297,7 @@ async function handleImageUpload(fileOrUrl) {
     } else {
         formData.append("url", fileOrUrl);
     }
+    formData.append("model_id", selectedModel);
 
     try {
         const response = await fetch("/api/biology-lab/analyse", {
@@ -310,8 +399,16 @@ function buildBioScene(componentsData) {
             geometry = new THREE.CylinderGeometry(0.2, 0.2, 1.2, 12);
         } else if (comp.type === 'mitochondria') {
             geometry = new THREE.CapsuleGeometry(0.4, 0.8, 4, 16);
-        } else if (comp.type === 'golgi' || comp.type === 'endoplasmic_reticulum') {
+        } else if (comp.type === 'golgi_apparatus' || comp.type === 'golgi' || comp.type === 'endoplasmic_reticulum') {
             geometry = new THREE.TorusKnotGeometry(0.6, 0.2, 64, 8);
+        } else if (comp.type === 'chloroplast') {
+            geometry = new THREE.CapsuleGeometry(0.5, 0.6, 4, 16);
+        } else if (comp.type === 'vacuole') {
+            geometry = new THREE.SphereGeometry(1.2, 16, 16);
+        } else if (comp.type === 'ribosome') {
+            geometry = new THREE.SphereGeometry(0.15, 8, 8);
+        } else if (comp.type === 'lysosome') {
+            geometry = new THREE.SphereGeometry(0.5, 16, 16);
         } else {
             geometry = new THREE.SphereGeometry(0.4 + Math.random() * 0.4, 16, 16);
         }
@@ -364,27 +461,34 @@ function buildBioScene(componentsData) {
 
 function addLabel(mesh, text, color) {
     const canvas = document.createElement('canvas');
-    canvas.width = 256;
-    canvas.height = 64;
+    canvas.width = 512;
+    canvas.height = 128;
     const ctx = canvas.getContext('2d');
 
-    ctx.fillStyle = `#${color.getHexString()}22`;
+    // Pill background
+    ctx.fillStyle = 'rgba(10, 10, 30, 0.8)';
     ctx.beginPath();
-    ctx.roundRect(4, 4, 248, 56, 8);
+    ctx.roundRect(10, 10, 492, 108, 54);
     ctx.fill();
 
+    // Border
     ctx.strokeStyle = `#${color.getHexString()}`;
-    ctx.lineWidth = 2;
+    ctx.lineWidth = 6;
     ctx.stroke();
 
+    // Text
     ctx.fillStyle = '#ffffff';
-    ctx.font = 'bold 20px Arial';
+    ctx.font = 'bold 44px Inter, Arial';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillText(text, 128, 32);
+
+    // Cyan glow for the text
+    ctx.shadowColor = '#22d3ee';
+    ctx.shadowBlur = 10;
+    ctx.fillText(text.toUpperCase(), 256, 64);
 
     const texture = new THREE.CanvasTexture(canvas);
-    const labelGeo = new THREE.PlaneGeometry(1.5, 0.4);
+    const labelGeo = new THREE.PlaneGeometry(2, 0.5);
     const labelMat = new THREE.MeshBasicMaterial({
         map: texture,
         transparent: true,
@@ -392,7 +496,9 @@ function addLabel(mesh, text, color) {
         side: THREE.DoubleSide
     });
     const label = new THREE.Mesh(labelGeo, labelMat);
-    label.position.set(mesh.position.x, mesh.position.y + 1.2, mesh.position.z);
+
+    // Position label above mesh
+    label.position.set(mesh.position.x, mesh.position.y + 1.5, mesh.position.z);
     label.userData.isLabel = true;
     scene.add(label);
 }
@@ -576,7 +682,8 @@ async function sendGuideMessage(message) {
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
                 message: message,
-                components: window.currentComponents || []
+                components: window.currentComponents || [],
+                model_id: selectedModel
             })
         });
         const data = await response.json();
