@@ -370,31 +370,6 @@
         </div>
     </section>
 
-    <!-- Newsletter / Subscribe Banner (Emergency Style) -->
-    <section class="py-16 bg-primary/95 text-white border-t border-white/10">
-        <div class="container mx-auto px-6 flex flex-col md:flex-row items-center justify-between gap-10">
-            <div class="flex items-center gap-6">
-                <div class="bg-white/20 p-5 rounded-full animate-pulse border border-white/30">
-                    <i data-feather="send" class="w-8 h-8 text-white"></i>
-                </div>
-                <div class="space-y-1">
-                    <h2 class="text-3xl font-extrabold tracking-tight">Stay Ahead with NAIRA</h2>
-                    <p class="text-primary-foreground/80 font-medium">Join our community for the latest African AI and XR innovation updates.</p>
-                </div>
-            </div>
-            <form id="newsletter-form-home" class="w-full md:w-auto flex flex-col sm:flex-row gap-4">
-                <div class="hidden">
-                    <label>Leave this field blank</label>
-                    <input type="text" name="website_url" autocomplete="off">
-                </div>
-                <input type="email" name="email" required class="px-8 py-4 rounded-full bg-white/10 border border-white/20 text-white placeholder-white/50 focus:outline-none focus:bg-white/20 transition-all min-w-[300px]" placeholder="Enter your email">
-                <button type="submit" class="bg-white text-primary px-10 py-4 rounded-full font-extrabold shadow-xl shadow-black/10 transition-all active:scale-95 whitespace-nowrap">
-                    Subscribe Now
-                </button>
-            </form>
-            <div id="newsletter-status-home" class="hidden absolute bottom-4 left-1/2 -translate-x-1/2"></div>
-        </div>
-    </section>
 </div>
 <script type="importmap">
     {
@@ -645,7 +620,6 @@
         const aiBtn = document.getElementById('try-ai-btn');
         const topBar = document.getElementById('top-bar');
         const navbar = document.getElementById('navbar');
-        const footer = document.querySelector('footer');
         const allSections = document.querySelectorAll('section');
 
         if (enable) {
@@ -654,7 +628,6 @@
             if (aiBtn) aiBtn.style.display = 'flex';
             if (topBar) topBar.style.display = 'none';
             if (navbar) navbar.style.display = 'none';
-            if (footer) footer.style.display = 'none';
 
             allSections.forEach(sec => {
                 if (!sec.contains(container)) {
@@ -669,7 +642,6 @@
             if (aiBtn) aiBtn.style.display = 'flex';
             if (topBar) topBar.style.display = '';
             if (navbar) navbar.style.display = '';
-            if (footer) footer.style.display = '';
 
             allSections.forEach(sec => {
                 sec.style.display = '';

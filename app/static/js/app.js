@@ -478,12 +478,12 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    const newsletterFormHome = document.getElementById('newsletter-form-home');
-    const newsletterStatusHome = document.getElementById('newsletter-status-home');
-    if (newsletterFormHome && newsletterStatusHome) {
-        newsletterFormHome.addEventListener('submit', (e) => {
+    const newsletterFormFooter = document.getElementById('newsletter-form-footer');
+    const newsletterStatusFooter = document.getElementById('newsletter-status-footer');
+    if (newsletterFormFooter && newsletterStatusFooter) {
+        newsletterFormFooter.addEventListener('submit', (e) => {
             e.preventDefault();
-            handleNewsletterSubmit(newsletterFormHome, newsletterStatusHome);
+            handleNewsletterSubmit(newsletterFormFooter, newsletterStatusFooter);
         });
     }
 });
