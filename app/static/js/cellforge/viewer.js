@@ -16,13 +16,25 @@ class CellViewer {
         this.camera = new THREE.PerspectiveCamera(35, this.container.clientWidth / this.container.clientHeight, 0.1, 1000);
         this.camera.position.set(0, 0.1, 6.05);
 
-        this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true });
-        this.renderer.setSize(this.container.clientWidth, this.container.clientHeight);
-        this.renderer.setPixelRatio(window.devicePixelRatio);
+        const existingCanvas = this.container.querySelector('canvas');
+        this.renderer = new THREE.WebGLRenderer({
+            canvas: existingCanvas || undefined,
+            antialias: true,
+            alpha: true,
+            preserveDrawingBuffer: true
+        });
+
+        if (!existingCanvas) {
+            this.renderer.setSize(this.container.clientWidth, this.container.clientHeight);
+            this.container.appendChild(this.renderer.domElement);
+        } else {
+            // Respect the fixed size if canvas was already provided
+            this.renderer.setPixelRatio(window.devicePixelRatio);
+        }
+
         this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
         this.renderer.toneMappingExposure = 1.08;
         this.renderer.shadowMap.enabled = true;
-        this.container.appendChild(this.renderer.domElement);
 
         this.controls = new OrbitControls(this.camera, this.renderer.domElement);
         this.controls.enableDamping = true;
