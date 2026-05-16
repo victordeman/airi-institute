@@ -21,7 +21,7 @@ html, body, #root {
 }
 
 body {
-  overflow: auto;
+  overflow: hidden;
 }
 
 button, input, textarea, select {
