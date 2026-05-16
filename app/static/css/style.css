@@ -141,32 +141,6 @@ nav, main, footer {
     color: #000000;
 }
 
-.page-sub footer {
-    background-color: #f5f4ef;
-    color: #000000 !important;
-}
-
-.page-sub footer {
-    background-color: #f8fafc;
-    border-top-color: rgba(0, 0, 0, 0.1);
-}
-
-.page-sub footer .text-slate-500 {
-    color: #666666;
-    color: #333333;
-}
-
-.page-sub footer .bg-white\/5 {
-    background-color: rgba(0,0,0,0.05);
-}
-
-.page-sub footer .border-white\/10 {
-    border-color: rgba(0,0,0,0.1);
-}
-
-.page-sub footer .text-slate-400 {
-    color: #555555;
-}
 
 .page-sub #navbar .text-slate-400 {
     color: #555555;
