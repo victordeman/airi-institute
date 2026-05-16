@@ -4,49 +4,42 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 // --- CONFIG & STATE ---
 let scene, camera, renderer, controls, raycaster;
 const mouse = new THREE.Vector2();
-let currentComponents = [];
+const components = [];
 let tourIndex = 0;
 let tourInterval = null;
-let isTouring = false;
 
 // --- INITIALIZATION ---
 function init() {
-    const container = document.getElementById('ai-canvas-container');
+    const viewport = document.getElementById('bio-viewport');
+    const canvas = document.getElementById('bio-canvas');
 
     scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x020617);
+    scene.background = new THREE.Color(0x0a0a1a);
 
-    camera = new THREE.PerspectiveCamera(60, container.clientWidth / container.clientHeight, 0.1, 1000);
-    camera.position.set(0, 10, 20);
+    camera = new THREE.PerspectiveCamera(60, viewport.clientWidth / viewport.clientHeight, 0.1, 1000);
+    camera.position.set(0, 5, 10);
 
-    renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-    renderer.setSize(container.clientWidth, container.clientHeight);
+    renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true });
+    renderer.setSize(viewport.clientWidth, viewport.clientHeight);
     renderer.setPixelRatio(window.devicePixelRatio);
-    container.appendChild(renderer.domElement);
 
     controls = new OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
-    controls.dampingFactor = 0.05;
 
     // Lighting
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.4);
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
     scene.add(ambientLight);
 
-    const pointLight = new THREE.PointLight(0x6366f1, 2, 100);
-    pointLight.position.set(10, 20, 10);
-    scene.add(pointLight);
+    const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
+    dirLight.position.set(5, 10, 7.5);
+    scene.add(dirLight);
 
     raycaster = new THREE.Raycaster();
 
-    // Environment
-    createStarfield();
-
     window.addEventListener('resize', onWindowResize);
-    renderer.domElement.addEventListener('click', onCanvasClick);
+    canvas.addEventListener('click', onCanvasClick);
 
-    setupUIListeners();
-
-    // Check Visibility for animation loop
+    // Animation visibility observer
     const observer = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
             if (entry.isIntersecting) {
@@ -56,99 +49,144 @@ function init() {
             }
         });
     }, { threshold: 0.1 });
-    observer.observe(container);
+    observer.observe(viewport);
 
-    if (window.feather) feather.replace();
-}
-
-function createStarfield() {
-    const geo = new THREE.BufferGeometry();
-    const vertices = [];
-    for (let i = 0; i < 5000; i++) {
-        vertices.push(
-            THREE.MathUtils.randFloatSpread(500),
-            THREE.MathUtils.randFloatSpread(500),
-            THREE.MathUtils.randFloatSpread(500)
-        );
-    }
-    geo.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
-    const mat = new THREE.PointsMaterial({ size: 0.5, color: 0x4f46e5, transparent: true, opacity: 0.6 });
-    scene.add(new THREE.Points(geo, mat));
+    setupEventListeners();
 }
 
 function onWindowResize() {
-    const container = document.getElementById('ai-canvas-container');
-    camera.aspect = container.clientWidth / container.clientHeight;
+    const viewport = document.getElementById('bio-viewport');
+    camera.aspect = viewport.clientWidth / viewport.clientHeight;
     camera.updateProjectionMatrix();
-    renderer.setSize(container.clientWidth, container.clientHeight);
+    renderer.setSize(viewport.clientWidth, viewport.clientHeight);
 }
 
-// --- UI LISTENERS ---
-function setupUIListeners() {
-    // Model Selector
-    document.querySelectorAll('.model-option').forEach(opt => {
-        opt.onclick = () => {
-            document.querySelectorAll('.model-option').forEach(o => {
-                o.classList.remove('selected', 'border-indigo-500/50', 'bg-indigo-500/10');
-                o.classList.add('border-white/10');
-            });
-            opt.classList.add('selected', 'border-indigo-500/50', 'bg-indigo-500/10');
-            opt.classList.remove('border-white/10');
-        };
+// --- CORE LOGIC ---
+
+function setupEventListeners() {
+    // Upload Handlers
+    const fileInput = document.getElementById('bio-image-input');
+    fileInput.addEventListener('change', (e) => {
+        if (e.target.files.length > 0) {
+            handleImageUpload(e.target.files[0]);
+        }
     });
 
-    // Upload
-    const uploadBtn = document.getElementById('upload-trigger-btn');
-    const fileInput = document.getElementById('bio-upload');
-    uploadBtn.onclick = () => fileInput.click();
-    fileInput.onchange = (e) => {
-        if (e.target.files.length > 0) handleUpload(e.target.files[0]);
-    };
+    document.getElementById('bio-url-btn').addEventListener('click', () => {
+        const url = document.getElementById('bio-url-input').value;
+        if (url) handleImageUpload(url);
+    });
 
-    // Demo
-    document.getElementById('demo-btn').onclick = loadDemo;
+    document.getElementById('demo-btn').addEventListener('click', loadDemo);
+    document.getElementById('start-tour-btn').addEventListener('click', () => {
+        document.getElementById('upload-panel').scrollIntoView({ behavior: 'smooth' });
+    });
 
-    // URL Analyze
-    document.getElementById('bio-url-btn').onclick = () => {
-        const url = document.getElementById('bio-url-input').value.trim();
-        if (url) handleUpload(null, url);
-    };
-
-    // HUD
-    document.getElementById('reset-btn').onclick = () => {
-        animateCameraTo(new THREE.Vector3(0, 5, 15), new THREE.Vector3(0, 0, 0));
-    };
-    document.getElementById('start-tour-btn').onclick = toggleTour;
+    // HUD buttons
+    document.getElementById('guided-tour-btn').addEventListener('click', toggleGuidedTour);
+    document.getElementById('reset-view-btn').addEventListener('click', resetView);
+    document.getElementById('upload-new-btn').addEventListener('click', () => {
+        location.reload();
+    });
 
     // Chat
-    document.getElementById('ai-chat-form').onsubmit = (e) => {
-        e.preventDefault();
-        const input = document.getElementById('ai-chat-input');
-        const msg = input.value.trim();
-        if (msg) {
-            sendChatMessage(msg);
+    document.getElementById('guide-send').addEventListener('click', () => {
+        const input = document.getElementById('guide-input');
+        if (input.value.trim()) {
+            sendGuideMessage(input.value.trim());
             input.value = '';
         }
-    };
+    });
 
-    document.getElementById('close-ai-info').onclick = () => {
-        document.getElementById('ai-info-panel').classList.add('hidden');
-    };
+    document.getElementById('guide-input').addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            document.getElementById('guide-send').click();
+        }
+    });
 
-    document.getElementById('ask-specialist-btn').onclick = () => {
-        const title = document.getElementById('ai-panel-title').textContent;
-        sendChatMessage(`Tell me more about the ${title} in this cell.`);
-    };
-
-    document.getElementById('upload-new-btn').onclick = () => location.reload();
+    document.getElementById('detail-close').addEventListener('click', () => {
+        document.getElementById('detail-card').style.display = 'none';
+    });
 }
 
-// --- FLOWS ---
-async function handleUpload(file, url = null) {
-    showLoading(true);
-    const modelId = document.querySelector('.model-option.selected').dataset.model;
+const DEMO_COMPONENTS = [
+    {
+      id: "nucleus",
+      name: "Nucleus",
+      type: "nucleus",
+      color: "#6366f1",
+      size: "large",
+      description: "Control center of the cell",
+      function: "Contains DNA and directs all cell activities",
+      facts: [
+        "Contains 46 chromosomes in human cells",
+        "Surrounded by double membrane",
+        "Communicates via nuclear pores"
+      ],
+      position_hint: "center"
+    },
+    {
+      id: "mitochondria",
+      name: "Mitochondria",
+      type: "mitochondria",
+      color: "#f59e0b",
+      size: "medium",
+      description: "Powerhouse of the cell",
+      function: "Produces ATP through cellular respiration",
+      facts: [
+        "Has its own DNA",
+        "Generates 90% of cell energy",
+        "Thought to be ancient bacteria"
+      ],
+      position_hint: "inner"
+    },
+    {
+      id: "cell_membrane",
+      name: "Cell Membrane",
+      type: "membrane",
+      color: "#10b981",
+      size: "large",
+      description: "Protective outer boundary",
+      function: "Controls what enters and exits the cell",
+      facts: [
+        "Made of phospholipid bilayer",
+        "Contains protein channels",
+        "Selectively permeable"
+      ],
+      position_hint: "outer"
+    },
+    {
+      id: "golgi",
+      name: "Golgi Apparatus",
+      type: "golgi",
+      color: "#ef4444",
+      size: "medium",
+      description: "Cell's postal system",
+      function: "Packages and ships proteins",
+      facts: [
+        "Named after Camillo Golgi",
+        "Stack of flattened membranes",
+        "Modifies proteins for export"
+      ],
+      position_hint: "inner"
+    },
+    {
+      id: "ribosome",
+      name: "Ribosomes",
+      type: "ribosome",
+      color: "#fbbf24",
+      size: "small",
+      description: "Protein factories",
+      function: "Synthesize proteins from RNA",
+      facts: [
+        "Smallest organelle",
+        "Found free or on ER",
+        "Made of RNA and protein"
+      ],
+      position_hint: "scattered"
+    }
+];
 
-    // First, identify biological components
 function loadDemo() {
     document.getElementById('upload-panel').style.display = 'none';
     document.getElementById('bio-viewport').style.display = 'block';
@@ -166,230 +204,201 @@ async function handleImageUpload(fileOrUrl) {
     showLoading("Uploading & Analysing image with AI...");
     
     const formData = new FormData();
-    if (file) formData.append('file', file);
-    if (url) formData.append('url', url);
-    formData.append('model_id', modelId);
+    if (fileOrUrl instanceof File) {
+        formData.append("file", fileOrUrl);
+    } else {
+        formData.append("url", fileOrUrl);
+    }
 
     try {
-        const resp = await fetch('/api/biology-lab/analyse', {
-            method: 'POST',
+        const response = await fetch("/api/biology-lab/analyse", {
+            method: "POST",
             body: formData
         });
-        const data = await resp.json();
+        const data = await response.json();
 
-        if (data.error) throw new Error(data.error);
+        if (data.error) {
+            alert(data.message || data.error);
+            hideLoading();
+            return;
+        }
 
-        buildScene(data.components);
-        enterImmersiveMode(data);
+        document.getElementById('upload-panel').style.display = 'none';
+        document.getElementById('bio-viewport').style.display = 'block';
+        document.getElementById('build-section').style.display = 'block';
 
-        // Second, try to generate a real 3D model artifact (mirror CellForge)
-        // We do this in the background to show the procedurally generated scene first
-        fetch('/api/cellforge/generate', {
-            method: 'POST',
-            body: formData
-        }).then(res => res.json()).then(modelData => {
-            if (modelData.model_data) {
-                console.log("3D Artifact Generated:", modelData.provider);
-                addGuideMessage(`I've also generated a reconstructed 3D model using ${modelData.provider}. Processing complete.`);
-            }
-        }).catch(err => console.warn("3D generation skipped or failed:", err));
+        window.currentComponents = data.components;
+        buildBioScene(data.components);
+        populateComponentList(data.components);
+        populateComponentTags(data.components);
+
         const names = data.components.map(c => c.name).join(', ');
         document.getElementById('guide-intro-text').textContent = 
           `I can see ${data.count} biological structures in your image: ${names}. Click any component in the 3D view to learn more, or ask me anything!`;
 
     } catch (err) {
-        alert("Analysis Error: " + err.message);
-        showLoading(false);
+        console.error(err);
+        alert("Failed to analyse image. Please try again.");
+    } finally {
+        hideLoading();
     }
 }
 
-function loadDemo() {
-    const demoData = {
-        components: [
-            { id: 'nucleus', name: 'Nucleus', type: 'nucleus', color: '#6366f1', size: 'large', description: 'Control center containing DNA', function: 'Regulates cell activities', facts: ['Contains 46 chromosomes', 'Nuclear envelope with pores'], position_hint: 'center' },
-            { id: 'mitochondria-1', name: 'Mitochondria', type: 'mitochondria', color: '#f59e0b', size: 'medium', description: 'Powerhouse of the cell', function: 'Produces ATP energy', facts: ['Has its own DNA', 'Found in most eukaryotic cells'], position_hint: 'inner' },
-            { id: 'membrane', name: 'Cell Membrane', type: 'membrane', color: '#10b981', size: 'large', description: 'Semi-permeable barrier', function: 'Controls cell entry/exit', facts: ['Phospholipid bilayer', 'Protects cell contents'], position_hint: 'outer' },
-            { id: 'golgi', name: 'Golgi Apparatus', type: 'golgi', color: '#ef4444', size: 'medium', description: 'Packaging center', function: 'Modifies and sorts proteins', facts: ['Named after Camillo Golgi', 'Stack of flattened sacs'], position_hint: 'inner' },
-            { id: 'ribosome-1', name: 'Ribosome', type: 'ribosome', color: '#fbbf24', size: 'small', description: 'Protein factory', function: 'Protein synthesis', facts: ['Can be free or bound', 'Made of RNA and protein'], position_hint: 'scattered' },
-            { id: 'ribosome-2', name: 'Ribosome', type: 'ribosome', color: '#fbbf24', size: 'small', description: 'Protein factory', function: 'Protein synthesis', facts: ['Essential for life', 'Translates mRNA'], position_hint: 'scattered' },
-            { id: 'er', name: 'Endoplasmic Reticulum', type: 'endoplasmic_reticulum', color: '#8b5cf6', size: 'medium', description: 'Transport network', function: 'Synthesizes lipids and proteins', facts: ['Rough ER has ribosomes', 'Smooth ER detoxifies'], position_hint: 'inner' },
-            { id: 'lysosome', name: 'Lysosome', type: 'lysosome', color: '#f97316', size: 'small', description: 'Waste disposal', function: 'Digests macromolecules', facts: ['Contains digestive enzymes', 'pH is acidic'], position_hint: 'scattered' }
-        ],
-        count: 8
-    };
-    buildScene(demoData.components);
-    enterImmersiveMode(demoData);
+function showLoading(text) {
+    document.getElementById('upload-zone').style.display = 'none';
+    document.querySelector('.bio-upload-divider').style.display = 'none';
+    document.querySelector('.bio-url-input').style.display = 'none';
+    document.getElementById('bio-loading').style.display = 'block';
+    document.getElementById('bio-loading-text').textContent = text;
 }
 
-function showLoading(show) {
-    const overlay = document.getElementById('bio-loading');
-    if (show) overlay.classList.remove('hidden');
-    else overlay.classList.add('hidden');
+function hideLoading() {
+    document.getElementById('bio-loading').style.display = 'none';
 }
 
-function enterImmersiveMode(data) {
-    showLoading(false);
-    document.getElementById('intro-ui').classList.add('opacity-0', 'pointer-events-none');
-    document.getElementById('hud-panel').classList.remove('opacity-0', 'pointer-events-none');
-    document.getElementById('build-section').classList.remove('opacity-0', 'pointer-events-none');
-    document.getElementById('component-count').textContent = `${data.count} Detected`;
-
-    // Populate Sidebar & Tags
-    const list = document.getElementById('component-list');
-    const tagsContainer = document.getElementById('component-tags');
-    list.innerHTML = '';
-    tagsContainer.innerHTML = '';
-
-    data.components.forEach(c => {
-        // Sidebar Item
-        const item = document.createElement('div');
-        item.className = 'p-3 bg-white/5 border border-white/5 rounded-xl flex items-center gap-3 cursor-pointer hover:bg-white/10 transition-all group';
-        item.innerHTML = `
-            <div class="w-2 h-2 rounded-full" style="background-color: ${c.color}"></div>
-            <span class="text-xs text-white/80 group-hover:text-white">${c.name}</span>
-        `;
-        item.onclick = () => selectComponent(c.id);
-        list.appendChild(item);
-
-        // Tag
-        const tag = document.createElement('button');
-        tag.className = 'px-3 py-1.5 rounded-full border border-white/10 text-[10px] font-bold text-white hover:bg-white/10 transition-all';
-        tag.style.borderColor = `${c.color}44`;
-        tag.textContent = c.name.toUpperCase();
-        tag.onclick = () => selectComponent(c.id);
-        tagsContainer.appendChild(tag);
-    });
-
-    addGuideMessage(`Analysis complete. I've identified ${data.count} biological structures. You can click them in the 3D view or select from the list to explore details.`);
-
-    currentComponents = data.components;
-    window.currentComponents = data.components;
-}
-
-// --- THREE.JS BUILDER ---
-function buildScene(componentsData) {
-    // Clear previous
-    while(scene.children.length > 0) {
 function clearScene() {
     while(scene.children.length > 0){ 
         const obj = scene.children[0];
         if (obj.geometry) obj.geometry.dispose();
         if (obj.material) {
-            if (Array.isArray(obj.material)) obj.material.forEach(m => m.dispose());
-            else obj.material.dispose();
+            if (Array.isArray(obj.material)) {
+                obj.material.forEach(m => m.dispose());
+            } else {
+                obj.material.dispose();
+            }
         }
         scene.remove(obj); 
     }
+    // Re-add lights
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+    scene.add(ambientLight);
+    const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
+    dirLight.position.set(5, 10, 7.5);
+    scene.add(dirLight);
+}
 
-    createStarfield();
-    // Lights
-    scene.add(new THREE.AmbientLight(0xffffff, 0.5));
-    const pl = new THREE.PointLight(0x6366f1, 2, 100);
-    pl.position.set(10, 20, 10);
-    scene.add(pl);
+function buildBioScene(componentsData) {
+    clearScene();
 
-    componentsData.forEach((comp, idx) => {
-        let geo, mat, mesh;
-        const color = new THREE.Color(comp.color);
+    componentsData.forEach((comp, index) => {
+        let geometry, material, mesh;
+
+        const colors = {
+            nucleus: 0x6366f1,
+            mitochondria: 0xf59e0b,
+            cell_membrane: 0x10b981,
+            membrane: 0x10b981,
+            endoplasmic_reticulum: 0x8b5cf6,
+            golgi_apparatus: 0xef4444,
+            golgi: 0xef4444,
+            ribosome: 0xfbbf24,
+            vacuole: 0x06b6d4,
+            chloroplast: 0x22c55e,
+            lysosome: 0xf97316,
+            cytoplasm: 0xe2e8f0,
+            default: 0x94a3b8
+        };
+
+        const colorHex = comp.color || colors[comp.type] || colors[comp.id.toLowerCase()] || colors.default;
+        const color = new THREE.Color(colorHex);
 
         if (comp.type === 'nucleus') {
-            geo = new THREE.SphereGeometry(3, 64, 64);
+            geometry = new THREE.SphereGeometry(1.5, 32, 32);
         } else if (comp.type === 'membrane') {
-            geo = new THREE.TorusGeometry(8, 0.2, 16, 100);
-        } else if (comp.type === 'mitochondria') {
-            geo = new THREE.CapsuleGeometry(0.8, 1.5, 4, 16);
-        } else if (comp.type === 'golgi' || comp.type === 'endoplasmic_reticulum') {
-            geo = new THREE.TorusKnotGeometry(1.2, 0.4, 64, 8);
+            geometry = new THREE.TorusGeometry(3, 0.15, 16, 100);
         } else if (comp.type === 'rod') {
-            geo = new THREE.CylinderGeometry(0.3, 0.3, 2, 12);
+            geometry = new THREE.CylinderGeometry(0.2, 0.2, 1.2, 12);
+        } else if (comp.type === 'mitochondria') {
+            geometry = new THREE.CapsuleGeometry(0.4, 0.8, 4, 16);
+        } else if (comp.type === 'golgi' || comp.type === 'endoplasmic_reticulum') {
+            geometry = new THREE.TorusKnotGeometry(0.6, 0.2, 64, 8);
         } else {
-            geo = new THREE.SphereGeometry(0.5 + Math.random() * 0.5, 32, 32);
+            geometry = new THREE.SphereGeometry(0.4 + Math.random() * 0.4, 16, 16);
         }
 
-        mat = new THREE.MeshPhongMaterial({
+        material = new THREE.MeshPhongMaterial({
             color: color,
             transparent: true,
             opacity: 0.85,
-            shininess: 100,
-            emissive: color,
-            emissiveIntensity: 0.1
+            shininess: 80
         });
 
-        mesh = new THREE.Mesh(geo, mat);
+        mesh = new THREE.Mesh(geometry, material);
 
-        // Position
-        if (comp.position_hint === 'center') {
-            mesh.position.set(0, 0, 0);
-        } else if (comp.position_hint === 'outer') {
-            const angle = (idx / componentsData.length) * Math.PI * 2;
-            mesh.position.set(Math.cos(angle) * 8, 0, Math.sin(angle) * 8);
-        } else {
-            const radius = 4 + Math.random() * 3;
-            const angle = Math.random() * Math.PI * 2;
-            const y = (Math.random() - 0.5) * 5;
-            mesh.position.set(Math.cos(angle) * radius, y, Math.sin(angle) * radius);
+        const angle = (index / componentsData.length) * Math.PI * 2;
+        const radius = (comp.type === 'nucleus' || comp.position_hint === 'center') ? 0 : 2 + Math.random() * 2;
+        mesh.position.set(
+            Math.cos(angle) * radius,
+            (Math.random() - 0.5) * 2,
+            Math.sin(angle) * radius
+        );
+
+        mesh.userData = {
+            componentId: comp.id,
+            componentName: comp.name,
+            description: comp.description,
+            function: comp.function,
+            facts: comp.facts,
+            type: comp.type,
+            color: colorHex
+        };
+
+        if (comp.type === 'nucleus') {
+            mesh.userData.pulse = true;
         }
 
-        mesh.userData = comp;
-        mesh.userData.isComponent = true;
-        if (comp.type === 'nucleus') mesh.userData.pulse = true;
         scene.add(mesh);
-
-        // Label
         addLabel(mesh, comp.name, color);
     });
 
-    // Outer Cell Sphere (Faint)
-    const shellGeo = new THREE.SphereGeometry(12, 64, 64);
-    const shellMat = new THREE.MeshPhongMaterial({
-        color: 0x22d3ee,
+    // Add outer membrane shell
+    const membraneGeo = new THREE.SphereGeometry(4.5, 32, 32);
+    const membraneMat = new THREE.MeshPhongMaterial({
+        color: 0x10b981,
         transparent: true,
-        opacity: 0.05,
-        side: THREE.BackSide,
-        wireframe: true
+        opacity: 0.08,
+        side: THREE.BackSide
     });
-    scene.add(new THREE.Mesh(shellGeo, shellMat));
+    scene.add(new THREE.Mesh(membraneGeo, membraneMat));
 }
 
 function addLabel(mesh, text, color) {
     const canvas = document.createElement('canvas');
-    canvas.width = 512; canvas.height = 128;
+    canvas.width = 256;
+    canvas.height = 64;
     const ctx = canvas.getContext('2d');
-
-    ctx.fillStyle = 'rgba(2, 6, 23, 0.8)';
     
     ctx.fillStyle = `#${color.getHexString()}22`;
     ctx.beginPath();
-    ctx.roundRect(0, 0, 512, 128, 20);
+    ctx.roundRect(4, 4, 248, 56, 8);
     ctx.fill();
     
     ctx.strokeStyle = `#${color.getHexString()}`;
-    ctx.lineWidth = 10;
+    ctx.lineWidth = 2;
     ctx.stroke();
     
     ctx.fillStyle = '#ffffff';
-    ctx.font = 'bold 64px Inter, sans-serif';
+    ctx.font = 'bold 20px Arial';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillText(text.toUpperCase(), 256, 64);
+    ctx.fillText(text, 128, 32);
 
     const texture = new THREE.CanvasTexture(canvas);
-    const labelMat = new THREE.MeshBasicMaterial({ map: texture, transparent: true, side: THREE.DoubleSide });
-    const label = new THREE.Mesh(new THREE.PlaneGeometry(3, 0.75), labelMat);
-    label.position.copy(mesh.position).add(new THREE.Vector3(0, mesh.geometry.type === 'SphereGeometry' ? 4 : 2, 0));
+    const labelGeo = new THREE.PlaneGeometry(1.5, 0.4);
+    const labelMat = new THREE.MeshBasicMaterial({
+        map: texture,
+        transparent: true,
+        depthTest: false,
+        side: THREE.DoubleSide
+    });
+    const label = new THREE.Mesh(labelGeo, labelMat);
+    label.position.set(mesh.position.x, mesh.position.y + 1.2, mesh.position.z);
     label.userData.isLabel = true;
     scene.add(label);
 }
 
-// --- INTERACTIONS ---
-function onCanvasClick(e) {
+function onCanvasClick(event) {
     const rect = renderer.domElement.getBoundingClientRect();
-    mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
-    mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
-
-    raycaster.setFromCamera(mouse, camera);
-    const intersects = raycaster.intersectObjects(scene.children.filter(o => o.userData.isComponent));
-
     mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
     mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
     
@@ -397,92 +406,134 @@ function onCanvasClick(e) {
     const intersects = raycaster.intersectObjects(scene.children.filter(obj => obj.type === 'Mesh' && !obj.userData.isLabel));
     
     if (intersects.length > 0) {
-        selectComponent(intersects[0].object.userData.id);
+        const obj = intersects[0].object;
+        if (obj.userData.componentId) {
+            showComponentDetail(obj.userData);
+            highlightComponent(obj);
+        }
     }
 }
 
-function selectComponent(id) {
-    const mesh = scene.children.find(o => o.userData.id === id);
-    if (!mesh) return;
-
-    // Reset others
-    scene.children.forEach(o => {
-        if (o.userData.isComponent) o.material.emissiveIntensity = 0.1;
+function highlightComponent(mesh) {
+    scene.children.forEach(obj => {
+        if (obj.type === 'Mesh' && obj.userData.componentId) {
+            obj.material.emissive = new THREE.Color(0x000000);
+        }
     });
-
-    mesh.material.emissiveIntensity = 0.8;
-    showDetail(mesh.userData);
-    animateCameraTo(mesh.position.clone().add(new THREE.Vector3(0, 5, 8)), mesh.position);
+    if (mesh.material.emissive) {
+        mesh.material.emissive = new THREE.Color(0x333333);
+    }
 }
 
-function showDetail(data) {
-    const panel = document.getElementById('ai-info-panel');
-    document.getElementById('ai-panel-title').textContent = data.name;
-    document.getElementById('ai-panel-type').textContent = data.type;
-
-    let html = `
-        <div class="space-y-4">
-            <div>
-                <h4 class="text-[10px] font-bold text-white/40 uppercase tracking-widest mb-1">Description</h4>
-                <p class="text-sm leading-relaxed text-white/80">${data.description}</p>
-            </div>
-            <div>
-                <h4 class="text-[10px] font-bold text-white/40 uppercase tracking-widest mb-1">Biological Function</h4>
-                <p class="text-sm leading-relaxed text-white/80">${data.function}</p>
-            </div>
-            <div>
-                <h4 class="text-[10px] font-bold text-white/40 uppercase tracking-widest mb-2">Key Facts</h4>
-                <ul class="space-y-2">
-                    ${data.facts.map(f => `
-                        <li class="flex items-start gap-2 text-xs text-white/60">
-                            <span class="w-1.5 h-1.5 rounded-full bg-indigo-500 mt-1 flex-shrink-0"></span>
-                            ${f}
-                        </li>
-                    `).join('')}
-                </ul>
-            </div>
-        </div>
+function showComponentDetail(data) {
+    document.getElementById('detail-title').textContent = data.componentName;
+    document.getElementById('detail-subtitle').textContent = data.type.toUpperCase();
+    document.getElementById('detail-body').innerHTML = `
+      <div class="detail-section">
+        <h4>Function</h4>
+        <p>${data.function}</p>
+      </div>
+      <div class="detail-section">
+        <h4>Description</h4>
+        <p>${data.description}</p>
+      </div>
+      <div class="detail-section">
+        <h4>Key Facts</h4>
+        <ul>${data.facts.map(f => `<li>${f}</li>`).join('')}</ul>
+      </div>
+      <button class="ask-guide-btn" id="ask-guide-btn-inline">
+        Ask Biology Guide →
+      </button>
     `;
+    document.getElementById('detail-card').style.display = 'block';
 
-    document.getElementById('ai-panel-content').innerHTML = html;
-    panel.classList.remove('hidden');
-    if (window.feather) feather.replace();
+    document.getElementById('ask-guide-btn-inline').onclick = () => {
+        askGuideAbout(data.componentName);
+    };
 }
 
-function animateCameraTo(pos, target) {
-    const duration = 1000;
+function askGuideAbout(name) {
+    const msg = `Tell me more about the ${name} and its role in the cell.`;
+    sendGuideMessage(msg);
+}
+
+function populateComponentList(componentsData) {
+    const list = document.getElementById('component-list');
+    list.innerHTML = '';
+    componentsData.forEach(comp => {
+        const item = document.createElement('div');
+        item.className = 'component-item';
+        item.innerHTML = `
+            <span class="component-dot" style="background-color: ${comp.color || '#6366f1'}"></span>
+            <span class="component-item-name">${comp.name}</span>
+        `;
+        item.onclick = () => {
+            const mesh = scene.children.find(obj => obj.userData.componentId === comp.id);
+            if (mesh) {
+                highlightComponent(mesh);
+                showComponentDetail(mesh.userData);
+                animateCameraTo(mesh.position);
+            }
+        };
+        list.appendChild(item);
+    });
+}
+
+function populateComponentTags(componentsData) {
+    const tags = document.getElementById('component-tags');
+    tags.innerHTML = '';
+    componentsData.forEach(comp => {
+        const tag = document.createElement('button');
+        tag.className = 'component-tag';
+        tag.style.borderColor = comp.color || '#6366f1';
+        tag.style.color = comp.color || '#6366f1';
+        tag.textContent = comp.name;
+        tag.onclick = () => {
+             const mesh = scene.children.find(obj => obj.userData.componentId === comp.id);
+             if (mesh) {
+                 highlightComponent(mesh);
+                 showComponentDetail(mesh.userData);
+                 animateCameraTo(mesh.position);
+             }
+        };
+        tags.appendChild(tag);
+    });
+}
+
+function animateCameraTo(position) {
+    const targetPos = position.clone().add(new THREE.Vector3(0, 2, 5));
     const startPos = camera.position.clone();
-    const startTarget = controls.target.clone();
+    const duration = 1000;
     const startTime = performance.now();
 
     function update(now) {
         const elapsed = now - startTime;
-        const t = Math.min(elapsed / duration, 1);
-        const ease = 1 - Math.pow(1 - t, 3);
+        const progress = Math.min(elapsed / duration, 1);
+        const ease = 1 - Math.pow(1 - progress, 3);
 
-        camera.position.lerpVectors(startPos, pos, ease);
-        controls.target.lerpVectors(startTarget, target, ease);
+        camera.position.lerpVectors(startPos, targetPos, ease);
+        controls.target.lerp(position, ease);
 
-        if (t < 1) requestAnimationFrame(update);
+        if (progress < 1) {
+            requestAnimationFrame(update);
+        }
     }
     requestAnimationFrame(update);
 }
 
-// --- TOUR ---
-function toggleTour() {
-    if (isTouring) stopTour();
-    else startTour();
+function toggleGuidedTour() {
+    if (tourInterval) {
+        stopGuidedTour();
+    } else {
+        startGuidedTour();
+    }
 }
 
-function startTour() {
-    if (currentComponents.length === 0) return;
-    isTouring = true;
-    tourIndex = 0;
-    document.getElementById('start-tour-btn').innerHTML = '<i data-feather="square" class="w-3 h-3"></i> Stop Tour';
-    if (window.feather) feather.replace();
+function startGuidedTour() {
+    const meshes = scene.children.filter(obj => obj.userData.componentId);
+    if (meshes.length === 0) return;
 
-    runTourStep();
-    tourInterval = setInterval(runTourStep, 6000);
+    tourIndex = 0;
     document.getElementById('guided-tour-btn').textContent = '⏹ Stop Tour';
     
     function next() {
@@ -504,77 +555,81 @@ function startTour() {
     tourInterval = setInterval(next, 8000);
 }
 
-function stopTour() {
-    isTouring = false;
+function stopGuidedTour() {
     clearInterval(tourInterval);
-    document.getElementById('start-tour-btn').innerHTML = '<i data-feather="play" class="w-3 h-3"></i> Guided Tour';
-    if (window.feather) feather.replace();
+    tourInterval = null;
+    document.getElementById('guided-tour-btn').textContent = '▶ Guided Tour';
 }
 
-function runTourStep() {
-    if (tourIndex >= currentComponents.length) {
-        stopTour();
-        return;
-    }
-    const comp = currentComponents[tourIndex];
-    selectComponent(comp.id);
-    addGuideMessage(`Exploring the ${comp.name}. ${comp.description}`);
-    tourIndex++;
+function resetView() {
+    animateCameraTo(new THREE.Vector3(0,0,0));
 }
 
 // --- CHAT ---
-async function sendChatMessage(msg) {
-    const body = document.getElementById('ai-chat-body');
-    const userDiv = document.createElement('div');
-    userDiv.className = 'bg-white/10 border border-white/20 p-4 rounded-2xl ml-8';
-    userDiv.innerHTML = `<span class="english-label" style="font-size: 10px; margin-bottom: 4px;">User</span><p class="description-text" style="font-size: 14px; color: #ffffff;">${msg}</p>`;
-    body.appendChild(userDiv);
-    body.scrollTop = body.scrollHeight;
-
 
 async function sendGuideMessage(message) {
     addUserMessage(message);
     
     try {
-        const res = await fetch('/api/biology-lab/chat', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ message: msg, components: currentComponents })
+        const response = await fetch("/api/biology-lab/chat", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                message: message,
+                components: window.currentComponents || []
+            })
         });
-        const data = await res.json();
-        addGuideMessage(data.response || data.error);
+        const data = await response.json();
+        addGuideMessage(data.response || "I'm sorry, I encountered an error.");
     } catch (err) {
-        addGuideMessage("Error: Could not reach the Biology Specialist.");
+        console.error(err);
+        addGuideMessage("Failed to connect to the Biology Guide.");
     }
 }
 
-function addGuideMessage(text) {
-    const body = document.getElementById('ai-chat-body');
-    const aiDiv = document.createElement('div');
-    aiDiv.className = 'bg-emerald-600/20 border border-emerald-500/30 p-4 rounded-2xl mr-8';
-    aiDiv.innerHTML = `<span class="english-label" style="font-size: 10px; margin-bottom: 4px;">Specialist</span><p class="description-text" style="font-size: 14px; color: #ffffff;">${text}</p>`;
-    body.appendChild(aiDiv);
-    body.scrollTop = body.scrollHeight;
+function addUserMessage(text) {
+    const chat = document.getElementById('guide-chat');
+    const msg = document.createElement('div');
+    msg.style.marginBottom = '1rem';
+    msg.style.textAlign = 'right';
+    msg.innerHTML = `
+        <div style="display: inline-block; background: rgba(99, 102, 241, 0.2); padding: 0.75rem 1rem; border-radius: 12px; border-bottom-right-radius: 2px; color: white; max-width: 80%; font-size: 14px;">
+            ${text}
+        </div>
+    `;
+    chat.appendChild(msg);
+    chat.scrollTop = chat.scrollHeight;
 }
 
-// --- LOOP ---
+function addGuideMessage(text) {
+    const chat = document.getElementById('guide-chat');
+    const msg = document.createElement('div');
+    msg.style.marginBottom = '1rem';
+    msg.innerHTML = `
+        <div style="display: inline-block; background: rgba(255,255,255,0.05); padding: 0.75rem 1rem; border-radius: 12px; border-bottom-left-radius: 2px; color: #cbd5e1; max-width: 80%; font-size: 14px; border: 1px solid rgba(255,255,255,0.1);">
+            ${text}
+        </div>
+    `;
+    chat.appendChild(msg);
+    chat.scrollTop = chat.scrollHeight;
+}
+
+// --- ANIMATION LOOP ---
 function animate() {
     controls.update();
-
-    scene.children.forEach(o => {
-        if (o.userData.pulse) {
     
     scene.children.forEach(obj => {
         if (obj.userData.pulse) {
             const scale = 1 + Math.sin(Date.now() * 0.002) * 0.05;
-            o.scale.setScalar(scale);
+            obj.scale.setScalar(scale);
         }
-        if (o.userData.isLabel) {
-            o.lookAt(camera.position);
+        if (obj.userData.isLabel) {
+            obj.lookAt(camera.position);
         }
     });
 
     renderer.render(scene, camera);
 }
 
+// Start
 init();
