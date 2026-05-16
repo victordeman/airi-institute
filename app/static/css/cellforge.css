@@ -292,29 +292,42 @@ button, input, textarea, select {
 }
 
 .brand-mark {
-  width: 36px;
-  height: 36px;
+  width: 28px;
+  height: 28px;
   display: grid;
   place-items: center;
-  border-radius: 8px;
+  border-radius: 6px;
   border: 1px solid rgba(92, 137, 160, 0.18);
   background: radial-gradient(circle at 30% 24%, rgba(255, 255, 255, 0.98), transparent 36%),
               rgba(255, 255, 255, 0.68);
   box-shadow: 0 10px 24px rgba(55, 95, 110, 0.1);
 }
 
+.brand-mark i {
+  width: 14px;
+  height: 14px;
+}
+
 .studio-brand strong {
-  font-size: 14px;
+  font-size: 12px;
   font-weight: 700;
   display: block;
   line-height: 1;
 }
 
 .studio-brand span {
-  font-size: 9px;
+  font-size: 8px;
   color: #6b6fd6;
   text-transform: uppercase;
   letter-spacing: 0.05em;
+}
+
+.brand-description {
+  margin-top: 12px;
+  font-size: 11px;
+  line-height: 1.5;
+  color: #64748b;
+  max-width: 600px;
 }
 
 .studio-nav {
