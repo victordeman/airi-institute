@@ -134,7 +134,22 @@ async def init_db():
                     full_name TEXT,
                     hashed_password TEXT NOT NULL,
                     disabled BOOLEAN DEFAULT 0,
-                    role TEXT DEFAULT 'user'
+                    role TEXT DEFAULT 'guest',
+                    avatar_url TEXT,
+                    preferred_language TEXT DEFAULT 'en',
+                    institution_id TEXT,
+                    department_id TEXT,
+                    student_id_number TEXT,
+                    bio TEXT,
+                    social_links TEXT DEFAULT '{}',
+                    xp_points INTEGER DEFAULT 0,
+                    level INTEGER DEFAULT 1,
+                    learning_goals TEXT DEFAULT '[]',
+                    notification_preferences TEXT DEFAULT '{"email": true, "push": true, "in_app": true}',
+                    privacy_settings TEXT DEFAULT '{"show_profile": true, "show_activity": true, "show_scores": true}',
+                    theme_preference TEXT DEFAULT 'dark',
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 )
             """)
             await client.execute("""
@@ -151,23 +166,36 @@ async def init_db():
             cursor = await client.execute("SELECT COUNT(*) FROM users")
             count = cursor.rows[0][0]
             if count == 0:
-                logger.info("Seeding users...")
+                logger.info("Seeding users with NAIRA RBAC roles...")
                 from passlib.context import CryptContext
+                import json
                 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
-                # Admin user
-                admin_hashed = pwd_context.hash("admin123")
-                await client.execute(
-                    "INSERT INTO users (username, email, full_name, hashed_password, role) VALUES (?, ?, ?, ?, ?)",
-                    ("admin", "admin@naira.institute", "NAIRA Admin", admin_hashed, "admin")
-                )
+                roles = [
+                    ("admin", "admin@naira.institute", "NAIRA Super Admin", "super_admin"),
+                    ("director", "director@nbu.edu.ng", "Institute Director", "institute_director"),
+                    ("faculty", "faculty@nbu.edu.ng", "Dr. Adebayo Researcher", "faculty"),
+                    ("ra", "ra@nbu.edu.ng", "Kofi Assistant", "research_assistant"),
+                    ("student", "student@nbu.edu.ng", "Zainab Learner", "student"),
+                    ("partner", "partner@industry.com", "Global Tech Partner", "industry_partner"),
+                    ("guestuser", "guest@public.com", "Public Guest", "guest")
+                ]
 
-                # Normal user
-                user_hashed = pwd_context.hash("user123")
-                await client.execute(
-                    "INSERT INTO users (username, email, full_name, hashed_password, role) VALUES (?, ?, ?, ?, ?)",
-                    ("testuser", "user@naira.institute", "Test User", user_hashed, "user")
-                )
+                for username, email, full_name, role in roles:
+                    hashed_password = pwd_context.hash(f"{username}123")
+                    await client.execute(
+                        """INSERT INTO users (
+                            username, email, full_name, hashed_password, role,
+                            xp_points, level, social_links, learning_goals
+                        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                        (
+                            username, email, full_name, hashed_password, role,
+                            1500 if role in ['faculty', 'super_admin'] else 100,
+                            5 if role in ['faculty', 'super_admin'] else 1,
+                            json.dumps({"linkedin": f"https://linkedin.com/in/{username}"}),
+                            json.dumps([{"title": "Master XR Basics", "progress": 60}]) if role == 'student' else '[]'
+                        )
+                    )
 
             # Seed pillars if empty
             cursor = await client.execute("SELECT COUNT(*) FROM pillars")

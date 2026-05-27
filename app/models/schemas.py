@@ -118,7 +118,22 @@ class User(BaseModel):
     email: Optional[str] = None
     full_name: Optional[str] = None
     disabled: Optional[bool] = None
-    role: Optional[str] = "user"
+    role: Optional[str] = "guest"
+    avatar_url: Optional[str] = None
+    preferred_language: str = "en"
+    institution_id: Optional[str] = None
+    department_id: Optional[str] = None
+    student_id_number: Optional[str] = None
+    bio: Optional[str] = None
+    social_links: Optional[str] = "{}"
+    xp_points: int = 0
+    level: int = 1
+    learning_goals: Optional[str] = "[]"
+    notification_preferences: Optional[str] = '{"email": true, "push": true, "in_app": true}'
+    privacy_settings: Optional[str] = '{"show_profile": true, "show_activity": true, "show_scores": true}'
+    theme_preference: str = "dark"
+    created_at: Optional[str] = None
+    updated_at: Optional[str] = None
 
 class UserCreate(User):
     password: str

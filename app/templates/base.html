@@ -49,7 +49,7 @@
         }
     </script>
 </head>
-<body class="font-sans antialiased selection:bg-primary selection:text-white overflow-x-hidden min-h-screen flex flex-col transition-colors duration-300 {% if request.url.path.rstrip('/') in ['', '/transformer-tour', '/economics-tour', '/terracotta-tour', '/immersive-learning', '/ai-agents-tour', '/computer-history-tour', '/biology-galaxy'] %}page-home{% else %}page-sub{% endif %}">
+<body class="font-sans antialiased selection:bg-primary selection:text-white overflow-x-hidden min-h-screen flex flex-col transition-colors duration-300 {% if request.url.path.startswith('/dashboard') %}dashboard-view{% elif request.url.path.rstrip('/') in ['', '/transformer-tour', '/economics-tour', '/terracotta-tour', '/immersive-learning', '/ai-agents-tour', '/computer-history-tour', '/biology-galaxy'] %}page-home{% else %}page-sub{% endif %}">
     <!-- Top Bar -->
     <div id="top-bar" class="bg-primary text-white py-2 text-xs hidden md:block z-[60] relative">
         <div class="container mx-auto px-6 flex justify-between items-center">

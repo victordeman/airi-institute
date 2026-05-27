@@ -11,9 +11,14 @@ from app.security import (
     authenticate_user,
     create_access_token,
     get_password_hash,
+    get_current_user,
 )
 
 router = APIRouter(prefix="/auth", tags=["auth"])
+
+@router.get("/me", response_model=User)
+async def read_users_me(current_user: User = Depends(get_current_user)):
+    return current_user
 
 @router.post("/register", response_model=User)
 async def register_user(user: UserCreate, db: libsql_client.Client = Depends(get_db)):

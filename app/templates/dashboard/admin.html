@@ -1,0 +1,142 @@
+{% extends "dashboard/layout.html" %}
+
+{% block title %}Admin Dashboard - NAIRA{% endblock %}
+
+{% block dashboard_content %}
+<div class="mb-8">
+    <h1 class="text-3xl font-display font-bold text-white mb-2">System Health</h1>
+    <p class="text-slate-400">Welcome back, Super Admin. Everything is running smoothly.</p>
+</div>
+
+<div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+    <div class="glass-card p-6 border border-white/10 rounded-2xl">
+        <div class="flex items-center justify-between mb-4">
+            <div class="w-10 h-10 rounded-xl bg-indigo-500/20 flex items-center justify-center">
+                <i data-feather="users" class="w-5 h-5 text-indigo-400"></i>
+            </div>
+            <span class="text-xs font-bold text-emerald-400">+12%</span>
+        </div>
+        <h4 class="text-2xl font-bold text-white">1,284</h4>
+        <p class="text-xs text-slate-500 uppercase tracking-wider font-bold">Active Users</p>
+    </div>
+    <div class="glass-card p-6 border border-white/10 rounded-2xl">
+        <div class="flex items-center justify-between mb-4">
+            <div class="w-10 h-10 rounded-xl bg-emerald-500/20 flex items-center justify-center">
+                <i data-feather="activity" class="w-5 h-5 text-emerald-400"></i>
+            </div>
+            <span class="text-xs font-bold text-emerald-400">99.9%</span>
+        </div>
+        <h4 class="text-2xl font-bold text-white">Up</h4>
+        <p class="text-xs text-slate-500 uppercase tracking-wider font-bold">System Status</p>
+    </div>
+    <div class="glass-card p-6 border border-white/10 rounded-2xl">
+        <div class="flex items-center justify-between mb-4">
+            <div class="w-10 h-10 rounded-xl bg-amber-500/20 flex items-center justify-center">
+                <i data-feather="alert-triangle" class="w-5 h-5 text-amber-400"></i>
+            </div>
+            <span class="text-xs font-bold text-slate-500">Normal</span>
+        </div>
+        <h4 class="text-2xl font-bold text-white">0</h4>
+        <p class="text-xs text-slate-500 uppercase tracking-wider font-bold">Open Alerts</p>
+    </div>
+    <div class="glass-card p-6 border border-white/10 rounded-2xl">
+        <div class="flex items-center justify-between mb-4">
+            <div class="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center">
+                <i data-feather="database" class="w-5 h-5 text-primary"></i>
+            </div>
+            <span class="text-xs font-bold text-indigo-400">4.2GB</span>
+        </div>
+        <h4 class="text-2xl font-bold text-white">82%</h4>
+        <p class="text-xs text-slate-500 uppercase tracking-wider font-bold">Storage Used</p>
+    </div>
+</div>
+
+<div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+    <div class="glass-card p-8 border border-white/10 rounded-3xl">
+        <h3 class="text-xl font-bold text-white mb-6">Recent Audit Logs</h3>
+        <div class="space-y-4">
+            <div class="flex items-center gap-4 py-3 border-b border-white/5">
+                <div class="w-2 h-2 rounded-full bg-emerald-500"></div>
+                <div class="flex-1">
+                    <p class="text-sm text-slate-300 font-medium">User "director" assigned "faculty" role to "adebayo"</p>
+                    <p class="text-[10px] text-slate-500 uppercase font-bold mt-1">2 minutes ago</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-4 py-3 border-b border-white/5">
+                <div class="w-2 h-2 rounded-full bg-primary"></div>
+                <div class="flex-1">
+                    <p class="text-sm text-slate-300 font-medium">New XR Experience "Solar System 3D" published</p>
+                    <p class="text-[10px] text-slate-500 uppercase font-bold mt-1">15 minutes ago</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-4 py-3">
+                <div class="w-2 h-2 rounded-full bg-amber-500"></div>
+                <div class="flex-1">
+                    <p class="text-sm text-slate-300 font-medium">Failed login attempt for "root" from 192.168.1.1</p>
+                    <p class="text-[10px] text-slate-500 uppercase font-bold mt-1">1 hour ago</p>
+                </div>
+            </div>
+        </div>
+        <button class="w-full mt-6 py-3 border border-white/10 rounded-xl text-sm font-bold text-slate-400 hover:text-white hover:bg-white/5 transition-all">View Full Audit Log</button>
+    </div>
+    <div class="glass-card p-8 border border-white/10 rounded-3xl">
+        <h3 class="text-xl font-bold text-white mb-6">Active System Processes</h3>
+        <div class="space-y-6">
+            <div class="space-y-2">
+                <div class="flex justify-between text-xs font-bold uppercase">
+                    <span class="text-slate-400">RAG Index Rebuild</span>
+                    <span class="text-primary">82%</span>
+                </div>
+                <div class="w-full h-2 bg-white/5 rounded-full overflow-hidden">
+                    <div class="h-full bg-primary" style="width: 82%"></div>
+                </div>
+            </div>
+            <div class="space-y-2">
+                <div class="flex justify-between text-xs font-bold uppercase">
+                    <span class="text-slate-400">Database Backup</span>
+                    <span class="text-emerald-400">Complete</span>
+                </div>
+                <div class="w-full h-2 bg-white/5 rounded-full overflow-hidden">
+                    <div class="h-full bg-emerald-500" style="width: 100%"></div>
+                </div>
+            </div>
+            <div class="space-y-2">
+                <div class="flex justify-between text-xs font-bold uppercase">
+                    <span class="text-slate-400">SSL Certificate Renewal</span>
+                    <span class="text-slate-500">Pending</span>
+                </div>
+                <div class="w-full h-2 bg-white/5 rounded-full overflow-hidden">
+                    <div class="h-full bg-indigo-500" style="width: 0%"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Token handling for dashboards
+    (function() {
+        const token = localStorage.getItem('access_token');
+        if (!token) {
+            window.location.href = '/login';
+            return;
+        }
+
+        // Add token to all subsequent fetch requests from this page
+        const originalFetch = window.fetch;
+        window.fetch = function() {
+            let [resource, config] = arguments;
+            if (config === undefined) config = {};
+            if (config.headers === undefined) config.headers = {};
+
+            // Only add token to relative or same-origin requests
+            if (!resource.startsWith('http') || resource.startsWith(window.location.origin)) {
+                config.headers['Authorization'] = 'Bearer ' + token;
+            }
+            return originalFetch(resource, config);
+        };
+
+        // Handle initial page load protection if needed beyond server-side
+    })();
+</script>
+{% endblock %}

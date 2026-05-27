@@ -1,0 +1,92 @@
+{% extends "dashboard/layout.html" %}
+
+{% block title %}Faculty Dashboard - NAIRA{% endblock %}
+
+{% block dashboard_content %}
+<div class="mb-8">
+    <h1 class="text-3xl font-display font-bold text-white mb-2">Faculty Overview</h1>
+    <p class="text-slate-400">Welcome back, {{ user.full_name }}. Here is your research and course activity.</p>
+</div>
+
+<div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
+    <div class="glass-card p-8 border border-white/10 rounded-3xl col-span-2">
+        <h3 class="text-xl font-bold text-white mb-6">Research Projects</h3>
+        <div class="space-y-4">
+            <div class="p-4 rounded-2xl bg-white/5 border border-white/10 hover:border-primary/50 transition-colors cursor-pointer group">
+                <div class="flex justify-between items-start mb-2">
+                    <h4 class="font-bold text-white group-hover:text-primary transition-colors">African Language LLM Fine-tuning</h4>
+                    <span class="text-[10px] bg-primary/20 text-primary px-2 py-1 rounded-full font-bold uppercase">Active</span>
+                </div>
+                <p class="text-xs text-slate-400 mb-4">Researching optimal tokenization strategies for Yoruba and Igbo dialects.</p>
+                <div class="flex items-center gap-4">
+                    <div class="flex -space-x-2">
+                        <div class="w-6 h-6 rounded-full bg-slate-700 border border-slate-900 flex items-center justify-center text-[10px] text-white">AS</div>
+                        <div class="w-6 h-6 rounded-full bg-primary border border-slate-900 flex items-center justify-center text-[10px] text-white">JD</div>
+                    </div>
+                    <span class="text-[10px] text-slate-500 font-bold uppercase">2 Collaborators</span>
+                </div>
+            </div>
+            <div class="p-4 rounded-2xl bg-white/5 border border-white/10 hover:border-primary/50 transition-colors cursor-pointer group">
+                <div class="flex justify-between items-start mb-2">
+                    <h4 class="font-bold text-white group-hover:text-primary transition-colors">Immersive History Visualization</h4>
+                    <span class="text-[10px] bg-emerald-500/20 text-emerald-400 px-2 py-1 rounded-full font-bold uppercase">Published</span>
+                </div>
+                <p class="text-xs text-slate-400 mb-4">Leveraging Three.js and NeRFs to recreate historical Oyo Empire sites.</p>
+                <div class="flex items-center gap-4">
+                    <span class="text-[10px] text-slate-500 font-bold uppercase">1,240 Views</span>
+                </div>
+            </div>
+        </div>
+        <button class="w-full mt-6 py-3 bg-primary/10 hover:bg-primary text-primary hover:text-white border border-primary/20 rounded-xl text-sm font-bold transition-all">Create New Research Project</button>
+    </div>
+
+    <div class="space-y-8">
+        <div class="glass-card p-8 border border-white/10 rounded-3xl">
+            <h3 class="text-lg font-bold text-white mb-6">Course Engagement</h3>
+            <div class="space-y-6">
+                <div class="space-y-2">
+                    <div class="flex justify-between text-xs font-bold uppercase">
+                        <span class="text-slate-400">AI Ethics 101</span>
+                        <span class="text-white">45 Students</span>
+                    </div>
+                    <div class="w-full h-1.5 bg-white/5 rounded-full overflow-hidden">
+                        <div class="h-full bg-primary" style="width: 85%"></div>
+                    </div>
+                </div>
+                <div class="space-y-2">
+                    <div class="flex justify-between text-xs font-bold uppercase">
+                        <span class="text-slate-400">Advanced XR Dev</span>
+                        <span class="text-white">22 Students</span>
+                    </div>
+                    <div class="w-full h-1.5 bg-white/5 rounded-full overflow-hidden">
+                        <div class="h-full bg-emerald-500" style="width: 60%"></div>
+                    </div>
+                </div>
+                <div class="space-y-2">
+                    <div class="flex justify-between text-xs font-bold uppercase">
+                        <span class="text-slate-400">Data Science</span>
+                        <span class="text-white">38 Students</span>
+                    </div>
+                    <div class="w-full h-1.5 bg-white/5 rounded-full overflow-hidden">
+                        <div class="h-full bg-amber-500" style="width: 75%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="glass-card p-8 border border-white/10 rounded-3xl">
+            <h3 class="text-lg font-bold text-white mb-4">Quick Stats</h3>
+            <div class="grid grid-cols-2 gap-4">
+                <div class="text-center p-4 rounded-2xl bg-white/5">
+                    <p class="text-xl font-bold text-white">12</p>
+                    <p class="text-[10px] text-slate-500 uppercase font-bold">Publications</p>
+                </div>
+                <div class="text-center p-4 rounded-2xl bg-white/5">
+                    <p class="text-xl font-bold text-white">450</p>
+                    <p class="text-[10px] text-slate-500 uppercase font-bold">Citations</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

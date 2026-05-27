@@ -1,0 +1,175 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="flex min-h-screen bg-slate-950">
+    <!-- Dashboard Sidebar -->
+    <aside class="w-64 bg-slate-900 border-r border-white/10 flex flex-col pt-24">
+        <div class="px-6 mb-8">
+            <div class="flex items-center gap-3 mb-4">
+                <div class="w-12 h-12 rounded-full bg-primary/20 border border-primary/30 flex items-center justify-center overflow-hidden">
+                    {% if user.avatar_url %}
+                        <img src="{{ user.avatar_url }}" alt="Avatar" class="w-full h-full object-cover">
+                    {% else %}
+                        <i data-feather="user" class="w-6 h-6 text-primary"></i>
+                    {% endif %}
+                </div>
+                <div>
+                    <h3 class="text-sm font-bold text-white truncate w-32">{{ user.full_name }}</h3>
+                    <span class="text-[10px] uppercase tracking-widest text-primary font-bold">{{ user.role.replace('_', ' ') }}</span>
+                </div>
+            </div>
+
+            {% if user.role in ['student', 'faculty'] %}
+            <div class="space-y-1">
+                <div class="flex justify-between text-[10px] text-slate-400 font-bold uppercase">
+                    <span>Level {{ user.level }}</span>
+                    <span>{{ user.xp_points }} XP</span>
+                </div>
+                <div class="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden">
+                    <div class="h-full bg-primary" style="width: {{ (user.xp_points % 1000) / 10 }}%"></div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <nav class="flex-1 px-4 space-y-1">
+            {% if user.role == 'student' %}
+                <a href="/dashboard/student" class="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all {% if request.url.path == '/dashboard/student' %}bg-primary text-white shadow-lg shadow-primary/20{% else %}text-slate-400 hover:bg-white/5 hover:text-white{% endif %}">
+                    <i data-feather="grid" class="w-4 h-4"></i> My Overview
+                </a>
+                <a href="/dashboard/student/experiences" class="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-slate-400 hover:bg-white/5 hover:text-white">
+                    <i data-feather="box" class="w-4 h-4"></i> XR Experiences
+                </a>
+                <a href="/dashboard/student/portfolio" class="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-slate-400 hover:bg-white/5 hover:text-white">
+                    <i data-feather="briefcase" class="w-4 h-4"></i> Portfolio
+                </a>
+                <a href="/dashboard/student/goals" class="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-slate-400 hover:bg-white/5 hover:text-white">
+                    <i data-feather="target" class="w-4 h-4"></i> Goals
+                </a>
+            {% elif user.role == 'faculty' %}
+                <a href="/dashboard/faculty" class="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all {% if request.url.path == '/dashboard/faculty' %}bg-primary text-white shadow-lg shadow-primary/20{% else %}text-slate-400 hover:bg-white/5 hover:text-white{% endif %}">
+                    <i data-feather="grid" class="w-4 h-4"></i> Overview
+                </a>
+                <a href="/dashboard/faculty/courses" class="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-slate-400 hover:bg-white/5 hover:text-white">
+                    <i data-feather="book-open" class="w-4 h-4"></i> My Courses
+                </a>
+                <a href="/dashboard/faculty/xr-content" class="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-slate-400 hover:bg-white/5 hover:text-white">
+                    <i data-feather="layers" class="w-4 h-4"></i> XR Content
+                </a>
+                <a href="/dashboard/faculty/research" class="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-slate-400 hover:bg-white/5 hover:text-white">
+                    <i data-feather="search" class="w-4 h-4"></i> Research
+                </a>
+                <a href="/dashboard/faculty/students" class="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-slate-400 hover:bg-white/5 hover:text-white">
+                    <i data-feather="users" class="w-4 h-4"></i> Students
+                </a>
+            {% elif user.role == 'institute_director' %}
+                <a href="/dashboard/institute" class="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all {% if request.url.path == '/dashboard/institute' %}bg-primary text-white shadow-lg shadow-primary/20{% else %}text-slate-400 hover:bg-white/5 hover:text-white{% endif %}">
+                    <i data-feather="bar-chart-2" class="w-4 h-4"></i> KPIs
+                </a>
+                <a href="/dashboard/institute/departments" class="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-slate-400 hover:bg-white/5 hover:text-white">
+                    <i data-feather="home" class="w-4 h-4"></i> Departments
+                </a>
+                <a href="/dashboard/institute/users" class="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-slate-400 hover:bg-white/5 hover:text-white">
+                    <i data-feather="users" class="w-4 h-4"></i> Users
+                </a>
+                <a href="/dashboard/institute/analytics" class="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-slate-400 hover:bg-white/5 hover:text-white">
+                    <i data-feather="activity" class="w-4 h-4"></i> Analytics
+                </a>
+                <a href="/dashboard/institute/branding" class="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-slate-400 hover:bg-white/5 hover:text-white">
+                    <i data-feather="palette" class="w-4 h-4"></i> Branding
+                </a>
+                <a href="/dashboard/institute/policies" class="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-slate-400 hover:bg-white/5 hover:text-white">
+                    <i data-feather="shield" class="w-4 h-4"></i> Policies
+                </a>
+            {% elif user.role == 'super_admin' %}
+                <a href="/dashboard/admin" class="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all {% if request.url.path == '/dashboard/admin' %}bg-primary text-white shadow-lg shadow-primary/20{% else %}text-slate-400 hover:bg-white/5 hover:text-white{% endif %}">
+                    <i data-feather="cpu" class="w-4 h-4"></i> System
+                </a>
+                <a href="/dashboard/admin/users" class="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-slate-400 hover:bg-white/5 hover:text-white">
+                    <i data-feather="users" class="w-4 h-4"></i> Users
+                </a>
+                <a href="/dashboard/admin/roles" class="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-slate-400 hover:bg-white/5 hover:text-white">
+                    <i data-feather="key" class="w-4 h-4"></i> Roles
+                </a>
+                <a href="/dashboard/admin/audit" class="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-slate-400 hover:bg-white/5 hover:text-white">
+                    <i data-feather="list" class="w-4 h-4"></i> Audit Log
+                </a>
+                <a href="/dashboard/admin/settings" class="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-slate-400 hover:bg-white/5 hover:text-white">
+                    <i data-feather="settings" class="w-4 h-4"></i> Settings
+                </a>
+            {% elif user.role == 'industry_partner' %}
+                <a href="/dashboard/partner" class="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all {% if request.url.path == '/dashboard/partner' %}bg-primary text-white shadow-lg shadow-primary/20{% else %}text-slate-400 hover:bg-white/5 hover:text-white{% endif %}">
+                    <i data-feather="grid" class="w-4 h-4"></i> Overview
+                </a>
+                <a href="/dashboard/partner/projects" class="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-slate-400 hover:bg-white/5 hover:text-white">
+                    <i data-feather="folder" class="w-4 h-4"></i> Projects
+                </a>
+                <a href="/dashboard/partner/consultancy" class="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-slate-400 hover:bg-white/5 hover:text-white">
+                    <i data-feather="message-circle" class="w-4 h-4"></i> Consultancy
+                </a>
+            {% endif %}
+
+            <div class="pt-4 mt-4 border-t border-white/5">
+                <a href="/profile" class="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-slate-400 hover:bg-white/5 hover:text-white">
+                    <i data-feather="user" class="w-4 h-4"></i> Profile
+                </a>
+                <a href="/settings" class="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-slate-400 hover:bg-white/5 hover:text-white">
+                    <i data-feather="settings" class="w-4 h-4"></i> Settings
+                </a>
+                <button onclick="logout()" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-red-400 hover:bg-red-400/10 transition-colors">
+                    <i data-feather="log-out" class="w-4 h-4"></i> Logout
+                </button>
+            </div>
+        </nav>
+
+        <!-- Language switch -->
+        <div class="p-6">
+            <div class="bg-white/5 rounded-xl p-2 flex justify-between gap-1">
+                <button onclick="switchLang('en')" class="text-[10px] font-bold py-1 px-2 rounded-lg hover:bg-white/10 transition-colors">EN</button>
+                <button onclick="switchLang('yo')" class="text-[10px] font-bold py-1 px-2 rounded-lg hover:bg-white/10 transition-colors">YO</button>
+                <button onclick="switchLang('sw')" class="text-[10px] font-bold py-1 px-2 rounded-lg hover:bg-white/10 transition-colors">SW</button>
+                <button onclick="switchLang('ig')" class="text-[10px] font-bold py-1 px-2 rounded-lg hover:bg-white/10 transition-colors">IG</button>
+                <button onclick="switchLang('ha')" class="text-[10px] font-bold py-1 px-2 rounded-lg hover:bg-white/10 transition-colors">HA</button>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-1 pt-24 pb-12 px-8 overflow-y-auto">
+        <div class="max-w-6xl mx-auto">
+            {% block dashboard_content %}{% endblock %}
+        </div>
+    </main>
+</div>
+
+<script>
+    function logout() {
+        localStorage.removeItem('access_token');
+        document.cookie = "access_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+        window.location.href = '/login';
+    }
+
+    // Auth protection for dashboard pages
+    (function() {
+        const token = localStorage.getItem('access_token');
+        if (!token) {
+            window.location.href = '/login';
+            return;
+        }
+
+        // Add token to all subsequent fetch requests from this page
+        const originalFetch = window.fetch;
+        window.fetch = function() {
+            let [resource, config] = arguments;
+            if (config === undefined) config = {};
+            if (config.headers === undefined) config.headers = {};
+
+            // Only add token to relative or same-origin requests
+            if (!resource.startsWith('http') || resource.startsWith(window.location.origin)) {
+                config.headers['Authorization'] = 'Bearer ' + token;
+            }
+            return originalFetch(resource, config);
+        };
+    })();
+</script>
+{% endblock %}

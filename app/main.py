@@ -14,6 +14,7 @@ from app.rag import rag_manager
 from app.routers.api import router as api_router
 from app.routers.pages import router as pages_router
 from app.routers.auth import router as auth_router
+from app.routers.dashboards import router as dashboard_router
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -64,6 +65,7 @@ app.mount("/static", StaticFiles(directory=os.path.join(BASE_DIR, "static")), na
 # Include routers
 app.include_router(auth_router)
 app.include_router(api_router)
+app.include_router(dashboard_router)
 app.include_router(pages_router)
 
 @app.get("/healthz")
