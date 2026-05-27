@@ -1,0 +1,113 @@
+{% extends "dashboard/layout.html" %}
+
+{% block title %}Institute Dashboard - NAIRA{% endblock %}
+
+{% block dashboard_content %}
+<div class="mb-8">
+    <h1 class="text-3xl font-display font-bold text-white mb-2">Institute KPIs</h1>
+    <p class="text-slate-400">Strategic overview for {{ user.full_name }}.</p>
+</div>
+
+<div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-12">
+    <div class="glass-card p-6 border border-white/10 rounded-2xl bg-indigo-500/5">
+        <p class="text-[10px] text-slate-500 uppercase tracking-widest font-bold mb-1">Total Enrollment</p>
+        <h4 class="text-3xl font-bold text-white">4,250</h4>
+        <div class="flex items-center gap-2 mt-2">
+            <span class="text-[10px] bg-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded-full font-bold">+5.2%</span>
+            <span class="text-[10px] text-slate-600 font-bold uppercase">vs last month</span>
+        </div>
+    </div>
+    <div class="glass-card p-6 border border-white/10 rounded-2xl bg-emerald-500/5">
+        <p class="text-[10px] text-slate-500 uppercase tracking-widest font-bold mb-1">Active Projects</p>
+        <h4 class="text-3xl font-bold text-white">24</h4>
+        <div class="flex items-center gap-2 mt-2">
+            <span class="text-[10px] bg-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded-full font-bold">+2</span>
+            <span class="text-[10px] text-slate-600 font-bold uppercase">new this week</span>
+        </div>
+    </div>
+    <div class="glass-card p-6 border border-white/10 rounded-2xl bg-amber-500/5">
+        <p class="text-[10px] text-slate-500 uppercase tracking-widest font-bold mb-1">Research Output</p>
+        <h4 class="text-3xl font-bold text-white">12</h4>
+        <div class="flex items-center gap-2 mt-2">
+            <span class="text-[10px] bg-slate-500/20 text-slate-400 px-2 py-0.5 rounded-full font-bold">Stable</span>
+            <span class="text-[10px] text-slate-600 font-bold uppercase">papers/mo</span>
+        </div>
+    </div>
+    <div class="glass-card p-6 border border-white/10 rounded-2xl bg-primary/5">
+        <p class="text-[10px] text-slate-500 uppercase tracking-widest font-bold mb-1">Partner Grants</p>
+        <h4 class="text-3xl font-bold text-white">$1.2M</h4>
+        <div class="flex items-center gap-2 mt-2">
+            <span class="text-[10px] bg-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded-full font-bold">Target Met</span>
+        </div>
+    </div>
+</div>
+
+<div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+    <div class="glass-card p-8 border border-white/10 rounded-3xl">
+        <h3 class="text-xl font-bold text-white mb-6">Department Performance</h3>
+        <div class="space-y-6">
+            <div class="flex items-center gap-4">
+                <div class="w-12 h-12 rounded-2xl bg-indigo-500/20 flex items-center justify-center shrink-0">
+                    <i data-feather="cpu" class="w-6 h-6 text-indigo-400"></i>
+                </div>
+                <div class="flex-1">
+                    <div class="flex justify-between mb-1">
+                        <h4 class="text-sm font-bold text-white">AI & Machine Learning</h4>
+                        <span class="text-xs font-bold text-slate-400">92% Engagement</span>
+                    </div>
+                    <div class="w-full h-1.5 bg-white/5 rounded-full overflow-hidden">
+                        <div class="h-full bg-indigo-500" style="width: 92%"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="flex items-center gap-4">
+                <div class="w-12 h-12 rounded-2xl bg-emerald-500/20 flex items-center justify-center shrink-0">
+                    <i data-feather="layers" class="w-6 h-6 text-emerald-400"></i>
+                </div>
+                <div class="flex-1">
+                    <div class="flex justify-between mb-1">
+                        <h4 class="text-sm font-bold text-white">XR & Immersive Design</h4>
+                        <span class="text-xs font-bold text-slate-400">78% Engagement</span>
+                    </div>
+                    <div class="w-full h-1.5 bg-white/5 rounded-full overflow-hidden">
+                        <div class="h-full bg-emerald-500" style="width: 78%"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="flex items-center gap-4">
+                <div class="w-12 h-12 rounded-2xl bg-amber-500/20 flex items-center justify-center shrink-0">
+                    <i data-feather="globe" class="w-6 h-6 text-amber-400"></i>
+                </div>
+                <div class="flex-1">
+                    <div class="flex justify-between mb-1">
+                        <h4 class="text-sm font-bold text-white">African Studies & Linguistics</h4>
+                        <span class="text-xs font-bold text-slate-400">85% Engagement</span>
+                    </div>
+                    <div class="w-full h-1.5 bg-white/5 rounded-full overflow-hidden">
+                        <div class="h-full bg-amber-500" style="width: 85%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="glass-card p-8 border border-white/10 rounded-3xl">
+        <h3 class="text-xl font-bold text-white mb-6">Recent Alerts</h3>
+        <div class="space-y-4">
+            <div class="flex gap-4 p-4 rounded-2xl bg-amber-500/10 border border-amber-500/20">
+                <i data-feather="alert-circle" class="w-5 h-5 text-amber-400 shrink-0"></i>
+                <div>
+                    <p class="text-sm text-white font-bold">Policy Update Required</p>
+                    <p class="text-xs text-amber-400/80">The Academic Honor Code needs review for the new semester.</p>
+                </div>
+            </div>
+            <div class="flex gap-4 p-4 rounded-2xl bg-primary/10 border border-primary/20">
+                <i data-feather="info" class="w-5 h-5 text-primary shrink-0"></i>
+                <div>
+                    <p class="text-sm text-white font-bold">Budget Approval</p>
+                    <p class="text-xs text-primary/80">Q3 research budget has been approved by the board.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

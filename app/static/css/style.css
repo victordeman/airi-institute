@@ -168,6 +168,28 @@ nav, main, footer {
     color: #555555;
 }
 
+/* Ensure dashboards stay dark themed even if body has page-sub class */
+.dashboard-view {
+    --bg-main: #020617 !important;
+    --text-main: #f1f5f9 !important;
+    background-color: #020617 !important;
+    color: #f1f5f9 !important;
+}
+
+.dashboard-view h1,
+.dashboard-view h2,
+.dashboard-view h3,
+.dashboard-view h4,
+.dashboard-view p,
+.dashboard-view span:not(.bg-primary):not(.bg-emerald-500):not(.bg-amber-500) {
+    color: #f1f5f9 !important;
+}
+
+.dashboard-view .text-slate-400,
+.dashboard-view .text-slate-500 {
+    color: #94a3b8 !important;
+}
+
 .page-sub #navbar .text-slate-400 {
     color: #555555;
     color: #333333;
