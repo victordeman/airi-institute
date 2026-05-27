@@ -10,9 +10,9 @@ async def test_biology_galaxy_page_loads():
     assert "Biology Galaxy" in response.text
     assert "Cell Biology" in response.text
     assert "DNA & Genetics" in response.text
-    assert "Human Anatomy" in response.text
-    assert "Microbiology" in response.text
-    assert "Ecology" in response.text
+    assert "Ecosystem" in response.text
+    assert "Immune System" in response.text
+    assert "Evolution" in response.text
 
 @pytest.mark.asyncio
 async def test_immersive_learning_page_contains_biology_galaxy():
