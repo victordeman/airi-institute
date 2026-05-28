@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 
 export class HandTracker {
-    constructor(video, canvas, scene, camera, renderer, physics, controls) {
+    constructor(video, canvas, scene, camera, renderer, physics, controls, onGesture) {
         this.video = video;
         this.canvas = canvas;
         this.ctx = canvas.getContext('2d');
@@ -10,27 +10,10 @@ export class HandTracker {
         this.renderer = renderer;
         this.physics = physics;
         this.controls = controls;
+        this.onGesture = onGesture;
 
-        this.hands = new window.Hands({
-            locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`
-        });
-
-        this.hands.setOptions({
-            maxNumHands: 2,
-            modelComplexity: 1,
-            minDetectionConfidence: 0.5,
-            minTrackingConfidence: 0.5
-        });
-
-        this.hands.onResults(this.onResults.bind(this));
-
-        this.camera_utils = new window.Camera(this.video, {
-            onFrame: async () => {
-                await this.hands.send({ image: this.video });
-            },
-            width: 1280,
-            height: 720
-        });
+        this.hands = null;
+        this.camera_utils = null;
 
         this.isActive = false;
         this.lastResults = null;
@@ -50,39 +33,56 @@ export class HandTracker {
 
         this.gestureLabel = "";
         this.labelPos = { x: 0, y: 0 };
-        this.calibrating = false;
+    }
+
+    async init() {
+        // Wait for MediaPipe to be available — poll for up to 5 seconds
+        let attempts = 0;
+        while (typeof Hands === 'undefined' && attempts < 50) {
+            await new Promise(r => setTimeout(r, 100));
+            attempts++;
+        }
+
+        if (typeof Hands === 'undefined') {
+            throw new Error('MediaPipe Hands failed to load. Check CDN URLs.');
+        }
+
+        this.hands = new Hands({
+            locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4.1646424915/${file}`
+        });
+
+        this.hands.setOptions({
+            maxNumHands: 2,
+            modelComplexity: window.innerWidth < 768 ? 0 : 1,
+            minDetectionConfidence: 0.7,
+            minTrackingConfidence: 0.5
+        });
+
+        this.hands.onResults(this.onResults.bind(this));
+
+        this.camera_utils = new Camera(this.video, {
+            onFrame: async () => {
+                if (this.isActive) {
+                    await this.hands.send({ image: this.video });
+                }
+            },
+            width: 1280,
+            height: 720
+        });
     }
 
     async start() {
-        if (window.innerWidth < 1024) {
-            const warning = document.createElement('div');
-            warning.className = 'fixed bottom-24 left-1/2 -translate-x-1/2 px-6 py-3 bg-yellow-500/20 text-yellow-200 text-[10px] rounded-full border border-yellow-500/30 backdrop-blur-xl z-[100] uppercase tracking-wider';
-            warning.textContent = 'Hand mode works best on desktop';
-            document.body.appendChild(warning);
-            setTimeout(() => warning.remove(), 4000);
-        }
+        if (!this.hands) await this.init();
 
         this.isActive = true;
         this.physics.isActive = true;
         this.scene.background = null;
         this.controls.enabled = false;
-        this.calibrating = true;
+
         await this.camera_utils.start();
-        document.getElementById('webcam-layer').style.display = 'block';
+
         document.getElementById('fps-counter').classList.remove('hidden');
         document.getElementById('hand-controls-legend').classList.remove('hidden');
-
-        // Show "Calibrating..." toast
-        const toast = document.createElement('div');
-        toast.className = 'fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 px-8 py-4 bg-black/80 text-[#4ade80] rounded-2xl border border-[#4ade80]/20 backdrop-blur-xl z-[100] font-bold tracking-widest uppercase text-sm';
-        toast.textContent = 'Calibrating hands...';
-        document.body.appendChild(toast);
-
-        setTimeout(() => {
-            toast.remove();
-            this.calibrating = false;
-        }, 1500);
-
         setTimeout(() => {
             document.getElementById('hand-controls-legend').style.opacity = '1';
         }, 100);
@@ -94,8 +94,9 @@ export class HandTracker {
         this.physics.reset();
         this.scene.background = new THREE.Color(0x020617);
         this.controls.enabled = true;
-        this.camera_utils.stop();
-        document.getElementById('webcam-layer').style.display = 'none';
+
+        if (this.camera_utils) this.camera_utils.stop();
+
         document.getElementById('fps-counter').classList.add('hidden');
         const legend = document.getElementById('hand-controls-legend');
         legend.style.opacity = '0';
@@ -125,7 +126,7 @@ export class HandTracker {
             // Adaptive complexity
             if (this.fps < 20) {
                 this.hands.setOptions({ modelComplexity: 0 });
-            } else if (this.fps > 25) {
+            } else if (this.fps > 25 && window.innerWidth >= 768) {
                 this.hands.setOptions({ modelComplexity: 1 });
             }
         }
@@ -138,21 +139,21 @@ export class HandTracker {
             if (this.grabbedNode) {
                  this.grabbedNode.grabbed = false;
                  this.grabbedNode = null;
+                 this.onGesture('RELEASE', null);
             }
             return;
         }
 
         const landmarks = results.multiHandLandmarks;
-        const handedness = results.multiHandedness;
 
         if (landmarks.length === 1) {
-            this.handleSingleHand(landmarks[0], handedness[0]);
+            this.handleSingleHand(landmarks[0]);
         } else if (landmarks.length === 2) {
             this.handleTwoHands(landmarks[0], landmarks[1]);
         }
     }
 
-    handleSingleHand(landmarks, handedness) {
+    handleSingleHand(landmarks) {
         const palmCenter = this.getPalmCenter(landmarks);
         const worldPalmPos = this.normalisedToWorld(palmCenter);
         this.labelPos = { x: palmCenter.x * this.canvas.width, y: palmCenter.y * this.canvas.height };
@@ -171,6 +172,7 @@ export class HandTracker {
             if (this.grabbedNode) {
                 this.grabbedNode.grabbed = false;
                 this.grabbedNode = null;
+                this.onGesture('RELEASE', null);
             }
             this.pinchHoldNode = null;
         }
@@ -218,7 +220,6 @@ export class HandTracker {
         this.raycaster.setFromCamera(this.handPos2D, this.camera);
 
         const meshes = this.physics.nodes.map(n => {
-             // For groups, we need the actual mesh inside for raycasting
              if (n.mesh.type === 'Group') {
                  return n.mesh.children.find(c => c.type === 'Mesh');
              }
@@ -236,12 +237,13 @@ export class HandTracker {
                     this.grabbedNode = node;
                     node.grabbed = true;
                     this.gestureLabel = "GRABBING";
+                    this.onGesture('GRAB', node);
                 }
 
                 // Pinch + Hold
                 if (this.pinchHoldNode === node) {
                     if (performance.now() - this.pinchHoldStartTime > 1500) {
-                        this.triggerNodeExpand(node);
+                        this.onGesture('PINCH_HOLD', node);
                         this.pinchHoldNode = null;
                     }
                 } else {
@@ -285,7 +287,6 @@ export class HandTracker {
             const diff = indexDist - this.lastIndexDist;
             if (Math.abs(diff) > 0.01) {
                 this.gestureLabel = "ZOOM";
-                // Zoom logic
                 this.camera.position.z -= diff * 1000;
             }
         }
@@ -295,15 +296,7 @@ export class HandTracker {
         this.labelPos = { x: (p1.x + p2.x) / 2 * this.canvas.width, y: (p1.y + p2.y) / 2 * this.canvas.height };
     }
 
-    triggerNodeExpand(node) {
-        const data = node.mesh.userData.data || (node.mesh.children[0] && node.mesh.children[0].userData.data);
-        if (data && window.showInfo) {
-            window.showInfo({ type: 'pioneer', data: data });
-        }
-    }
-
     getPalmCenter(landmarks) {
-        // Average of wrist(0), index_mcp(5), pinky_mcp(17)
         return {
             x: (landmarks[0].x + landmarks[5].x + landmarks[17].x) / 3,
             y: (landmarks[0].y + landmarks[5].y + landmarks[17].y) / 3
@@ -318,8 +311,6 @@ export class HandTracker {
     }
 
     checkOpenPalm(landmarks) {
-        // Tips: 8, 12, 16, 20
-        // Bases: 5, 9, 13, 17
         const isExtended = (tip, base) => landmarks[tip].y < landmarks[base].y;
         return isExtended(8, 5) && isExtended(12, 9) && isExtended(16, 13) && isExtended(20, 17);
     }
@@ -339,17 +330,16 @@ export class HandTracker {
         this.ctx.translate(-this.canvas.width, 0);
 
         if (results.multiHandLandmarks) {
-            results.multiHandLandmarks.forEach((landmarks, index) => {
-                // Draw connections
-                window.drawConnectors(this.ctx, landmarks, window.HAND_CONNECTIONS, { color: 'rgba(255, 255, 255, 0.3)', lineWidth: 1 });
+            results.multiHandLandmarks.forEach((landmarks) => {
+                if (typeof drawConnectors !== 'undefined') {
+                    drawConnectors(this.ctx, landmarks, HAND_CONNECTIONS, { color: 'rgba(255, 255, 255, 0.3)', lineWidth: 1 });
+                }
 
-                // Draw landmarks
                 for (let i = 0; i < landmarks.length; i++) {
                     const landmark = landmarks[i];
                     const x = landmark.x * this.canvas.width;
                     const y = landmark.y * this.canvas.height;
 
-                    // Fingertips (8, 12, 16, 20, 4)
                     if ([4, 8, 12, 16, 20].includes(i)) {
                         this.ctx.beginPath();
                         this.ctx.arc(x, y, 6, 0, 2 * Math.PI);
@@ -363,7 +353,6 @@ export class HandTracker {
                     }
                 }
 
-                // Palm center
                 const palm = this.getPalmCenter(landmarks);
                 const px = palm.x * this.canvas.width;
                 const py = palm.y * this.canvas.height;
@@ -376,14 +365,12 @@ export class HandTracker {
                 this.ctx.fill();
                 this.ctx.shadowBlur = 0;
 
-                // Pulse animation for palm
                 const pulse = 1 + Math.sin(performance.now() * 0.01) * 0.2;
                 this.ctx.beginPath();
                 this.ctx.arc(px, py, 12 * pulse, 0, 2 * Math.PI);
                 this.ctx.strokeStyle = 'rgba(74, 222, 128, 0.5)';
                 this.ctx.stroke();
 
-                // Visual cues for gestures
                 if (this.checkOpenPalm(landmarks)) {
                     this.ctx.beginPath();
                     this.ctx.arc(px, py, 50, 0, 2 * Math.PI);
@@ -394,8 +381,6 @@ export class HandTracker {
                 }
 
                 if (this.grabbedNode && this.checkPinch(landmarks)) {
-                    // Draw line from pinch to grabbed node
-                    // We need node's screen position
                     const nodeScreenPos = this.grabbedNode.mesh.position.clone().project(this.camera);
                     const nx = (nodeScreenPos.x * 0.5 + 0.5) * this.canvas.width;
                     const ny = (-nodeScreenPos.y * 0.5 + 0.5) * this.canvas.height;
@@ -411,7 +396,6 @@ export class HandTracker {
                     this.ctx.restore();
                 }
 
-                // Pinch + Hold loading ring
                 if (this.pinchHoldNode && this.checkPinch(landmarks)) {
                     const elapsed = performance.now() - this.pinchHoldStartTime;
                     const progress = Math.min(1, elapsed / 1500);
@@ -425,9 +409,8 @@ export class HandTracker {
             });
         }
 
-        // Draw gesture label
-        if (this.gestureLabel && !this.calibrating) {
-            this.ctx.setTransform(1, 0, 0, 1, 0, 0); // Reset transform for text
+        if (this.gestureLabel) {
+            this.ctx.setTransform(1, 0, 0, 1, 0, 0);
             this.ctx.font = 'bold 12px monospace';
             this.ctx.fillStyle = '#4ade80';
             this.ctx.textAlign = 'center';

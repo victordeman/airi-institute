@@ -9,7 +9,7 @@ from slowapi.errors import RateLimitExceeded
 from slowapi.middleware import SlowAPIMiddleware
 
 from app.limiter import limiter
-from app.database import init_db, get_all_naira_data
+from app.database import init_db, get_all_airi_data
 from app.rag import rag_manager
 from app.routers.api import router as api_router
 from app.routers.pages import router as pages_router
@@ -30,14 +30,14 @@ async def lifespan(app: FastAPI):
         await init_db()
         # Build RAG index
         logger.info("Building RAG index...")
-        data = await get_all_naira_data()
+        data = await get_all_airi_data()
         await rag_manager.build_index(data)
     except Exception as e:
         logger.error(f"Error during application startup: {e}")
     yield
     logger.info("Shutting down application...")
 
-app = FastAPI(title="NAIRA - African AI & XR Excellence Hub", lifespan=lifespan)
+app = FastAPI(title="AIRI Institute - Artificial Intelligence Research & Innovation Institute", lifespan=lifespan)
 
 # Disable rate limiting for tests
 import os

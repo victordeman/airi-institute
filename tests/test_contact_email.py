@@ -60,7 +60,7 @@ def test_contact_email_triggered(mock_smtp):
 
         # Verify email content
         sent_msg = mock_server.send_message.call_args[0][0]
-        assert sent_msg['To'] == "naira@nbu.edu.ng"
+        assert sent_msg['To'] == "airi@airi.institute"
         assert "Jane Doe" in sent_msg['Subject']
 
         body = sent_msg.get_payload()[0].get_payload()

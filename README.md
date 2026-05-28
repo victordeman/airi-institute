@@ -1,6 +1,6 @@
-# NAIRA - African AI & XR Excellence Hub
+# AIRI Institute - Artificial Intelligence Research & Innovation Institute
 
-AIRI (AIRI Institute.) is a full-stack FastAPI application dedicated to transforming education and innovation through immersive XR experiences and agentic AI architectures, centered on African excellence. Visit the site here https://nairasite0.vercel.app/
+AIRI Institute (AIRI Institute) is a full-stack FastAPI application dedicated to transforming education and innovation through immersive XR experiences and agentic AI architectures, centered on African excellence. Visit the site here https://airi-institute.vercel.app/
 
 ## 🚀 Features
 
