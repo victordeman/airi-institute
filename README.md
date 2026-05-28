@@ -1,6 +1,6 @@
 # NAIRA - African AI & XR Excellence Hub
 
-NAIRA (NBU Artificial Intelligence Research & Advancement Institute) is a full-stack FastAPI application dedicated to transforming education and innovation through immersive XR experiences and agentic AI architectures, centered on African excellence. Visit the site here https://nairasite0.vercel.app/
+AIRI (AIRI Institute.) is a full-stack FastAPI application dedicated to transforming education and innovation through immersive XR experiences and agentic AI architectures, centered on African excellence. Visit the site here https://nairasite0.vercel.app/
 
 ## 🚀 Features
 
