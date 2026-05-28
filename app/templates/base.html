@@ -66,60 +66,28 @@
     </div>
 
     <!-- Navigation -->
-    <header id="navbar" class="sticky top-0 z-50 w-full border-b bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/60 transition-all duration-300">
-        <div class="container mx-auto px-6 flex h-20 items-center justify-between">
-            <a href="/" class="flex flex-col">
-                <span class="text-xl font-bold text-primary leading-tight uppercase tracking-tighter">
-                    NAIRA
-                </span>
-                <span class="text-[10px] font-medium text-slate-500 uppercase tracking-widest hidden sm:block">
-                    AI Research & Advancement
-                </span>
+    <header id="navbar" class="sticky top-0 z-50 w-full border-b {% if request.url.path.rstrip('/') in ['', '/transformer-tour', '/economics-tour', '/terracotta-tour', '/immersive-learning', '/ai-agents-tour', '/computer-history-tour', '/biology-galaxy'] %}bg-slate-950/80 border-white/5 text-white{% else %}bg-white/95 border-slate-200 text-slate-900{% endif %} backdrop-blur transition-all duration-300">
+        <div class="container mx-auto px-6 flex h-24 items-center justify-between">
+            <a href="/" class="flex items-center">
+                <img src="/static/images/logo.jpeg" alt="AIRI Logo" class="w-[200px] h-auto object-contain">
             </a>
 
             <!-- Desktop Navigation -->
-            <div class="hidden md:flex items-center gap-8">
-                <nav class="flex items-center gap-6">
-                    <a href="/" class="text-sm font-medium text-slate-600 hover:text-primary transition-colors {% if request.url.path == '/' %}text-primary font-bold{% endif %}" data-key="nav-home">Home</a>
-                    <a href="/vision" class="text-sm font-medium text-slate-600 hover:text-primary transition-colors {% if request.url.path == '/vision' %}text-primary font-bold{% endif %}" data-key="nav-vision">Vision</a>
-                    <a href="/pillars" class="text-sm font-medium text-slate-600 hover:text-primary transition-colors {% if request.url.path == '/pillars' %}text-primary font-bold{% endif %}" data-key="nav-pillars">Pillars</a>
-                    <a href="/architecture" class="text-sm font-medium text-slate-600 hover:text-primary transition-colors {% if request.url.path == '/architecture' %}text-primary font-bold{% endif %}" data-key="nav-architecture">Architecture</a>
-                    <a href="/services" class="text-sm font-medium text-slate-600 hover:text-primary transition-colors {% if request.url.path == '/services' %}text-primary font-bold{% endif %}" data-key="nav-services">Services</a>
-                    <a href="/projects" class="text-sm font-medium text-slate-600 hover:text-primary transition-colors {% if request.url.path == '/projects' %}text-primary font-bold{% endif %}" data-key="nav-projects">Projects</a>
-                    <div class="relative group">
-                        <a href="/immersive-learning" class="text-sm font-medium text-slate-600 hover:text-primary transition-colors {% if request.url.path == '/immersive-learning' %}text-primary font-bold{% endif %}" data-key="nav-immersive">Immersive</a>
-                        <div class="absolute left-0 mt-2 w-48 bg-white rounded-xl border border-slate-200 shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible overflow-hidden transition-all z-[70]">
-                            <a href="/immersive-learning" class="block px-4 py-2 text-xs text-slate-600 hover:bg-slate-50 hover:text-primary">All Experiences</a>
-                            <a href="/biology-galaxy" class="block px-4 py-2 text-xs text-slate-600 hover:bg-slate-50 hover:text-primary">3D Cell Forge ✨</a>
-                            <a href="/computer-history-tour" class="block px-4 py-2 text-xs text-slate-600 hover:bg-slate-50 hover:text-primary">Computer History</a>
-                            <a href="/biology-galaxy" class="block px-4 py-2 text-xs text-slate-600 hover:bg-slate-50 hover:text-primary">Biology Galaxy 🌌</a>
-                            <a href="/ai-agents-tour" class="block px-4 py-2 text-xs text-slate-600 hover:bg-slate-50 hover:text-primary">AI Agents Tour</a>
-                        </div>
-                    </div>
+            <div class="hidden xl:flex items-center gap-6">
+                <nav class="flex items-center gap-5">
+                    <a href="/" class="text-[13px] font-bold uppercase tracking-wider hover:text-blue-400 transition-colors {% if request.url.path == '/' %}text-blue-500{% endif %}">Home</a>
+                    <a href="/immersive-learning" class="text-[13px] font-bold uppercase tracking-wider hover:text-blue-400 transition-colors">XR Experiences</a>
+                    <a href="/ai-agents-tour" class="text-[13px] font-bold uppercase tracking-wider hover:text-blue-400 transition-colors">Agentic AI</a>
+                    <a href="/vision" class="text-[13px] font-bold uppercase tracking-wider hover:text-blue-400 transition-colors">Research</a>
+                    <a href="/pillars" class="text-[13px] font-bold uppercase tracking-wider hover:text-blue-400 transition-colors">Innovation</a>
+                    <a href="/services" class="text-[13px] font-bold uppercase tracking-wider hover:text-blue-400 transition-colors">Academy</a>
+                    <a href="/community" class="text-[13px] font-bold uppercase tracking-wider hover:text-blue-400 transition-colors">Community</a>
                 </nav>
 
-                <div class="flex items-center gap-4 pl-6 border-l border-slate-200">
-                    <!-- Language Select -->
-                    <div class="relative group">
-                        <button class="flex items-center gap-1 text-xs font-bold text-slate-600 hover:text-primary uppercase tracking-widest transition-colors">
-                            <i data-feather="globe" class="w-4 h-4"></i>
-                            <span id="current-lang">EN</span>
-                        </button>
-                        <div class="absolute right-0 mt-2 w-32 bg-white rounded-xl border border-slate-200 shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible overflow-hidden transition-all z-[70]">
-                            <button onclick="switchLang('en')" class="w-full text-left px-4 py-2 text-xs text-slate-600 hover:bg-slate-50 hover:text-primary">English</button>
-                            <button onclick="switchLang('yo')" class="w-full text-left px-4 py-2 text-xs text-slate-600 hover:bg-slate-50 hover:text-primary">Yoruba</button>
-                            <button onclick="switchLang('sw')" class="w-full text-left px-4 py-2 text-xs text-slate-600 hover:bg-slate-50 hover:text-primary">Swahili</button>
-                            <button onclick="switchLang('ig')" class="w-full text-left px-4 py-2 text-xs text-slate-600 hover:bg-slate-50 hover:text-primary">Igbo</button>
-                            <button onclick="switchLang('ha')" class="w-full text-left px-4 py-2 text-xs text-slate-600 hover:bg-slate-50 hover:text-primary">Hausa</button>
-                        </div>
-                    </div>
-
-                    <a href="/login" class="auth-link text-sm font-medium text-slate-600 hover:text-primary transition-colors" data-key="nav-auth">
-                        <span class="auth-text">Login</span>
-                    </a>
-
-                    <a href="/contact" class="bg-primary hover:bg-primary/90 text-white px-6 py-2.5 rounded-full text-sm font-bold shadow-lg shadow-primary/20 transition-all active:scale-95">
-                        Contact Us
+                <div class="flex items-center gap-6 pl-6 border-l border-white/10">
+                    <a href="/login" class="text-[13px] font-bold uppercase tracking-wider hover:text-blue-400 transition-colors">Login</a>
+                    <a href="/launch" class="btn-naira-launch px-8 py-3 rounded-full text-[13px] font-black uppercase tracking-[0.1em] transition-all">
+                        Launch NAIRA
                     </a>
                 </div>
             </div>
