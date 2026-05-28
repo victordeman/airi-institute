@@ -1,63 +1,87 @@
 {% extends "base.html" %}
-{% block title %}Biology Galaxy — Explore the Universe of Life - NAIRA{% endblock %}
+{% block title %}Biology Galaxy 3D Tour - NAIRA{% endblock %}
+{% block meta_description %}Explore the living universe of biology through an immersive 3D galaxy — where cells, DNA, ecosystems, and life processes become worlds to navigate.{% endblock %}
+{% block extra_meta %}
+<meta property="og:image" content="/static/images/biology-galaxy-preview.png">
+{% endblock %}
 {% block content %}
-<div id="ai-tour-container" class="w-full h-screen bg-black relative flex overflow-hidden">
+<div id="ai-tour-container" class="w-full h-screen bg-[#020617] relative flex overflow-hidden">
     <!-- Main 3D Scene -->
     <div id="ai-canvas-container" class="flex-1 h-full relative z-0">
         <!-- Persistent Exit Link -->
         <div class="absolute top-8 left-8 z-50">
-             <a href="/" class="flex items-center gap-2 text-white/40 hover:text-white transition-all description-text" style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.2em; font-weight: 700;">
+             <a href="/immersive-learning" class="flex items-center gap-2 text-white/40 hover:text-white transition-all description-text" style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.2em; font-weight: 700;">
                 <i data-feather="arrow-left" class="w-4 h-4"></i>
-                Back to NAIRA Home
+                Back to Immersive Learning
             </a>
         </div>
 
         <!-- Instructional Overlays -->
         <div id="intro-ui" class="absolute top-24 left-8 z-40 space-y-4 transition-all duration-1000">
             <div class="pointer-events-none space-y-2 p-8 rounded-3xl shadow-2xl" style="background: rgba(24, 24, 27, 0.9); backdrop-filter: blur(24px); border: 1px solid rgba(255,255,255,0.1);">
-                <h1 class="english-label" style="margin-bottom: 8px;">Biology Galaxy — Explore the Universe of Life</h1>
-                <h2 id="current-phase-title" class="text-3xl font-display font-medium mb-2" style="color: #ffffff !important;">“Journey Through the Cosmic Microcosm”</h2>
-                <p class="description-text max-w-lg">An immersive XR experience revealing the hidden structures of life — from the molecular machinery of DNA to the vast interconnectedness of ecosystems.</p>
+                <p class="english-label" style="margin-bottom: 8px;">Life Science · 3D Exploration</p>
+                <h1 class="text-3xl font-display font-medium mb-2" style="color: #ffffff !important; text-shadow: 0 0 20px rgba(74, 222, 128, 0.4);">Biology Galaxy 3D Tour</h1>
+                <h2 id="current-phase-title" class="text-xl font-display font-medium mb-4 opacity-80" style="color: #ffffff !important;">“From the Cell to the Cosmos: Life's Blueprint Explored”</h2>
+                <p class="description-text max-w-lg">An immersive journey through the architecture of life — from the molecular machinery inside a single cell to the vast interdependence of ecosystems across Earth. Click any planet to enter its world.</p>
             </div>
-            <div class="flex gap-4">
-                <button id="demo-btn" class="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-full shadow-lg shadow-indigo-500/20 flex items-center gap-2 transition-all active:scale-95 description-text" style="font-size: 14px; text-transform: uppercase;">
-                    <i data-feather="zap" class="w-4 h-4"></i>
-                    Launch Demo
-                </button>
-                <button id="start-tour-btn" class="px-6 py-3 bg-white/10 hover:bg-white/20 text-white rounded-full border border-white/20 flex items-center gap-2 transition-all active:scale-95 description-text" style="font-size: 14px; text-transform: uppercase;">
-                    <i data-feather="play" class="w-4 h-4"></i>
-                    Start Guided Tour
-                </button>
-            </div>
+            <button id="start-tour-btn" class="px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-full shadow-lg shadow-emerald-500/20 flex items-center gap-2 transition-all active:scale-95 description-text" style="font-size: 14px; text-transform: uppercase;">
+                <i data-feather="play" class="w-4 h-4"></i>
+                Begin Galaxy Tour
+            </button>
         </div>
 
         <div class="absolute bottom-8 left-24 z-40 flex flex-col gap-4 transition-all duration-1000">
-            <div id="tour-narration-panel" class="hidden max-w-2xl px-8 py-6 rounded-3xl shadow-2xl mb-4 animate-bounce-subtle" style="background: rgba(16, 185, 129, 0.9); backdrop-filter: blur(24px); border: 1px solid rgba(255,255,255,0.2);">
-                <p id="tour-narration-text" class="text-white font-medium text-lg leading-relaxed"></p>
+            <!-- Domain Selector Tabs -->
+            <div id="domain-selector" class="flex gap-2 p-2 rounded-2xl bg-black/40 border border-white/10 backdrop-blur-xl mb-2 overflow-x-auto no-scrollbar max-w-xl">
+                <button class="domain-tab active px-4 py-2 rounded-xl text-[10px] font-bold text-white uppercase tracking-wider transition-all border border-white/5 hover:bg-emerald-500/20" data-domain="all">All Life</button>
+                <button class="domain-tab px-4 py-2 rounded-xl text-[10px] font-bold text-white uppercase tracking-wider transition-all border border-white/5 hover:bg-emerald-500/20" data-domain="Molecular">Molecular</button>
+                <button class="domain-tab px-4 py-2 rounded-xl text-[10px] font-bold text-white uppercase tracking-wider transition-all border border-white/5 hover:bg-emerald-500/20" data-domain="Cell Biology">Cell Biology</button>
+                <button class="domain-tab px-4 py-2 rounded-xl text-[10px] font-bold text-white uppercase tracking-wider transition-all border border-white/5 hover:bg-emerald-500/20" data-domain="Ecology">Ecology</button>
+                <button class="domain-tab px-4 py-2 rounded-xl text-[10px] font-bold text-white uppercase tracking-wider transition-all border border-white/5 hover:bg-emerald-500/20" data-domain="Physiology">Physiology</button>
+                <button class="domain-tab px-4 py-2 rounded-xl text-[10px] font-bold text-white uppercase tracking-wider transition-all border border-white/5 hover:bg-emerald-500/20" data-domain="Human Biology">Human Biology</button>
+                <button class="domain-tab px-4 py-2 rounded-xl text-[10px] font-bold text-white uppercase tracking-wider transition-all border border-white/5 hover:bg-emerald-500/20" data-domain="Evolutionary">Evolutionary</button>
             </div>
 
-            <div id="agent-status-panel" class="flex items-center gap-8 px-8 py-4 rounded-3xl shadow-2xl min-w-[500px]" style="background: rgba(24, 24, 27, 0.9); backdrop-filter: blur(24px); border: 1px solid rgba(255,255,255,0.1);">
-                <div class="flex flex-col min-w-[150px]">
-                    <span class="english-label" style="margin-bottom: 4px; font-size: 11px;">Current Domain</span>
-                    <span id="core-state-val" class="description-text truncate" style="color: #22d3ee; font-size: 22px; font-weight: 700;">Galaxy Core</span>
+            <div id="agent-status-panel" class="flex items-center gap-8 px-8 py-4 rounded-3xl shadow-2xl" style="background: rgba(24, 24, 27, 0.9); backdrop-filter: blur(24px); border: 1px solid rgba(255,255,255,0.1);">
+                <div class="flex flex-col">
+                    <span class="english-label" style="margin-bottom: 4px; font-size: 11px;">Biology Domain</span>
+                    <span id="core-state-val" class="description-text" style="color: #4ade80; font-size: 22px; font-weight: 700;">All Life</span>
                 </div>
                 <div class="w-px h-10 bg-white/10"></div>
-                <div class="flex flex-col min-w-[200px]">
-                    <span class="english-label" style="margin-bottom: 4px; font-size: 11px;">Biological Scale</span>
-                    <span id="active-modules-val" class="description-text" style="color: #22d3ee; font-size: 22px; font-weight: 700;">Cosmic Overview</span>
+                <div class="flex flex-col">
+                    <span class="english-label" style="margin-bottom: 4px; font-size: 11px;">Active Concept</span>
+                    <span id="active-modules-val" class="description-text" style="color: #818cf8; font-size: 22px; font-weight: 700;">The Cell</span>
                 </div>
             </div>
 
             <div class="english-label" style="font-size: 11px; letter-spacing: 0.2em; padding: 10px 24px; border-radius: 999px; background: rgba(24, 24, 27, 0.9); backdrop-filter: blur(24px); border: 1px solid rgba(255,255,255,0.1); display: inline-block; width: fit-content; font-weight: 600;">
-                Drag to orbit · Scroll to zoom · Click planets to dive in
+                Drag to rotate · Scroll to zoom · Click planets to explore life processes
             </div>
         </div>
 
-        <!-- Left Sidebar: Planet List -->
-        <div class="absolute left-8 top-1/2 -translate-y-1/2 z-30 flex flex-col gap-2 transition-all duration-1000">
-             <div id="planet-list" class="flex flex-col gap-2">
-                 <!-- Populated by JS -->
-             </div>
+        <!-- Floating Controls Panel -->
+        <div class="absolute bottom-8 right-8 z-40 w-80 space-y-4 transition-all duration-1000">
+            <div class="glass-card p-6 rounded-3xl border border-white/10 space-y-6">
+                <div class="space-y-2">
+                    <h3 class="english-label" style="font-size: 12px;">Assemble a Living Cell</h3>
+                    <p class="description-text" style="font-size: 12px; opacity: 0.8;">Drag organelles into the cell to build a functioning organism</p>
+                </div>
+
+                <div id="assembler-tooltip" class="h-10 text-[10px] text-emerald-400 font-medium italic flex items-center justify-center text-center opacity-0 transition-opacity"></div>
+                <div class="grid grid-cols-2 gap-3">
+                    <button class="module-btn p-3 rounded-xl border border-white/10 text-[10px] font-bold text-white hover:bg-emerald-500/20 hover:border-emerald-500/50 transition-all" data-module="nucleus">NUCLEUS</button>
+                    <button class="module-btn p-3 rounded-xl border border-white/10 text-[10px] font-bold text-white hover:bg-emerald-500/20 hover:border-emerald-500/50 transition-all" data-module="mitochondria">MITOCHONDRIA</button>
+                    <button class="module-btn p-3 rounded-xl border border-white/10 text-[10px] font-bold text-white hover:bg-emerald-500/20 hover:border-emerald-500/50 transition-all" data-module="ribosome">RIBOSOME</button>
+                    <button class="module-btn p-3 rounded-xl border border-white/10 text-[10px] font-bold text-white hover:bg-emerald-500/20 hover:border-emerald-500/50 transition-all" data-module="membrane">CELL MEMBRANE</button>
+                    <button class="module-btn p-3 rounded-xl border border-white/10 text-[10px] font-bold text-white hover:bg-emerald-500/20 hover:border-emerald-500/50 transition-all col-span-2" data-module="chloroplast">CHLOROPLAST</button>
+                </div>
+
+                <div class="pt-4 border-t border-white/5 space-y-4">
+                    <button id="reset-experience" class="w-full py-4 px-6 bg-[#818cf8]/10 hover:bg-[#818cf8]/20 text-white rounded-full border border-[#818cf8]/30 transition-all description-text shadow-lg" style="font-size: 13px; text-transform: uppercase; text-align: center; font-weight: 600;">
+                        Reset Cell
+                    </button>
+                </div>
+            </div>
         </div>
 
         <!-- Description Panel -->
@@ -69,8 +93,8 @@
             <div class="space-y-6">
                 <div id="ai-panel-header" class="transition-all duration-700">
                     <div class="flex items-center gap-3 mb-4">
-                        <div id="status-dot" class="w-2 h-2 rounded-full transition-all duration-700" style="background-color: rgb(34, 211, 238); box-shadow: rgb(34, 211, 238) 0px 0px 20px;"></div>
-                        <span id="ai-panel-subtitle" class="english-label" style="margin-bottom: 0;">Biological Entity</span>
+                        <div id="status-dot" class="w-2 h-2 rounded-full transition-all duration-700" style="background-color: #4ade80; box-shadow: #4ade80 0px 0px 20px;"></div>
+                        <span id="ai-panel-subtitle" class="english-label" style="margin-bottom: 0;">Biology Concept</span>
                     </div>
                     <h2 id="ai-panel-title" class="text-[#ffffff] font-medium text-2xl tracking-tight leading-none"></h2>
                 </div>
@@ -80,24 +104,24 @@
 
             <!-- Action Buttons -->
             <div class="mt-8 space-y-3">
-                <button id="ai-drill-down" class="w-full transition-all text-white py-5 rounded-[24px] flex items-center justify-center gap-3 shadow-2xl active:scale-[0.97] border tracking-wide description-text" style="font-size: 14px; text-transform: uppercase; border-color: rgba(34, 211, 238, 0.5); color: rgb(34, 211, 238); background: rgba(34, 211, 238, 0.1);">
-                    <i data-feather="maximize-2" class="w-5 h-5"></i>
-                    Dive Deep
+                <button id="ai-drill-down" class="w-full transition-all text-white py-5 rounded-[24px] flex items-center justify-center gap-3 shadow-2xl active:scale-[0.97] border tracking-wide description-text" style="font-size: 14px; text-transform: uppercase; border-color: rgba(74, 222, 128, 0.5); color: #4ade80; background: rgba(74, 222, 128, 0.1);">
+                    <i data-feather="zoom-in" class="w-5 h-5"></i>
+                    Analyse Organism
                 </button>
             </div>
         </div>
     </div>
 
     <!-- AI Assistant Sidebar -->
-    <aside id="ai-sidebar" class="w-96 bg-[#0a0f1a] border-l border-slate-800/40 flex flex-col z-40 transform transition-transform duration-500 translate-x-0 lg:relative fixed right-0 top-0 h-full">
+    <aside id="ai-sidebar" class="w-96 bg-[#0a0f1a] border-l border-[#818cf8]/20 flex flex-col z-40 transform transition-transform duration-500 translate-x-0 lg:relative fixed right-0 top-0 h-full">
         <div class="p-6 border-b border-white/5 flex items-center justify-between bg-slate-900/40">
             <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-2xl bg-emerald-600/20 flex items-center justify-center">
-                    <i data-feather="activity" class="w-5 h-5 text-emerald-400"></i>
+                <div class="w-10 h-10 rounded-2xl bg-[#818cf8]/20 flex items-center justify-center">
+                    <i data-feather="activity" class="text-[#818cf8] w-5 h-5"></i>
                 </div>
                 <div>
                     <p class="english-label" style="font-size: 10px; margin-bottom: 2px;">Biology Guide</p>
-                    <h3 class="description-text" style="font-size: 14px; color: #ffffff;">NAIRA Life Specialist</h3>
+                    <h3 class="description-text" style="font-size: 14px; color: #ffffff;">Life Science Specialist</h3>
                 </div>
             </div>
             <button id="close-sidebar" class="p-2 text-white hover:text-emerald-400 transition-colors lg:hidden">
@@ -109,7 +133,12 @@
         <div id="ai-chat-body" class="flex-1 overflow-y-auto p-6 space-y-4 bg-slate-950/20">
             <div class="p-4 rounded-2xl" style="background: rgba(24, 24, 27, 0.95); backdrop-filter: blur(24px); border: 1px solid rgba(255,255,255,0.1);">
                 <span class="english-label" style="font-size: 10px; margin-bottom: 8px;">Introduction</span>
-                <p class="description-text" style="font-size: 14px; color: #ffffff;">Welcome to the Biology Galaxy. I am here to explore the wonders of life with you. Which biological planet shall we visit first?</p>
+                <p class="description-text" style="font-size: 14px; color: #ffffff;">Welcome to the Biology Galaxy. I am here to guide you through the architecture of life — from the molecular world inside a single cell to the vast web of ecosystems on Earth. Which domain of biology would you like to explore first?</p>
+                <div class="flex flex-wrap gap-2 mt-4">
+                    <button class="prompt-chip px-3 py-1 rounded-full bg-[#818cf8]/10 border border-[#818cf8]/20 text-[10px] text-[#818cf8] hover:bg-[#818cf8]/20 transition-all" onclick="sendQuickMsg('Explain DNA replication')">DNA Replication</button>
+                    <button class="prompt-chip px-3 py-1 rounded-full bg-[#818cf8]/10 border border-[#818cf8]/20 text-[10px] text-[#818cf8] hover:bg-[#818cf8]/20 transition-all" onclick="sendQuickMsg('How does photosynthesis work?')">Photosynthesis</button>
+                    <button class="prompt-chip px-3 py-1 rounded-full bg-[#818cf8]/10 border border-[#818cf8]/20 text-[10px] text-[#818cf8] hover:bg-[#818cf8]/20 transition-all" onclick="sendQuickMsg('What is natural selection?')">Natural Selection</button>
+                </div>
             </div>
         </div>
 
@@ -137,59 +166,294 @@
 <script type="module">
     import * as THREE from 'three';
     import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+    import { DragControls } from 'three/addons/controls/DragControls.js';
 
-    // --- ENGINE SETUP ---
+    // --- DATA ---
+    const BIOLOGY_NODES = [
+        {
+            id: "cell",
+            name: "The Cell",
+            category: "Foundations",
+            size: "giant",
+            color: "#4ade80",
+            contribution: "The fundamental unit of life. Every organism is made of one or more cells — the site of metabolism, reproduction, and response.",
+            subtopics: ["Prokaryotic Cell", "Eukaryotic Cell", "Cell Membrane", "Nucleus", "Mitochondria"],
+            year: "Molecular Biology",
+            content: `
+                <div class="space-y-4">
+                    <p>The cell is the basic structural, functional, and biological unit of all known organisms. Cells are the smallest unit of life that can replicate independently, and are often called the "building blocks of life".</p>
+                    <ul class="list-disc pl-5 space-y-1">
+                        <li><strong>Prokaryotic Cell:</strong> Simple cells without a nucleus (e.g., bacteria).</li>
+                        <li><strong>Eukaryotic Cell:</strong> Complex cells with a nucleus and organelles (e.g., plants, animals).</li>
+                        <li><strong>Cell Membrane:</strong> The protective barrier that regulates what enters and leaves the cell.</li>
+                    </ul>
+                </div>
+            `
+        },
+        {
+            id: "dna",
+            name: "DNA & Genetics",
+            category: "Molecular",
+            size: "large",
+            color: "#818cf8",
+            contribution: "The molecule of heredity. DNA encodes the instructions for building and operating every living organism.",
+            subtopics: ["Double Helix", "Genes", "Chromosomes", "Mutations", "Gene Expression"],
+            year: "Molecular Biology",
+            content: `
+                <div class="space-y-4">
+                    <p>DNA (Deoxyribonucleic acid) is the hereditary material in humans and almost all other organisms. Nearly every cell in a person's body has the same DNA.</p>
+                    <ul class="list-disc pl-5 space-y-1">
+                        <li><strong>Double Helix:</strong> The twisted-ladder structure of DNA.</li>
+                        <li><strong>Genes:</strong> Segments of DNA that serve as the blueprint for proteins.</li>
+                        <li><strong>Chromosomes:</strong> Thread-like structures made of protein and a single molecule of DNA.</li>
+                    </ul>
+                </div>
+            `
+        },
+        {
+            id: "photosynthesis",
+            name: "Photosynthesis",
+            category: "Energy",
+            size: "large",
+            color: "#facc15",
+            contribution: "The process by which plants, algae, and some bacteria convert sunlight into chemical energy — powering nearly all life on Earth.",
+            subtopics: ["Chloroplast", "Light Reactions", "Calvin Cycle", "Glucose", "Oxygen Release"],
+            year: "Cell Biology",
+            content: `
+                <div class="space-y-4">
+                    <p>Photosynthesis is the process used by plants, algae and certain bacteria to harness energy from sunlight and turn it into chemical energy.</p>
+                    <ul class="list-disc pl-5 space-y-1">
+                        <li><strong>Chloroplast:</strong> The organelle where photosynthesis takes place.</li>
+                        <li><strong>Glucose:</strong> The sugar produced as energy for the plant.</li>
+                        <li><strong>Oxygen:</strong> A vital byproduct released into the atmosphere.</li>
+                    </ul>
+                </div>
+            `
+        },
+        {
+            id: "evolution",
+            name: "Evolution",
+            category: "Theory",
+            size: "large",
+            color: "#fb923c",
+            contribution: "The change in heritable traits across generations. Darwin's natural selection explains how species adapt, diverge, and go extinct.",
+            subtopics: ["Natural Selection", "Adaptation", "Speciation", "Fossil Record", "Common Ancestry"],
+            year: "Evolutionary Biology",
+            content: `
+                <div class="space-y-4">
+                    <p>Evolution is the change in the heritable characteristics of biological populations over successive generations.</p>
+                    <ul class="list-disc pl-5 space-y-1">
+                        <li><strong>Natural Selection:</strong> The process where organisms better adapted to their environment tend to survive.</li>
+                        <li><strong>Adaptation:</strong> A trait that helps an organism survive and reproduce.</li>
+                        <li><strong>Common Ancestry:</strong> The idea that all life on Earth is related.</li>
+                    </ul>
+                </div>
+            `
+        },
+        {
+            id: "ecosystem",
+            name: "Ecosystem",
+            category: "Ecology",
+            size: "medium",
+            color: "#34d399",
+            contribution: "A community of living organisms interacting with each other and their non-living environment as a system.",
+            subtopics: ["Food Web", "Producers", "Consumers", "Decomposers", "Energy Flow"],
+            year: "Ecology",
+            content: `
+                <div class="space-y-4">
+                    <p>An ecosystem consists of all the living things in a given area, interacting with each other, and also with their non-living environments.</p>
+                    <ul class="list-disc pl-5 space-y-1">
+                        <li><strong>Food Web:</strong> The complex network of overlapping food chains.</li>
+                        <li><strong>Producers:</strong> Organisms that make their own food (e.g., plants).</li>
+                        <li><strong>Decomposers:</strong> Organisms that break down dead material.</li>
+                    </ul>
+                </div>
+            `
+        },
+        {
+            id: "homeostasis",
+            name: "Homeostasis",
+            category: "Physiology",
+            size: "medium",
+            color: "#38bdf8",
+            contribution: "The ability of an organism to maintain stable internal conditions despite external changes — the balance of life.",
+            subtopics: ["Feedback Loops", "Body Temperature", "Blood Sugar", "pH Balance", "Osmoregulation"],
+            year: "Physiology",
+            content: `
+                <div class="space-y-4">
+                    <p>Homeostasis is any self-regulating process by which biological systems tend to maintain stability while adjusting to conditions that are optimal for survival.</p>
+                </div>
+            `
+        },
+        {
+            id: "mitosis",
+            name: "Cell Division",
+            category: "Reproduction",
+            size: "medium",
+            color: "#f472b6",
+            contribution: "Mitosis and meiosis — the processes by which cells divide to enable growth, repair, and sexual reproduction.",
+            subtopics: ["Mitosis", "Meiosis", "Interphase", "Cytokinesis", "Chromosomal Separation"],
+            year: "Cell Biology",
+            content: `
+                <div class="space-y-4">
+                    <p>Cell division is the process by which a parent cell divides into two or more daughter cells.</p>
+                </div>
+            `
+        },
+        {
+            id: "nervous_system",
+            name: "Nervous System",
+            category: "Physiology",
+            size: "medium",
+            color: "#a78bfa",
+            contribution: "The brain, spinal cord, and nerve network that processes information and coordinates responses throughout the body.",
+            subtopics: ["Neurons", "Synapses", "Brain Lobes", "Reflex Arc", "Neurotransmitters"],
+            year: "Human Biology",
+            content: `
+                <div class="space-y-4">
+                    <p>The nervous system is the part of an animal that coordinates its actions and transmits signals between different parts of its body.</p>
+                </div>
+            `
+        },
+        {
+            id: "protein_synthesis",
+            name: "Protein Synthesis",
+            category: "Molecular",
+            size: "small",
+            color: "#67e8f9",
+            contribution: "How genetic information in DNA is transcribed to mRNA and translated into proteins by ribosomes.",
+            subtopics: ["Transcription", "Translation", "mRNA", "Ribosomes", "Amino Acids"],
+            year: "Molecular Biology",
+            content: `
+                <div class="space-y-4">
+                    <p>Protein synthesis is one of the most fundamental biological processes by which individual cells build their specific proteins.</p>
+                </div>
+            `
+        },
+        {
+            id: "classification",
+            name: "Classification of Life",
+            category: "Taxonomy",
+            size: "small",
+            color: "#fbbf24",
+            contribution: "The system for organising all living things — from Domains to Species — based on shared evolutionary traits.",
+            subtopics: ["Domains", "Kingdom", "Phylum", "Genus", "Species"],
+            year: "Taxonomy",
+            content: `
+                <div class="space-y-4">
+                    <p>Taxonomy is the science of naming, describing and classifying organisms and includes all plants, animals and microorganisms of the world.</p>
+                </div>
+            `
+        },
+        {
+            id: "respiration",
+            name: "Cellular Respiration",
+            category: "Energy",
+            size: "small",
+            color: "#f87171",
+            contribution: "The biochemical process that converts glucose and oxygen into ATP — the energy currency of the cell.",
+            subtopics: ["Glycolysis", "Krebs Cycle", "Electron Transport Chain", "ATP", "Anaerobic Respiration"],
+            year: "Cell Biology",
+            content: `
+                <div class="space-y-4">
+                    <p>Cellular respiration is a set of metabolic reactions and processes that take place in the cells of organisms to convert biochemical energy from nutrients into adenosine triphosphate (ATP).</p>
+                </div>
+            `
+        },
+        {
+            id: "immunity",
+            name: "Immune System",
+            category: "Defence",
+            size: "small",
+            color: "#86efac",
+            contribution: "The body's defence network — white blood cells, antibodies, and memory cells working to destroy pathogens.",
+            subtopics: ["White Blood Cells", "Antigens", "Antibodies", "Vaccines", "Innate vs Adaptive Immunity"],
+            year: "Human Biology",
+            content: `
+                <div class="space-y-4">
+                    <p>The immune system is a network of biological processes that protects an organism from diseases.</p>
+                </div>
+            `
+        }
+    ];
+
+    const PHASES = [
+        { id: "all", title: "All Life", subtitle: "The Living Universe", content: "Explore the vast spectrum of life, from microscopic cells to global ecosystems." },
+        { id: "molecular", title: "Molecular", subtitle: "Life's Chemistry", content: "Journey into the molecules that make life possible, including DNA and proteins." },
+        { id: "cell", title: "Cell Biology", subtitle: "Life's Foundations", content: "Explore the fundamental building blocks of all living organisms." },
+        { id: "ecology", title: "Ecology", subtitle: "Interconnected World", content: "Discover how life interacts with the environment and other species." },
+        { id: "physiology", title: "Physiology", subtitle: "Living Systems", content: "Understand how biological systems maintain balance and function." },
+        { id: "human", title: "Human Biology", subtitle: "Our Inner World", content: "Focus on the complex systems of the human body." },
+        { id: "evolutionary", title: "Evolutionary", subtitle: "Life's History", content: "Trace the lineages and adaptations that shaped biodiversity." }
+    ];
+
+    // --- THREE.JS ENGINE ---
     const container = document.getElementById('ai-canvas-container');
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x000005); // Deep space black-blue
+    scene.background = new THREE.Color(0x020617);
 
-    const camera = new THREE.PerspectiveCamera(60, container.clientWidth / container.clientHeight, 0.1, 5000);
-    camera.position.set(0, 400, 800);
+    const camera = new THREE.PerspectiveCamera(60, container.clientWidth / container.clientHeight, 0.1, 2000);
+    camera.position.set(0, 500, 1000); // Start far for fly-in
 
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     renderer.setSize(container.clientWidth, container.clientHeight);
     renderer.setPixelRatio(window.devicePixelRatio);
-    renderer.shadowMap.enabled = true;
     container.appendChild(renderer.domElement);
 
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
     controls.dampingFactor = 0.05;
-    controls.maxDistance = 2000;
-    controls.minDistance = 50;
 
-    // --- LIGHTING ---
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.2);
-    scene.add(ambientLight);
+    // --- DRAG CONTROLS SETUP ---
+    window.draggableObjects = [];
+    let draggableObjects = window.draggableObjects;
+    const dragControls = new DragControls(draggableObjects, camera, renderer.domElement);
 
-    const coreLight = new THREE.PointLight(0xffffff, 2, 1000);
-    coreLight.position.set(0, 0, 0);
-    scene.add(coreLight);
+    dragControls.addEventListener('dragstart', function (event) {
+        controls.enabled = false;
+        if (event.object.material.emissive) {
+            event.object.material.emissiveIntensity = 2;
+        }
+    });
 
-    // --- COSMIC ENVIRONMENT ---
+    dragControls.addEventListener('dragend', function (event) {
+        controls.enabled = true;
+        if (event.object.material.emissive) {
+            event.object.material.emissiveIntensity = 0.5;
+        }
+    });
+
+    // --- Lights ---
+    scene.add(new THREE.AmbientLight(0xffffff, 0.4));
+    const mainLight = new THREE.PointLight(0x4ade80, 2, 500);
+    mainLight.position.set(50, 50, 50);
+    scene.add(mainLight);
+
+    // --- Cosmic Environment ---
     function createStarfield() {
         const geo = new THREE.BufferGeometry();
         const vertices = [];
         const colors = [];
         for (let i = 0; i < 20000; i++) {
             vertices.push(
-                THREE.MathUtils.randFloatSpread(4000),
-                THREE.MathUtils.randFloatSpread(4000),
-                THREE.MathUtils.randFloatSpread(4000)
+                THREE.MathUtils.randFloatSpread(3000),
+                THREE.MathUtils.randFloatSpread(3000),
+                THREE.MathUtils.randFloatSpread(3000)
             );
             const color = new THREE.Color();
-            // Vary star colors slightly (blue-white to pale yellow)
-            color.setHSL(0.6 + Math.random() * 0.1, 0.2, 0.8 + Math.random() * 0.2);
+            color.setHSL(Math.random(), 0.8, 0.9);
             colors.push(color.r, color.g, color.b);
         }
         geo.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
         geo.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
-        const mat = new THREE.PointsMaterial({ size: 1.5, vertexColors: true, transparent: true, opacity: 0.8 });
+        const mat = new THREE.PointsMaterial({ size: 1.2, vertexColors: true, transparent: true, opacity: 0.8 });
         return new THREE.Points(geo, mat);
     }
     scene.add(createStarfield());
 
-    function createNebula(color, pos, size = 1500) {
+    // Nebula Effect (Glowing Planes)
+    function createNebula(color, pos) {
+        const geo = new THREE.PlaneGeometry(1000, 1000);
         const canvas = document.createElement('canvas');
         canvas.width = 512; canvas.height = 512;
         const ctx = canvas.getContext('2d');
@@ -197,362 +461,391 @@
         grad.addColorStop(0, color);
         grad.addColorStop(1, 'rgba(0,0,0,0)');
         ctx.fillStyle = grad;
-        ctx.fillRect(0, 0, 512, 512);
-
+        ctx.fillRect(0,0,512,512);
         const tex = new THREE.CanvasTexture(canvas);
-        const mat = new THREE.MeshBasicMaterial({
-            map: tex,
-            transparent: true,
-            opacity: 0.1,
-            depthWrite: false,
-            side: THREE.DoubleSide,
-            blending: THREE.AdditiveBlending
-        });
-        const mesh = new THREE.Mesh(new THREE.PlaneGeometry(size, size), mat);
+        const mat = new THREE.MeshBasicMaterial({ map: tex, transparent: true, opacity: 0.15, depthWrite: false, side: THREE.DoubleSide });
+        const mesh = new THREE.Mesh(geo, mat);
         mesh.position.copy(pos);
-        mesh.lookAt(0,0,0);
         return mesh;
     }
+    scene.add(createNebula('rgba(74, 222, 128, 0.6)', new THREE.Vector3(-800, -200, -800))); // Green nebula
+    scene.add(createNebula('rgba(129, 140, 248, 0.6)', new THREE.Vector3(800, 200, -1000))); // Violet nebula
 
-    // Chlorophyll-green, Hemoglobin-red, DNA-gold nebulae
-    scene.add(createNebula('rgba(16, 185, 129, 0.8)', new THREE.Vector3(-1000, 200, -1000))); // Green
-    scene.add(createNebula('rgba(239, 68, 68, 0.8)', new THREE.Vector3(1000, -300, -500)));   // Red
-    scene.add(createNebula('rgba(245, 158, 11, 0.8)', new THREE.Vector3(200, 500, -1200)));  // Gold
+    // Thought Particles
+    const particleCount = 200;
+    const particlesGeo = new THREE.BufferGeometry();
+    const particlePos = new Float32Array(particleCount * 3);
+    for(let i=0; i<particleCount*3; i++) particlePos[i] = THREE.MathUtils.randFloatSpread(100);
+    particlesGeo.setAttribute('position', new THREE.BufferAttribute(particlePos, 3));
+    const particlesMat = new THREE.PointsMaterial({ color: 0x4ade80, size: 2, transparent: true, opacity: 0.6, blending: THREE.AdditiveBlending });
+    const thoughtParticles = new THREE.Points(particlesGeo, particlesMat);
+    scene.add(thoughtParticles);
 
-    // Bioluminescent Dust
-    const dustCount = 1000;
-    const dustGeo = new THREE.BufferGeometry();
-    const dustPos = new Float32Array(dustCount * 3);
-    for(let i=0; i<dustCount*3; i++) dustPos[i] = THREE.MathUtils.randFloatSpread(1000);
-    dustGeo.setAttribute('position', new THREE.BufferAttribute(dustPos, 3));
-    const dustMat = new THREE.PointsMaterial({ color: 0x10b981, size: 2, transparent: true, opacity: 0.4, blending: THREE.AdditiveBlending });
-    const dustParticles = new THREE.Points(dustGeo, dustMat);
-    scene.add(dustParticles);
+    // Advanced Particle Systems
+    const sparks = [];
+    function createSpark(pos, color) {
+        const geo = new THREE.SphereGeometry(0.5, 8, 8);
+        const mat = new THREE.MeshBasicMaterial({ color: color, transparent: true, opacity: 1 });
+        const mesh = new THREE.Mesh(geo, mat);
+        mesh.position.copy(pos);
+        mesh.userData = {
+            velocity: new THREE.Vector3(Math.random()-0.5, Math.random()-0.5, Math.random()-0.5).multiplyScalar(2),
+            life: 1.0
+        };
+        scene.add(mesh);
+        sparks.push(mesh);
+    }
 
-    // --- CORE OF LIFE ---
+    function triggerToolBurst() {
+        for(let i=0; i<30; i++) {
+            createSpark(new THREE.Vector3(0,0,0), 0x4ade80);
+        }
+    }
+
+    const collaborationBeams = [];
+    function createBeam(start, end) {
+        const material = new THREE.LineBasicMaterial({ color: 0x4ade80, transparent: true, opacity: 0.5 });
+        const points = [start, end];
+        const geo = new THREE.BufferGeometry().setFromPoints(points);
+        const line = new THREE.Line(geo, material);
+        scene.add(line);
+        collaborationBeams.push({ line, life: 1.0 });
+    }
+
+    // --- Biological Core ---
     const coreGroup = new THREE.Group();
     scene.add(coreGroup);
 
-    const coreGeo = new THREE.SphereGeometry(40, 64, 64);
+    const coreGeo = new THREE.SphereGeometry(15, 64, 64);
     const coreMat = new THREE.MeshStandardMaterial({
-        color: 0xffffff,
-        emissive: 0xffcc33,
-        emissiveIntensity: 1,
-        metalness: 0.5,
-        roughness: 0.5,
+        color: 0x4ade80,
+        emissive: 0x4ade80,
+        emissiveIntensity: 0.5,
+        metalness: 0.8,
+        roughness: 0.2,
+        wireframe: true
     });
+    const agentCore = new THREE.Mesh(coreGeo, coreMat);
+    coreGroup.add(agentCore);
 
-    // Texture for hydrothermal vent/primordial soup
-    const textureLoader = new THREE.TextureLoader();
-    textureLoader.crossOrigin = 'anonymous';
-    textureLoader.load('https://upload.wikimedia.org/wikipedia/commons/c/c0/Hydrothermal_vent_at_the_bottom_of_the_ocean.jpg', (tex) => {
-        coreMat.map = tex;
-        coreMat.needsUpdate = true;
-    }, undefined, (err) => {
-        textureLoader.load('https://placehold.co/1024x512/332211/ffffff?text=Primordial+Soup', (tex) => {
-            coreMat.map = tex;
-            coreMat.needsUpdate = true;
-        });
-    });
+    const innerCore = new THREE.Mesh(
+        new THREE.SphereGeometry(10, 32, 32),
+        new THREE.MeshStandardMaterial({ color: 0x000000, emissive: 0x4ade80, emissiveIntensity: 2 })
+    );
+    coreGroup.add(innerCore);
 
-    const coreMesh = new THREE.Mesh(coreGeo, coreMat);
-    coreGroup.add(coreMesh);
+    // --- Pioneer Timeline (Helix) ---
+    const timelineGroup = new THREE.Group();
+    scene.add(timelineGroup);
 
-    // Core Glow
-    const glowGeo = new THREE.SphereGeometry(45, 32, 32);
-    const glowMat = new THREE.MeshBasicMaterial({ color: 0xffaa00, transparent: true, opacity: 0.2, side: THREE.BackSide });
-    coreGroup.add(new THREE.Mesh(glowGeo, glowMat));
+    const pioneerPlanes = [];
+    const sizes = { giant: 2.5, large: 1.8, medium: 1.2, small: 0.7 };
 
-    // Volumetric Rays (Refined)
-    for(let i=0; i<12; i++) {
-        const rayGeo = new THREE.CylinderGeometry(0, 50 + Math.random() * 100, 1500, 32, 1, true);
-        const rayMat = new THREE.MeshBasicMaterial({
-            color: 0xffcc33,
-            transparent: true,
-            opacity: 0.03,
-            side: THREE.DoubleSide,
-            blending: THREE.AdditiveBlending
-        });
-        const ray = new THREE.Mesh(rayGeo, rayMat);
-        ray.rotation.z = Math.random() * Math.PI;
-        ray.rotation.x = Math.random() * Math.PI;
-        coreGroup.add(ray);
-    }
+    BIOLOGY_NODES.forEach((p, i) => {
+        const angle = (i / BIOLOGY_NODES.length) * Math.PI * 2;
+        const radius = 120;
+        const x = Math.cos(angle) * radius;
+        const z = Math.sin(angle) * radius;
+        const y = (i - BIOLOGY_NODES.length/2) * 20;
 
-    // --- PLANETS DATA ---
-    const PLANETS = [
-        {
-            id: 'cell',
-            name: 'Cell Biology',
-            description: 'The fundamental unit of life. Explore the complex machinery of organelles working in harmony.',
-            texture: 'https://upload.wikimedia.org/wikipedia/commons/1/1a/Anatomy_of_an_Animal_Cell.jpg',
-            color: 0x10b981,
-            distance: 120,
-            size: 15,
-            speed: 0.005,
-            details: `
-                <div class="space-y-4">
-                    <p>Cells are the basic structural, functional, and biological units of all known organisms. A cell is the smallest unit of life that can replicate independently.</p>
-                    <h4 class="text-emerald-400 font-bold">African Example:</h4>
-                    <p>Sickle cell trait research in West Africa has provided profound insights into human evolution and resistance to malaria.</p>
-                </div>
-            `,
-            connection: "Just as individual cells power an organism, the genetic code within them provides the instructions for all life..."
-        },
-        {
-            id: 'dna',
-            name: 'DNA & Genetics',
-            description: 'The blueprint of life. Journey through the double helix and the code that defines existence.',
-            texture: 'https://upload.wikimedia.org/wikipedia/commons/b/b3/DNA_Double_Helix.png',
-            color: 0x6366f1,
-            distance: 180,
-            size: 12,
-            speed: 0.003,
-            hasRing: true,
-            details: `
-                <div class="space-y-4">
-                    <p>Deoxyribonucleic acid is a molecule that carries the genetic instructions used in the growth, development, functioning, and reproduction of all known organisms.</p>
-                    <h4 class="text-indigo-400 font-bold">African Example:</h4>
-                    <p>The "African Genome Project" is uncovering the immense genetic diversity of the continent, the birthplace of modern humans.</p>
-                </div>
-            `,
-            connection: "The genetic blueprint expressed in DNA determines how plants capture energy through photosynthesis..."
-        },
-        {
-            id: 'photosynthesis',
-            name: 'Photosynthesis & Energy',
-            description: 'Converting light into life. Witness the molecular dance of chloroplasts and carbon fixation.',
-            texture: 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/49/Plagiomnium_affine_laminazellen.jpeg/1024px-Plagiomnium_affine_laminazellen.jpeg',
-            color: 0x059669,
-            distance: 250,
-            size: 14,
-            speed: 0.002,
-            details: `
-                <div class="space-y-4">
-                    <p>Photosynthesis is the process used by plants and other organisms to convert light energy into chemical energy that, through cellular respiration, can later be released to fuel the organism's activities.</p>
-                    <h4 class="text-emerald-500 font-bold">African Example:</h4>
-                    <p>C4 grasses in African savannas have evolved highly efficient photosynthetic pathways to thrive in high temperatures and low CO2 conditions.</p>
-                </div>
-            `,
-            connection: "Energy captured from the sun fuels the complex systems of higher organisms, including human physiology..."
-        },
-        {
-            id: 'anatomy',
-            name: 'Human Anatomy',
-            description: 'The symphony of systems. From pulsing hearts to firing neurons, see the human form in action.',
-            texture: 'https://upload.wikimedia.org/wikipedia/commons/d/d3/Human_Anatomy_and_Physiology.jpg',
-            color: 0xef4444,
-            distance: 330,
-            size: 18,
-            speed: 0.0015,
-            details: `
-                <div class="space-y-4">
-                    <p>Human anatomy is the study of the structure of the human body. It involves understanding the complex systems (nervous, circulatory, etc.) that sustain life.</p>
-                    <h4 class="text-red-400 font-bold">African Example:</h4>
-                    <p>The study of Hominid fossils in East Africa's Rift Valley has defined our understanding of human bipedalism and anatomical evolution.</p>
-                </div>
-            `,
-            connection: "Humans coexist with trillions of microorganisms that play vital roles in our health and survival..."
-        },
-        {
-            id: 'microbiology',
-            name: 'Microbiology',
-            description: 'The invisible world. Meet the bacteria, viruses, and fungi that shape our planet.',
-            texture: 'https://upload.wikimedia.org/wikipedia/commons/3/3f/Staphylococcus_aureus_SEM_01.jpg',
-            color: 0x8b5cf6,
-            distance: 400,
-            size: 10,
-            speed: 0.0012,
-            details: `
-                <div class="space-y-4">
-                    <p>Microbiology is the study of microscopic organisms, such as bacteria, viruses, archaea, fungi and protozoa. This includes research on their biochemistry, physiology, cell biology, and ecology.</p>
-                    <h4 class="text-purple-400 font-bold">African Example:</h4>
-                    <p>Traditional fermented foods across Africa, like Injera or Ogbono, rely on complex microbial ecosystems for nutrition and preservation.</p>
-                </div>
-            `,
-            connection: "From the microscopic to the macroscopic, all organisms interact within vast, interconnected ecosystems..."
-        },
-        {
-            id: 'ecology',
-            name: 'Ecology & Ecosystems',
-            description: 'The web of life. Explore the delicate balance between species and their environment.',
-            texture: 'https://upload.wikimedia.org/wikipedia/commons/c/c3/Great_Barrier_Reef_Australia.jpg',
-            color: 0x10b981,
-            distance: 480,
-            size: 20,
-            speed: 0.001,
-            details: `
-                <div class="space-y-4">
-                    <p>Ecology is the study of the relationships between living organisms, including humans, and their physical environment; it seeks to understand the vital connections between plants and animals and the world around them.</p>
-                    <h4 class="text-emerald-400 font-bold">African Example:</h4>
-                    <p>The Great Migration in the Serengeti-Mara ecosystem is one of the world's most spectacular displays of ecological interconnectedness.</p>
-                </div>
-            `,
-            connection: "Ecosystems drive the selective pressures that lead to the evolution of new species and biodiversity..."
-        },
-        {
-            id: 'evolution',
-            name: 'Evolution & Biodiversity',
-            description: 'The tree of life. Trace the lineages that led to the incredible variety of life on Earth.',
-            texture: 'https://upload.wikimedia.org/wikipedia/commons/7/70/Phylogenetic_tree.png',
-            color: 0xd97706,
-            distance: 560,
-            size: 16,
-            speed: 0.0008,
-            details: `
-                <div class="space-y-4">
-                    <p>Evolution is change in the heritable characteristics of biological populations over successive generations. These characteristics are the expressions of genes that are passed on from parent to offspring during reproduction.</p>
-                    <h4 class="text-amber-500 font-bold">African Example:</h4>
-                    <p>Cichlid fish in Lake Victoria are a classic example of "adaptive radiation," where hundreds of species evolved from a single ancestor in record time.</p>
-                </div>
-            `,
-            connection: "Understanding these natural processes allows us to harness biological systems through modern biotechnology..."
-        },
-        {
-            id: 'biotech',
-            name: 'Biotechnology & CRISPR',
-            description: 'Engineering life. Discover the tools we use to edit genomes and build the future of medicine.',
-            texture: 'https://upload.wikimedia.org/wikipedia/commons/1/1f/DNA_Editing_with_CRISPR.jpg',
-            color: 0x06b6d4,
-            distance: 650,
-            size: 13,
-            speed: 0.0006,
-            details: `
-                <div class="space-y-4">
-                    <p>Biotechnology is the use of living systems and organisms to develop or make products. CRISPR is a revolutionary technology for editing genomes, allowing researchers to easily alter DNA sequences.</p>
-                    <h4 class="text-cyan-400 font-bold">African Example:</h4>
-                    <p>African scientists are using CRISPR to develop climate-resilient crops like drought-tolerant maize to ensure food security.</p>
-                </div>
-            `,
-            connection: "And so the cycle continues, as we use technology to better understand and protect the fundamental building blocks of life."
-        }
-    ];
+        const group = new THREE.Group();
+        group.position.set(x, y, z);
+        group.userData.originalY = y;
 
-    // --- CREATE PLANETS ---
-    const planetMeshes = [];
-    const planetGroup = new THREE.Group();
-    scene.add(planetGroup);
+        // Sphere for "Planet"
+        const planetRadius = (sizes[p.size] || 1.2) * 4; // Scale up for visibility
+        const geo = new THREE.SphereGeometry(planetRadius, 32, 32);
 
-    PLANETS.forEach(p => {
-        const pGroup = new THREE.Group();
-
-        // Planet
-        const geo = new THREE.SphereGeometry(p.size, 64, 64);
         const mat = new THREE.MeshStandardMaterial({
-            color: 0xffffff,
-            metalness: 0.2,
-            roughness: 0.8,
+            color: p.color,
             emissive: p.color,
-            emissiveIntensity: 0.2
-        });
-
-        textureLoader.load(p.texture, (tex) => {
-            mat.map = tex;
-            mat.needsUpdate = true;
+            emissiveIntensity: 0.5,
+            metalness: 0.2,
+            roughness: 0.8
         });
 
         const mesh = new THREE.Mesh(geo, mat);
-        mesh.userData = { id: p.id, type: 'planet', data: p };
-        pGroup.add(mesh);
-        planetMeshes.push(mesh);
+        mesh.userData = { type: 'pioneer', data: p };
+        group.add(mesh);
+        draggableObjects.push(mesh);
 
-        // Ring (for DNA planet)
-        if (p.hasRing) {
-            const ringGeo = new THREE.TorusGeometry(p.size * 1.8, 0.5, 16, 100);
-            const ringMat = new THREE.MeshStandardMaterial({ color: p.color, transparent: true, opacity: 0.6 });
+        // Ring for Giant Planets
+        if (p.size === 'giant') {
+            const ringGeo = new THREE.TorusGeometry(planetRadius * 1.8, 0.5, 2, 100);
+            const ringMat = new THREE.MeshBasicMaterial({ color: p.color, transparent: true, opacity: 0.4, side: THREE.DoubleSide });
             const ring = new THREE.Mesh(ringGeo, ringMat);
-            ring.rotation.x = Math.PI / 2.5;
-            pGroup.add(ring);
+            ring.rotation.x = Math.PI / 2;
+            group.add(ring);
         }
 
-        // Bioluminescent Halo
-        const haloGeo = new THREE.SphereGeometry(p.size * 1.1, 32, 32);
-        const haloMat = new THREE.MeshBasicMaterial({ color: p.color, transparent: true, opacity: 0.1, side: THREE.BackSide });
-        pGroup.add(new THREE.Mesh(haloGeo, haloMat));
+        // Atmosphere Glow
+        const atmosphereGeo = new THREE.SphereGeometry(planetRadius * 1.2, 32, 32);
+        const atmosphereMat = new THREE.MeshBasicMaterial({ color: p.color, transparent: true, opacity: 0.1, side: THREE.BackSide });
+        group.add(new THREE.Mesh(atmosphereGeo, atmosphereMat));
 
-        // Initial Position
-        const angle = Math.random() * Math.PI * 2;
-        pGroup.position.set(Math.cos(angle) * p.distance, 0, Math.sin(angle) * p.distance);
-        pGroup.userData = { angle: angle, distance: p.distance, speed: p.speed };
+        // Label
+        const label = createTextLabel(p.name);
+        label.position.set(0, planetRadius + 5, 0);
+        group.add(label);
 
-        planetGroup.add(pGroup);
+        timelineGroup.add(group);
+        pioneerPlanes.push(mesh);
     });
 
-    // --- INTERACTIVE UI SYSTEM ---
-    const planetList = document.getElementById('planet-list');
-    const infoPanel = document.getElementById('ai-info-panel');
+    // --- Module Nodes ---
+    window.moduleNodes = [];
+    const moduleNodes = window.moduleNodes;
+    const MODULE_TYPES = [
+        { id: 'nucleus', name: 'NUCLEUS', color: 0x4ade80 },
+        { id: 'mitochondria', name: 'MITOCHONDRIA', color: 0x818cf8 },
+        { id: 'ribosome', name: 'RIBOSOME', color: 0x34d399 },
+        { id: 'membrane', name: 'MEMBRANE', color: 0x67e8f9 },
+        { id: 'chloroplast', name: 'CHLOROPLAST', color: 0xfacc15 }
+    ];
+
+    MODULE_TYPES.forEach((m, i) => {
+        const geo = new THREE.BoxGeometry(8, 8, 8);
+        const mat = new THREE.MeshStandardMaterial({
+            color: m.color,
+            emissive: m.color,
+            emissiveIntensity: 0.5,
+            transparent: true,
+            opacity: 0.8
+        });
+        const mesh = new THREE.Mesh(geo, mat);
+        mesh.position.set(100, -50 + i * 20, 0);
+        mesh.userData = { type: 'module', id: m.id };
+        scene.add(mesh);
+        moduleNodes.push(mesh);
+        draggableObjects.push(mesh);
+
+        // Label
+        const label = createTextLabel(m.name);
+        label.position.copy(mesh.position).add(new THREE.Vector3(0, 8, 0));
+        scene.add(label);
+        mesh.userData.label = label;
+    });
+
+    dragControls.addEventListener('drag', function (event) {
+        if (event.object.userData.type === 'module') {
+            event.object.userData.label.position.copy(event.object.position).add(new THREE.Vector3(0, 8, 0));
+
+            // Check proximity to Core
+            const dist = event.object.position.distanceTo(new THREE.Vector3(0,0,0));
+            if (dist < 30) {
+                if (!activeModules.includes(event.object.userData.id)) {
+                    activeModules.push(event.object.userData.id);
+                    updateCore();
+                    // Visual feedback
+                    event.object.material.emissiveIntensity = 5;
+                }
+            }
+        }
+    });
+
+    // --- Phase Nodes (Orbiting Shells style) ---
+    const phaseNodes = [];
+    const connections = [];
+
+    PHASES.forEach((p, i) => {
+        const group = new THREE.Group();
+        const angle = (i / PHASES.length) * Math.PI * 2 + Math.PI / 4;
+        group.position.set(Math.cos(angle) * 180, 0, Math.sin(angle) * 180);
+
+        // Inner core of phase
+        const geo = new THREE.IcosahedronGeometry(10, 1);
+        const mat = new THREE.MeshStandardMaterial({
+            color: 0x818cf8,
+            emissive: 0x818cf8,
+            emissiveIntensity: 0.8,
+            wireframe: true
+        });
+        const mesh = new THREE.Mesh(geo, mat);
+        mesh.userData = { type: 'phase', data: p };
+        group.add(mesh);
+
+        // Outer shell
+        const shellGeo = new THREE.SphereGeometry(14, 32, 32);
+        const shellMat = new THREE.MeshPhongMaterial({
+            color: 0x818cf8,
+            transparent: true,
+            opacity: 0.1,
+            side: THREE.BackSide
+        });
+        group.add(new THREE.Mesh(shellGeo, shellMat));
+
+        scene.add(group);
+        phaseNodes.push(mesh);
+        draggableObjects.push(mesh);
+
+        // Label
+        const label = createTextLabel(p.title);
+        label.position.copy(group.position).add(new THREE.Vector3(0, 20, 0));
+        scene.add(label);
+    });
+
+    // --- Connections (Dynamic Glowing Tubes) ---
+    function createConnection(startObj, endPos) {
+        const material = new THREE.MeshStandardMaterial({
+            color: 0x4ade80,
+            emissive: 0x818cf8,
+            emissiveIntensity: 2,
+            transparent: true,
+            opacity: 0.2
+        });
+        const group = new THREE.Group();
+        scene.add(group);
+
+        return {
+            startObj,
+            endPos,
+            mesh: null,
+            update: function() {
+                if (this.mesh) {
+                    group.remove(this.mesh);
+                    this.mesh.geometry.dispose();
+                }
+                const startPos = new THREE.Vector3();
+                this.startObj.getWorldPosition(startPos);
+
+                const curve = new THREE.QuadraticBezierCurve3(
+                    startPos,
+                    new THREE.Vector3((startPos.x + this.endPos.x) / 2, (startPos.y + this.endPos.y) / 2 + 30, (startPos.z + this.endPos.z) / 2),
+                    this.endPos
+                );
+                const geometry = new THREE.TubeGeometry(curve, 20, 0.2, 8, false);
+                this.mesh = new THREE.Mesh(geometry, material);
+                group.add(this.mesh);
+            }
+        };
+    }
+
+    // Connect Pioneers to Phases and Core
+    BIOLOGY_NODES.forEach((p, i) => {
+        const mesh = pioneerPlanes[i];
+        const connection = createConnection(mesh, new THREE.Vector3(0,0,0));
+        connections.push(connection);
+    });
+    phaseNodes.forEach(node => {
+        const connection = createConnection(node, new THREE.Vector3(0,0,0));
+        connections.push(connection);
+    });
+
+    function createTextLabel(text) {
+        const canvas = document.createElement('canvas');
+        canvas.width = 512; canvas.height = 128;
+        const ctx = canvas.getContext('2d');
+        ctx.fillStyle = 'rgba(0,0,0,0)';
+        ctx.fillRect(0,0,512,128);
+        ctx.font = 'bold 48px Inter';
+        ctx.fillStyle = '#ffffff';
+        ctx.textAlign = 'center';
+        ctx.fillText(text.toUpperCase(), 256, 80);
+        const tex = new THREE.CanvasTexture(canvas);
+        const mesh = new THREE.Mesh(new THREE.PlaneGeometry(20, 5), new THREE.MeshBasicMaterial({ map: tex, transparent: true }));
+        return mesh;
+    }
+
+    // --- Animation Loop ---
+    let currentSparkColor = 0x4ade80;
+    function animate(t) {
+        requestAnimationFrame(animate);
+
+        agentCore.rotation.y += 0.01;
+        agentCore.rotation.x += 0.005;
+        innerCore.scale.setScalar(1 + Math.sin(t * 0.002) * 0.1);
+
+        timelineGroup.rotation.y += 0.002;
+        pioneerPlanes.forEach((p, i) => {
+            const isActive = p.userData.isActive !== false;
+            const rotationSpeed = isActive ? 0.01 : 0;
+            p.rotation.y += rotationSpeed;
+
+            if (isActive) {
+                const pulse = 1 + Math.sin(t * 0.002) * 0.05;
+                p.scale.setScalar(pulse);
+            } else {
+                p.scale.setScalar(1);
+            }
+
+            p.parent.position.y = p.parent.userData.originalY + Math.sin(t * 0.001 + i) * (isActive ? 2 : 0.5);
+        });
+
+        thoughtParticles.rotation.y += 0.001;
+        const positions = thoughtParticles.geometry.attributes.position.array;
+        for(let i=0; i<particleCount; i++) {
+            positions[i*3+1] += Math.sin(t * 0.001 + i) * 0.02;
+        }
+        thoughtParticles.geometry.attributes.position.needsUpdate = true;
+
+        // Update Dynamic Connections
+        connections.forEach(c => c.update());
+
+        // Update Beams
+        for(let i = collaborationBeams.length - 1; i >= 0; i--) {
+            const b = collaborationBeams[i];
+            b.life -= 0.01;
+            b.line.material.opacity = b.life * 0.5;
+            if(b.life <= 0) {
+                scene.remove(b.line);
+                collaborationBeams.splice(i, 1);
+            }
+        }
+
+        // Randomly trigger beams between nodes to show knowledge flow
+        if (Math.random() < 0.02) {
+            const nodes = [...pioneerPlanes, ...phaseNodes];
+            const n1 = nodes[Math.floor(Math.random() * nodes.length)];
+            const n2 = nodes[Math.floor(Math.random() * nodes.length)];
+            if (n1 && n2 && n1 !== n2) {
+                const p1 = new THREE.Vector3();
+                const p2 = new THREE.Vector3();
+                n1.getWorldPosition(p1);
+                n2.getWorldPosition(p2);
+                createBeam(p1, p2);
+            }
+        }
+
+        // Update Sparks
+        for(let i=sparks.length-1; i>=0; i--) {
+            const s = sparks[i];
+            s.position.add(s.userData.velocity);
+            s.userData.life -= 0.02;
+            s.material.opacity = s.userData.life;
+            if(s.userData.life <= 0) {
+                scene.remove(s);
+                sparks.splice(i, 1);
+            }
+        }
+
+        // Randomly trigger reasoning sparks from core
+        if (Math.random() < 0.1) {
+            createSpark(new THREE.Vector3(0,0,0), currentSparkColor);
+        }
+
+        controls.update();
+        renderer.render(scene, camera);
+    }
+    // Dramatic Fly-in
+    setTimeout(() => {
+        const startPos = camera.position.clone();
+        const endPos = new THREE.Vector3(0, 50, 150);
+        let progress = 0;
+        const duration = 120;
+        const flyIn = () => {
+            progress++;
+            camera.position.lerpVectors(startPos, endPos, progress/duration);
+            if (progress < duration) requestAnimationFrame(flyIn);
+        };
+        flyIn();
+    }, 500);
+
+    animate(0);
+
+    // --- Interactions ---
     const raycaster = new THREE.Raycaster();
     const mouse = new THREE.Vector2();
-
-    function populatePlanetList() {
-        PLANETS.forEach(p => {
-            const btn = document.createElement('button');
-            btn.className = 'planet-nav-btn flex items-center gap-3 group';
-            btn.innerHTML = `
-                <div class="w-2 h-2 rounded-full transition-all group-hover:scale-150" style="background-color: #${p.color.toString(16).padStart(6, '0')}; box-shadow: 0 0 10px #${p.color.toString(16).padStart(6, '0')};"></div>
-                <span class="text-xs font-bold text-white/70 group-hover:text-white transition-colors">${p.name}</span>
-            `;
-            btn.onclick = () => flyToPlanet(p.id);
-            planetList.appendChild(btn);
-        });
-    }
-    populatePlanetList();
-
-    function flyToPlanet(planetId) {
-        const planet = PLANETS.find(p => p.id === planetId);
-        const mesh = planetMeshes.find(m => m.userData.id === planetId);
-        if (!planet || !mesh) return;
-
-        showInfo(mesh.userData);
-
-        // Update active state in sidebar
-        document.querySelectorAll('.planet-nav-btn').forEach((btn, i) => {
-            btn.classList.toggle('active', PLANETS[i].id === planetId);
-        });
-
-        const targetPos = new THREE.Vector3();
-        mesh.getWorldPosition(targetPos);
-
-        const offset = targetPos.clone().normalize().multiplyScalar(planet.size * 3);
-        const cameraTarget = targetPos.clone().add(offset);
-
-        // Smooth camera move
-        const startPos = camera.position.clone();
-        let progress = 0;
-        const duration = 60;
-        const move = () => {
-            progress++;
-            const t = progress / duration;
-            const easedT = t * (2 - t); // Ease out
-            camera.position.lerpVectors(startPos, cameraTarget, easedT);
-            controls.target.lerp(targetPos, easedT);
-            if (progress < duration) requestAnimationFrame(move);
-        };
-        move();
-
-        document.getElementById('core-state-val').textContent = planet.name;
-        document.getElementById('active-modules-val').textContent = 'Microscopic to Global';
-    }
-
-    function showInfo(userData) {
-        const { data } = userData;
-        const title = document.getElementById('ai-panel-title');
-        const content = document.getElementById('ai-panel-content');
-
-        title.textContent = data.name;
-        content.innerHTML = `
-            <div class="space-y-4">
-                <p class="text-emerald-400/80 font-medium italic">${data.description}</p>
-                <div class="w-full h-40 rounded-2xl overflow-hidden border border-white/10 bg-black/40 mb-4">
-                    <img src="${data.texture}" class="w-full h-full object-cover opacity-80" />
-                </div>
-                ${data.details}
-            </div>
-        `;
-
-        infoPanel.classList.remove('hidden');
-        if (window.feather) feather.replace();
-    }
+    const infoPanel = document.getElementById('ai-info-panel');
 
     container.addEventListener('click', (e) => {
         const rect = container.getBoundingClientRect();
@@ -560,22 +853,212 @@
         mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
 
         raycaster.setFromCamera(mouse, camera);
-        const intersects = raycaster.intersectObjects(planetMeshes);
+        const intersects = raycaster.intersectObjects([...pioneerPlanes, ...phaseNodes]);
 
         if (intersects.length > 0) {
-            flyToPlanet(intersects[0].object.userData.id);
+            const obj = intersects[0].object;
+            showInfo(obj.userData);
+            if (obj.userData.data && obj.userData.data.name) {
+                document.getElementById('active-modules-val').textContent = obj.userData.data.name;
+            }
         } else {
-            // Check if clicking on something else or empty space
-            // infoPanel.classList.add('hidden');
+            infoPanel.classList.add('hidden');
         }
     });
 
-    document.getElementById('close-ai-info').onclick = () => {
-        infoPanel.classList.add('hidden');
-        document.querySelectorAll('.planet-nav-btn').forEach(btn => btn.classList.remove('active'));
+    window.showInfo = function(userData) {
+        const { type, data } = userData;
+        const title = document.getElementById('ai-panel-title');
+        const subtitle = document.getElementById('ai-panel-subtitle');
+        const content = document.getElementById('ai-panel-content');
+
+        title.textContent = data.name || data.title;
+        subtitle.textContent = type === 'pioneer' ? `Domain: ${data.year}` : `Context: ${data.subtitle}`;
+
+        let html = '';
+        if (type === 'pioneer' && data.image) {
+            html += `<div class="w-full mb-6 rounded-2xl overflow-hidden border border-white/20 shadow-2xl bg-black/40">
+                        <img src="${data.image}" alt="${data.name}" class="w-full h-64 object-contain" onerror="this.src='https://placehold.co/600x400/1e293b/ffffff?text=${encodeURIComponent(data.name)}'">
+                    </div>`;
+        }
+        html += `<div class="description-text">${data.content}</div>`;
+        content.innerHTML = html;
+
+        infoPanel.classList.remove('hidden');
+        if (window.feather) feather.replace();
+    }
+
+    document.getElementById('close-ai-info').onclick = () => infoPanel.classList.add('hidden');
+
+    // --- Tour Logic ---
+    let tourIndex = 0;
+    const tourPoints = [...BIOLOGY_NODES.map(p => ({ type: 'pioneer', data: p })), ...PHASES.map(p => ({ type: 'phase', data: p }))];
+
+    document.getElementById('start-tour-btn').onclick = () => {
+        // Hide Intro UI
+        const introUI = document.getElementById('intro-ui');
+        introUI.style.display = 'none';
+
+        const sidebar = document.getElementById('ai-sidebar');
+        sidebar.style.display = 'none';
+
+        // Hide Build Panel too for full immersion
+        const buildPanel = document.querySelector('.absolute.bottom-8.right-8.z-40.w-80');
+        if (buildPanel) {
+            buildPanel.style.opacity = '0';
+            buildPanel.style.pointerEvents = 'none';
+            buildPanel.style.transform = 'translateY(50px)';
+        }
+
+        const statusPanel = document.getElementById('agent-status-panel');
+        if (statusPanel) {
+            statusPanel.parentElement.style.opacity = '0';
+            statusPanel.parentElement.style.pointerEvents = 'none';
+            statusPanel.parentElement.style.transform = 'translateY(50px)';
+        }
+
+        tourIndex = 0;
+        runTourStep();
     };
 
-    // AI Chat Integration
+    function runTourStep() {
+        if (tourIndex >= tourPoints.length) return;
+        const step = tourPoints[tourIndex];
+        showInfo(step);
+        if (step.data && step.data.name) {
+            document.getElementById('active-modules-val').textContent = step.data.name;
+        }
+
+        let targetPos;
+        if (step.type === 'pioneer') {
+            const mesh = pioneerPlanes.find(p => p.userData.data.id === step.data.id);
+            const worldPos = new THREE.Vector3();
+            mesh.getWorldPosition(worldPos);
+            targetPos = worldPos.clone().add(worldPos.clone().normalize().multiplyScalar(40));
+            controls.target.copy(worldPos);
+        } else {
+            const mesh = phaseNodes.find(p => p.userData.data.id === step.data.id);
+            const worldPos = new THREE.Vector3();
+            mesh.getWorldPosition(worldPos);
+            targetPos = worldPos.clone().add(new THREE.Vector3(0, 30, 80));
+            controls.target.copy(worldPos);
+        }
+
+        // Camera move
+        const startPos = camera.position.clone();
+        let progress = 0;
+        const duration = 60;
+        const move = () => {
+            progress++;
+            camera.position.lerpVectors(startPos, targetPos, progress/duration);
+            if (progress < duration) requestAnimationFrame(move);
+        };
+        move();
+
+        tourIndex++;
+        setTimeout(runTourStep, 8000);
+    }
+
+    // --- Core Evolution Logic ---
+    let activeModules = [];
+    const organelleTooltips = {
+        nucleus: "Control centre — stores DNA and directs cell activity",
+        mitochondria: "Powerhouse — produces ATP through cellular respiration",
+        ribosome: "Protein factory — translates mRNA into proteins",
+        membrane: "Gatekeeper — controls what enters and exits the cell",
+        chloroplast: "Solar panel — captures sunlight for photosynthesis"
+    };
+
+    document.querySelectorAll('.module-btn').forEach(btn => {
+        btn.onclick = () => {
+            const mod = btn.getAttribute('data-module');
+            if (!activeModules.includes(mod)) {
+                activeModules.push(mod);
+                btn.classList.add('bg-emerald-500/40', 'border-emerald-400');
+                showAssemblerTooltip(mod);
+                updateCore();
+            }
+        };
+    });
+
+    function showAssemblerTooltip(mod) {
+        const el = document.getElementById('assembler-tooltip');
+        el.textContent = organelleTooltips[mod] || "";
+        el.style.opacity = '1';
+        setTimeout(() => el.style.opacity = '0', 4000);
+    }
+
+    function updateCore() {
+        triggerToolBurst();
+
+        const hasMembrane = activeModules.includes('membrane');
+        const hasNucleus = activeModules.includes('nucleus');
+        const hasMito = activeModules.includes('mitochondria');
+        const hasRibo = activeModules.includes('ribosome');
+        const hasChloro = activeModules.includes('chloroplast');
+
+        let state = "Biological Forge";
+        let detail = "Drag organelles into the cell to build a functioning organism";
+
+        if (hasMembrane && hasNucleus && hasMito && hasRibo && hasChloro) {
+            state = "Complex Organism";
+            detail = "Complex Life — Organ systems. Like a flowering plant.";
+            currentSparkColor = 0x4ade80;
+            agentCore.geometry.dispose();
+            agentCore.geometry = new THREE.TorusKnotGeometry(12, 3, 100, 16);
+            agentCore.material.color.setHex(0x4ade80);
+            agentCore.material.wireframe = false;
+        } else if (hasMito && hasRibo) {
+            state = "Multicellular";
+            detail = "Multicellular Life — Cells cooperating. Like algae.";
+            currentSparkColor = 0x818cf8;
+            agentCore.geometry.dispose();
+            agentCore.geometry = new THREE.IcosahedronGeometry(15, 0);
+            agentCore.material.color.setHex(0x818cf8);
+            agentCore.material.wireframe = true;
+        } else if (hasNucleus) {
+            state = "Eukaryote";
+            detail = "Complex Cell — Nucleus present. Like a yeast cell.";
+            currentSparkColor = 0x34d399;
+            agentCore.geometry.dispose();
+            agentCore.geometry = new THREE.SphereGeometry(15, 32, 32);
+            agentCore.material.color.setHex(0x34d399);
+            agentCore.material.wireframe = true;
+            innerCore.visible = true;
+        } else if (hasMembrane) {
+            state = "Prokaryote";
+            detail = "Simple Life — No nucleus. Like E. coli.";
+            currentSparkColor = 0x4ade80;
+            agentCore.geometry.dispose();
+            agentCore.geometry = new THREE.SphereGeometry(10, 32, 32);
+            agentCore.material.color.setHex(0x4ade80);
+            agentCore.material.wireframe = false;
+            innerCore.visible = false;
+        }
+
+        document.getElementById('core-state-val').textContent = state;
+        document.getElementById('active-modules-val').textContent = detail;
+
+        // Particle Burst on evolve
+        particlesMat.opacity = 1.0;
+        setTimeout(() => particlesMat.opacity = 0.6, 500);
+    }
+
+    document.getElementById('reset-experience').onclick = () => {
+        // Restore UI
+        document.querySelector('.absolute.top-8.left-8').style.opacity = '1';
+        document.querySelector('.absolute.top-8.left-8').style.pointerEvents = 'all';
+        document.getElementById('ai-sidebar').style.transform = 'translateX(0)';
+        location.reload();
+    };
+
+    // AI Chat
+    window.sendQuickMsg = (msg) => {
+        const input = document.getElementById('ai-chat-input');
+        input.value = msg;
+        document.getElementById('ai-chat-form').dispatchEvent(new Event('submit'));
+    };
+
     const chatForm = document.getElementById('ai-chat-form');
     chatForm.onsubmit = async (e) => {
         e.preventDefault();
@@ -586,121 +1069,86 @@
         const body = document.getElementById('ai-chat-body');
         const userDiv = document.createElement('div');
         userDiv.className = 'bg-white/10 border border-white/20 p-4 rounded-2xl ml-8';
-        userDiv.innerHTML = `<span class="english-label" style="font-size: 10px; margin-bottom: 4px;">User</span><p class="description-text" style="font-size: 14px; color: #ffffff;">${msg}</p>`;
+        const userLabel = document.createElement('span');
+        userLabel.className = 'english-label';
+        userLabel.style.fontSize = '10px';
+        userLabel.style.marginBottom = '4px';
+        userLabel.textContent = 'User';
+        const userText = document.createElement('p');
+        userText.className = 'description-text';
+        userText.style.fontSize = '14px';
+        userText.style.color = '#ffffff';
+        userText.textContent = msg;
+        userDiv.appendChild(userLabel);
+        userDiv.appendChild(userText);
         body.appendChild(userDiv);
         input.value = '';
         body.scrollTop = body.scrollHeight;
 
         try {
-            const currentPlanet = document.getElementById('core-state-val').textContent;
+            const systemPrompt = "You are a Biology Guide for NAIRA Institute's immersive Biology Galaxy experience. You explain biology concepts clearly, using analogies that connect to African ecosystems, indigenous knowledge, and everyday experiences familiar to Nigerian students. You are engaging, curious, and scientifically accurate. Always relate concepts to real-world examples when possible. Connect explanations to African ecosystems, Nigerian organisms, and indigenous knowledge where relevant.";
             const res = await fetch('/api/chat', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    message: `[Context: Biology Specialist viewing ${currentPlanet}] ${msg}`,
+                    message: `[System Context: ${systemPrompt}] User question: ${msg}`,
                     model: 'qwen'
                 })
             });
             const data = await res.json();
             const aiDiv = document.createElement('div');
-            aiDiv.className = 'bg-emerald-600/20 border border-emerald-500/30 p-4 rounded-2xl mr-8';
-            aiDiv.innerHTML = `<span class="english-label" style="font-size: 10px; margin-bottom: 4px;">Assistant</span><p class="description-text" style="font-size: 14px; color: #ffffff;">${data.response}</p>`;
+            aiDiv.className = 'bg-[#818cf8]/20 border border-[#818cf8]/30 p-4 rounded-2xl mr-8';
+            const aiLabel = document.createElement('span');
+            aiLabel.className = 'english-label';
+            aiLabel.style.fontSize = '10px';
+            aiLabel.style.marginBottom = '4px';
+            aiLabel.textContent = 'Life Science Specialist';
+            const aiText = document.createElement('p');
+            aiText.className = 'description-text';
+            aiText.style.fontSize = '14px';
+            aiText.style.color = '#ffffff';
+            aiText.textContent = data.response;
+            aiDiv.appendChild(aiLabel);
+            aiDiv.appendChild(aiText);
             body.appendChild(aiDiv);
             body.scrollTop = body.scrollHeight;
         } catch (err) { console.error(err); }
     };
 
-    // --- TOUR & DEMO LOGIC ---
-    let tourIndex = 0;
-    let isTourRunning = false;
-
-    function runTourStep() {
-        if (!isTourRunning || tourIndex >= PLANETS.length) {
-            isTourRunning = false;
-            document.getElementById('start-tour-btn').innerHTML = '<i data-feather="play" class="w-4 h-4"></i> Start Guided Tour';
-            document.getElementById('tour-narration-panel').classList.add('hidden');
-            if (window.feather) feather.replace();
-            return;
-        }
-
-        const planet = PLANETS[tourIndex];
-        flyToPlanet(planet.id);
-
-        // Show Narration
-        const narrationPanel = document.getElementById('tour-narration-panel');
-        const narrationText = document.getElementById('tour-narration-text');
-        narrationText.textContent = planet.connection;
-        narrationPanel.classList.remove('hidden');
-
-        tourIndex++;
-        setTimeout(runTourStep, 10000); // 10 seconds per planet for better readability
-    }
-
-    document.getElementById('start-tour-btn').onclick = () => {
-        if (isTourRunning) {
-            isTourRunning = false;
-            document.getElementById('start-tour-btn').innerHTML = '<i data-feather="play" class="w-4 h-4"></i> Start Guided Tour';
-        } else {
-            isTourRunning = true;
-            tourIndex = 0;
-            document.getElementById('start-tour-btn').innerHTML = '<i data-feather="square" class="w-4 h-4"></i> Stop Tour';
-            document.getElementById('intro-ui').style.opacity = '0.3';
-            runTourStep();
-        }
-        if (window.feather) feather.replace();
-    };
-
-    document.getElementById('demo-btn').onclick = () => {
-        document.getElementById('intro-ui').classList.add('opacity-0', 'pointer-events-none');
-        // Instantly fly to a central overview
-        const startPos = camera.position.clone();
-        const endPos = new THREE.Vector3(0, 500, 1000);
-        let progress = 0;
-        const duration = 60;
-        const move = () => {
-            progress++;
-            camera.position.lerpVectors(startPos, endPos, progress/duration);
-            controls.target.set(0, 0, 0);
-            if (progress < duration) requestAnimationFrame(move);
-        };
-        move();
-    };
-
-    // --- ANIMATION LOOP ---
-    function animate(t) {
-        requestAnimationFrame(animate);
-
-        coreMesh.rotation.y += 0.002;
-
-        // Orbit Planets
-        planetGroup.children.forEach(pGroup => {
-            pGroup.userData.angle += pGroup.userData.speed;
-            pGroup.position.x = Math.cos(pGroup.userData.angle) * pGroup.userData.distance;
-            pGroup.position.z = Math.sin(pGroup.userData.angle) * pGroup.userData.distance;
-            pGroup.children[0].rotation.y += 0.01; // Planet rotation
-        });
-        coreGroup.children.forEach((child, i) => {
-            if (child.type === 'Mesh' && child.geometry.type === 'CylinderGeometry') {
-                child.rotation.y += 0.001 * (i + 1);
-            }
-        });
-
-        dustParticles.rotation.y += 0.0005;
-        const positions = dustParticles.geometry.attributes.position.array;
-        for(let i=0; i<dustCount; i++) {
-            positions[i*3+1] += Math.sin(t * 0.001 + i) * 0.1;
-        }
-        dustParticles.geometry.attributes.position.needsUpdate = true;
-
-        controls.update();
-        renderer.render(scene, camera);
-    }
-    animate(0);
-
     window.addEventListener('resize', () => {
         camera.aspect = container.clientWidth / container.clientHeight;
         camera.updateProjectionMatrix();
         renderer.setSize(container.clientWidth, container.clientHeight);
+    });
+
+    if (window.feather) feather.replace();
+
+    // Domain Filtering Logic
+    document.querySelectorAll('.domain-tab').forEach(tab => {
+        tab.onclick = () => {
+            const domain = tab.getAttribute('data-domain');
+
+            // Update UI
+            document.querySelectorAll('.domain-tab').forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+            document.getElementById('core-state-val').textContent = tab.textContent;
+
+            // Filter Nodes
+            pioneerPlanes.forEach(mesh => {
+                const nodeData = mesh.userData.data;
+                const isMatch = domain === 'all' || nodeData.category === domain || nodeData.year === domain;
+
+                if (isMatch) {
+                    mesh.parent.visible = true;
+                    mesh.material.opacity = 0.9;
+                    mesh.userData.isActive = true;
+                } else {
+                    mesh.parent.visible = true; // Keep visible as requested
+                    mesh.material.opacity = 0.2;
+                    mesh.userData.isActive = false;
+                }
+            });
+        };
     });
 </script>
 
@@ -711,9 +1159,10 @@
     #ai-tour-container { top: 0; left: 0; z-index: 100; }
 
     .glass-card {
-        background: rgba(15, 23, 42, 0.7);
+        background: rgba(2, 6, 23, 0.7);
         backdrop-filter: blur(20px);
         -webkit-backdrop-filter: blur(20px);
+        border: 1px solid rgba(74, 222, 128, 0.1);
     }
 
     .description-panel {
@@ -725,9 +1174,9 @@
       width: 420px;
       max-width: 90vw;
       overflow-y: auto;
-      background: rgba(24, 24, 27, 0.95);
+      background: rgba(2, 6, 23, 0.95);
       backdrop-filter: blur(24px);
-      border: 1px solid rgba(255,255,255,0.1);
+      border: 1px solid rgba(74, 222, 128, 0.2);
       border-radius: 32px;
       box-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.8);
       padding: 40px;
@@ -736,13 +1185,19 @@
     }
 
     .english-label {
-      color: #22d3ee !important;
+      color: #4ade80 !important;
       font-size: 13px;
       font-weight: 600;
       letter-spacing: 0.1em;
       text-transform: uppercase;
       margin-bottom: 12px;
       display: block;
+    }
+
+    .domain-tab.active {
+        background: rgba(74, 222, 128, 0.2);
+        border-color: rgba(74, 222, 128, 0.4);
+        box-shadow: 0 0 20px rgba(74, 222, 128, 0.1);
     }
 
     #ai-panel-title {
@@ -780,30 +1235,5 @@
     .description-panel::-webkit-scrollbar { width: 4px; }
     .description-panel::-webkit-scrollbar-track { background: transparent; }
     .description-panel::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
-
-    /* Planet Sidebar Button */
-    .planet-nav-btn {
-        width: 180px;
-        padding: 12px 20px;
-        background: rgba(24, 24, 27, 0.6);
-        backdrop-filter: blur(12px);
-        border: 1px solid rgba(255,255,255,0.05);
-        border-radius: 16px;
-        text-align: left;
-        transition: all 0.3s;
-        cursor: pointer;
-    }
-
-    .planet-nav-btn:hover {
-        background: rgba(16, 185, 129, 0.1);
-        border-color: rgba(16, 185, 129, 0.4);
-        transform: translateX(10px);
-    }
-
-    .planet-nav-btn.active {
-        background: rgba(16, 185, 129, 0.2);
-        border-color: rgba(16, 185, 129, 0.6);
-        box-shadow: 0 0 20px rgba(16, 185, 129, 0.2);
-    }
 </style>
 {% endblock %}
