@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 if os.getenv("TURSO_DATABASE_URL"):
     DATABASE_URL = os.getenv("TURSO_DATABASE_URL")
 else:
-    DATABASE_URL = "file:naira.db"
+    DATABASE_URL = "file:airi.db"
 
 AUTH_TOKEN = os.getenv("TURSO_AUTH_TOKEN", "")
 
@@ -173,13 +173,13 @@ async def migrate():
         """)
 
         # Seeding
-        logger.info("Seeding users with NAIRA RBAC roles...")
+        logger.info("Seeding users with AIRI Institute RBAC roles...")
         from passlib.context import CryptContext
         import json
         pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
         roles = [
-            ("admin", "admin@naira.institute", "NAIRA Super Admin", "super_admin"),
+            ("admin", "admin@airi.institute", "AIRI Super Admin", "super_admin"),
             ("director", "director@nbu.edu.ng", "Institute Director", "institute_director"),
             ("faculty", "faculty@nbu.edu.ng", "Dr. Adebayo Researcher", "faculty"),
             ("ra", "ra@nbu.edu.ng", "Kofi Assistant", "research_assistant"),

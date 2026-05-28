@@ -1,5 +1,5 @@
 /**
- * XR Tour Engine for NAIRA Immersive Experiences
+ * XR Tour Engine for AIRI Institute Immersive Experiences
  * Orchestrates camera movements, narration, and hotspots for <model-viewer>
  */
 

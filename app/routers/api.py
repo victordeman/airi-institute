@@ -172,7 +172,7 @@ def send_contact_email(submission: ContactSubmission):
 
     msg = MIMEMultipart()
     msg['From'] = smtp_user
-    msg['To'] = "naira@nbu.edu.ng"
+    msg['To'] = "airi@airi.institute"
     msg['Subject'] = f"New Contact Submission from {submission.name}"
 
     body = f"""
@@ -307,17 +307,17 @@ async def chat_ai(request: Request, chat_request: ChatRequest, db: libsql_client
     
     # Enhanced RAG retrieval
     relevant_docs = await rag_manager.query(user_msg)
-    naira_context = "\n".join(relevant_docs) if relevant_docs else "No specific NAIRA context found for this query."
+    airi_context = "\n".join(relevant_docs) if relevant_docs else "No specific AIRI Institute context found for this query."
     
-    system_prompt = f"""You are the NAIRA AI Assistant, an expert on the NBU AI Research & Advancement Institute.
-Your goal is to provide helpful, accurate, and culturally relevant information about NAIRA's work in AI and XR.
+    system_prompt = f"""You are the AIRI Assistant, an expert on the AIRI Institute.
+Your goal is to provide helpful, accurate, and culturally relevant information about AIRI Institute's work in AI and XR.
 
-RELEVANT NAIRA CONTEXT:
-{naira_context}
+RELEVANT AIRI Institute CONTEXT:
+{airi_context}
 
 Guidelines:
-1. Use the provided context to answer questions about NAIRA.
-2. If the user asks something outside this context, answer generally but try to relate it back to NAIRA's mission (African-centered AI/XR).
+1. Use the provided context to answer questions about AIRI Institute.
+2. If the user asks something outside this context, answer generally but try to relate it back to AIRI Institute's mission (African-centered AI/XR).
 3. Be professional, visionary, and encouraging.
 4. Keep responses concise but informative.
 """
@@ -341,10 +341,10 @@ Guidelines:
         # Enhanced Fallback: if user message matches keywords, use specific context
         full_message = user_msg.lower()
         if any(k in full_message for k in ["pillar", "strategy", "focus"]):
-            return {"response": "NAIRA operates on six strategic pillars, including African-Centered AI Research and Educational Transformation. Based on our records: " + naira_context[:200] + "..."}
+            return {"response": "AIRI Institute operates on six strategic pillars, including African-Centered AI Research and Educational Transformation. Based on our records: " + airi_context[:200] + "..."}
         if any(k in full_message for k in ["project", "doing", "working"]):
-            return {"response": "We are currently working on high-impact projects. Relevant info: " + naira_context[:200] + "..."}
+            return {"response": "We are currently working on high-impact projects. Relevant info: " + airi_context[:200] + "..."}
         if any(k in full_message for k in ["architecture", "layer", "system"]):
-            return {"response": "Our architecture is built on multiple layers: Experience, Intelligence, and Data. " + naira_context[:200] + "..."}
+            return {"response": "Our architecture is built on multiple layers: Experience, Intelligence, and Data. " + airi_context[:200] + "..."}
             
-        return {"response": f"I'm the NAIRA Assistant. Using our knowledge base, I found this relevant information: {naira_context[:300]}... How else can I help you today?"}
+        return {"response": f"I'm the AIRI Assistant. Using our knowledge base, I found this relevant information: {airi_context[:300]}... How else can I help you today?"}

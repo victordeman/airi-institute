@@ -16,7 +16,7 @@ SECRET_KEY = os.getenv("SECRET_KEY", "09d25e094faa6ca2556c818166b7a9563b93f7099f
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 480 # Extended for development
 
-# NAIRA Role Hierarchy & Permissions
+# AIRI Institute Role Hierarchy & Permissions
 ROLE_LEVELS = {
     "super_admin": 100,
     "institute_director": 80,
@@ -29,7 +29,7 @@ ROLE_LEVELS = {
 
 def check_permission(user_role: str, resource: str, action: str) -> bool:
     """
-    Implements the NAIRA RBAC Permissions Matrix.
+    Implements the AIRI Institute RBAC Permissions Matrix.
     """
     level = ROLE_LEVELS.get(user_role, 0)
 

@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}Biology Galaxy 3D Tour - NAIRA{% endblock %}
+{% block title %}Biology Galaxy 3D Tour - AIRI Institute{% endblock %}
 {% block meta_description %}Explore the living universe of biology through an immersive 3D galaxy — where cells, DNA, ecosystems, and life processes become worlds to navigate.{% endblock %}
 {% block extra_meta %}
 <meta property="og:image" content="/static/images/biology-galaxy-preview.png">
@@ -1400,7 +1400,7 @@
         body.scrollTop = body.scrollHeight;
 
         try {
-            const systemPrompt = "You are a Biology Guide for NAIRA Institute's immersive Biology Galaxy experience. You explain biology concepts clearly, using analogies that connect to African ecosystems, indigenous knowledge, and everyday experiences familiar to Nigerian students. You are engaging, curious, and scientifically accurate. Always relate concepts to real-world examples when possible. Connect explanations to African ecosystems, Nigerian organisms, and indigenous knowledge where relevant.";
+            const systemPrompt = "You are a Biology Guide for AIRI Institute's immersive Biology Galaxy experience. You explain biology concepts clearly, using analogies that connect to African ecosystems, indigenous knowledge, and everyday experiences familiar to Nigerian students. You are engaging, curious, and scientifically accurate. Always relate concepts to real-world examples when possible. Connect explanations to African ecosystems, Nigerian organisms, and indigenous knowledge where relevant.";
             const res = await fetch('/api/chat', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
