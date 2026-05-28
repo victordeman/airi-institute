@@ -6,14 +6,63 @@
 {% endblock %}
 {% block content %}
 <div id="ai-tour-container" class="w-full h-screen bg-[#020617] relative flex overflow-hidden">
+    <!-- Webcam Layer (Bottom) -->
+    <video id="webcam-layer" autoplay playsinline></video>
+
+    <!-- Flash Effect Layer -->
+    <div id="flash-overlay" class="fixed inset-0 bg-white pointer-events-none z-[100] opacity-0 transition-opacity duration-150"></div>
+
+    <!-- Hand Tracking Overlay (Middle-ish, below 3D) -->
+    <canvas id="hand-canvas" class="absolute inset-0 w-full h-full pointer-events-none z-[1]"></canvas>
+
     <!-- Main 3D Scene -->
-    <div id="ai-canvas-container" class="flex-1 h-full relative z-0">
+    <div id="ai-canvas-container" class="flex-1 h-full relative z-10">
         <!-- Persistent Exit Link -->
         <div class="absolute top-8 left-8 z-50">
              <a href="/immersive-learning" class="flex items-center gap-2 text-white/40 hover:text-white transition-all description-text" style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.2em; font-weight: 700;">
                 <i data-feather="arrow-left" class="w-4 h-4"></i>
                 Back to Immersive Learning
             </a>
+        </div>
+
+        <!-- Hand Mode Toggle -->
+        <div class="absolute top-8 right-8 z-50 flex items-center gap-4">
+            <button id="hand-mode-toggle" class="px-6 py-2 rounded-full border border-[#4ade80] text-[#4ade80] font-bold text-[11px] uppercase tracking-widest hover:bg-[#4ade80]/10 transition-all flex items-center gap-2">
+                <span class="icon">✋</span>
+                <span class="label">Activate Hand Mode</span>
+            </button>
+            <div id="fps-counter" class="text-[10px] text-white/50 font-mono hidden">FPS: 0</div>
+        </div>
+
+        <!-- Hand Controls Legend -->
+        <div id="hand-controls-legend" class="absolute left-8 top-1/2 -translate-y-1/2 z-40 w-64 glass-card p-6 rounded-3xl border border-white/10 space-y-4 hidden opacity-0 transition-all duration-500">
+            <h3 class="english-label" style="font-size: 12px; color: #4ade80 !important;">Hand Controls</h3>
+            <div class="space-y-3">
+                <div class="flex justify-between items-center border-b border-white/5 pb-2">
+                    <span class="text-[10px] text-white/70 uppercase">Open Palm</span>
+                    <span class="text-[10px] text-[#4ade80] font-bold">Gravity Pull</span>
+                </div>
+                <div class="flex justify-between items-center border-b border-white/5 pb-2">
+                    <span class="text-[10px] text-white/70 uppercase">Pinch</span>
+                    <span class="text-[10px] text-[#4ade80] font-bold">Grab Node</span>
+                </div>
+                <div class="flex justify-between items-center border-b border-white/5 pb-2">
+                    <span class="text-[10px] text-white/70 uppercase">Pinch + Hold</span>
+                    <span class="text-[10px] text-[#4ade80] font-bold">Expand Info</span>
+                </div>
+                <div class="flex justify-between items-center border-b border-white/5 pb-2">
+                    <span class="text-[10px] text-white/70 uppercase">Two Hands Apart</span>
+                    <span class="text-[10px] text-[#4ade80] font-bold">Scatter All</span>
+                </div>
+                <div class="flex justify-between items-center border-b border-white/5 pb-2">
+                    <span class="text-[10px] text-white/70 uppercase">Palm Swipe</span>
+                    <span class="text-[10px] text-[#4ade80] font-bold">Rotate Scene</span>
+                </div>
+                <div class="flex justify-between items-center">
+                    <span class="text-[10px] text-white/70 uppercase">Two Hands Pinch</span>
+                    <span class="text-[10px] text-[#4ade80] font-bold">Zoom</span>
+                </div>
+            </div>
         </div>
 
         <!-- Instructional Overlays -->
@@ -154,6 +203,10 @@
     </aside>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
+
 <script type="importmap">
     {
         "imports": {
@@ -167,6 +220,8 @@
     import * as THREE from 'three';
     import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     import { DragControls } from 'three/addons/controls/DragControls.js';
+    import { GesturePhysics } from '/static/js/biology-galaxy/GesturePhysics.js';
+    import { HandTracker } from '/static/js/biology-galaxy/HandTracker.js';
 
     // --- DATA ---
     const BIOLOGY_NODES = [
@@ -398,6 +453,7 @@
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     renderer.setSize(container.clientWidth, container.clientHeight);
     renderer.setPixelRatio(window.devicePixelRatio);
+    renderer.setClearColor(0x000000, 0); // Set clear color with 0 alpha
     container.appendChild(renderer.domElement);
 
     const controls = new OrbitControls(camera, renderer.domElement);
@@ -746,10 +802,44 @@
         return mesh;
     }
 
+    // --- Hand Mode Setup ---
+    const gesturePhysics = new GesturePhysics(pioneerPlanes);
+    const handTracker = new HandTracker(
+        document.getElementById('webcam-layer'),
+        document.getElementById('hand-canvas'),
+        scene,
+        camera,
+        renderer,
+        gesturePhysics,
+        controls
+    );
+
+    const handToggle = document.getElementById('hand-mode-toggle');
+    handToggle.onclick = async () => {
+        if (!handTracker.isActive) {
+            try {
+                await handTracker.start();
+                handToggle.classList.add('active');
+                handToggle.querySelector('.label').textContent = 'Deactivate';
+            } catch (err) {
+                console.error(err);
+                alert("Hand mode requires camera access. Please allow camera permissions and try again.");
+            }
+        } else {
+            handTracker.stop();
+            handToggle.classList.remove('active');
+            handToggle.querySelector('.label').textContent = 'Activate Hand Mode';
+        }
+    };
+
     // --- Animation Loop ---
     let currentSparkColor = 0x4ade80;
     function animate(t) {
         requestAnimationFrame(animate);
+
+        if (gesturePhysics.isActive) {
+            gesturePhysics.update();
+        }
 
         agentCore.rotation.y += 0.01;
         agentCore.rotation.x += 0.005;
@@ -1153,10 +1243,31 @@
 </script>
 
 <style>
+    #webcam-layer {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      object-fit: cover;
+      transform: scaleX(-1);        /* mirror the feed */
+      filter: brightness(0.4) saturate(0.7);   /* darken to keep galaxy readable */
+      z-index: 0;
+      display: none;
+    }
+
+    #hand-canvas {
+        z-index: 5;
+    }
+
+    #hand-mode-toggle.active {
+        background: #ef4444;
+        border-color: #ef4444;
+        color: white;
+    }
+
     /* Fullscreen Immersion */
     #navbar, footer, header, #top-bar, .bg-primary.text-white.py-2 { display: none !important; }
     body { overflow: hidden !important; background-color: black !important; margin-top: 0 !important; }
-    #ai-tour-container { top: 0; left: 0; z-index: 100; }
+    #ai-tour-container { top: 0; left: 0; z-index: 100; background: transparent !important; }
 
     .glass-card {
         background: rgba(2, 6, 23, 0.7);
