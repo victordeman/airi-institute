@@ -26,9 +26,9 @@ def to_dict_list(result_set: libsql_client.ResultSet):
 if os.getenv("TURSO_DATABASE_URL"):
     DATABASE_URL = os.getenv("TURSO_DATABASE_URL")
 elif os.getenv("VERCEL"):
-    DATABASE_URL = "file:/tmp/naira.db"
+    DATABASE_URL = "file:/tmp/airi.db"
 else:
-    DATABASE_URL = "file:naira.db"
+    DATABASE_URL = "file:airi.db"
 
 AUTH_TOKEN = os.getenv("TURSO_AUTH_TOKEN", "")
 
@@ -166,13 +166,13 @@ async def init_db():
             cursor = await client.execute("SELECT COUNT(*) FROM users")
             count = cursor.rows[0][0]
             if count == 0:
-                logger.info("Seeding users with NAIRA RBAC roles...")
+                logger.info("Seeding users with AIRI Institute RBAC roles...")
                 from passlib.context import CryptContext
                 import json
                 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
                 roles = [
-                    ("admin", "admin@naira.institute", "NAIRA Super Admin", "super_admin"),
+                    ("admin", "admin@airi.institute", "AIRI Super Admin", "super_admin"),
                     ("director", "director@nbu.edu.ng", "Institute Director", "institute_director"),
                     ("faculty", "faculty@nbu.edu.ng", "Dr. Adebayo Researcher", "faculty"),
                     ("ra", "ra@nbu.edu.ng", "Kofi Assistant", "research_assistant"),
@@ -271,7 +271,7 @@ async def init_db():
         logger.error(f"Failed to initialize database: {e}")
         raise e
 
-async def get_all_naira_data():
+async def get_all_airi_data():
     """
     Collects string representation of all key data for RAG.
     """

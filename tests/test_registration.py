@@ -12,11 +12,11 @@ from app.database import init_db
 @pytest.fixture(scope="module", autouse=True)
 def setup_db():
     import asyncio
-    os.environ["TURSO_DATABASE_URL"] = "file:test_naira.db"
+    os.environ["TURSO_DATABASE_URL"] = "file:test_airi.db"
     asyncio.run(init_db())
     yield
-    if os.path.exists("test_naira.db"):
-        os.remove("test_naira.db")
+    if os.path.exists("test_airi.db"):
+        os.remove("test_airi.db")
 
 client = TestClient(app)
 

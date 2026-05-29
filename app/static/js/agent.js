@@ -9,7 +9,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const sidebar = document.getElementById('chat-sidebar');
     const voiceBtn = document.getElementById('voice-input-btn');
 
-    let chatHistory = JSON.parse(localStorage.getItem('naira_chat_history') || '[]');
+    let chatHistory = JSON.parse(localStorage.getItem('airi_chat_history') || '[]');
 
     // Initialize Feather Icons
     if (window.feather) feather.replace();
@@ -161,7 +161,7 @@ document.addEventListener('DOMContentLoaded', () => {
             updateHistory(message, data.response);
         } catch (error) {
             removeLoadingIndicator(loadingId);
-            addMessage("I'm sorry, I encountered an error connecting to the NAIRA brain. Please check your connection.", 'ai');
+            addMessage("I'm sorry, I encountered an error connecting to the AIRI Institute brain. Please check your connection.", 'ai');
         }
     });
 
@@ -234,7 +234,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const title = userMsg.length > 30 ? userMsg.substring(0, 30) + '...' : userMsg;
         chatHistory.unshift({ title, date: new Date().toISOString(), messages: [{user: userMsg, ai: aiMsg}] });
         if (chatHistory.length > 10) chatHistory.pop();
-        localStorage.setItem('naira_chat_history', JSON.stringify(chatHistory));
+        localStorage.setItem('airi_chat_history', JSON.stringify(chatHistory));
         renderHistory();
     }
 

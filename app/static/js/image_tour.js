@@ -1,5 +1,5 @@
 /**
- * Image Tour Engine for NAIRA Immersive Experiences
+ * Image Tour Engine for AIRI Institute Immersive Experiences
  * Orchestrates cinematic zooming, panning, narration, and hotspots for 2D images
  */
 

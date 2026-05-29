@@ -132,7 +132,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const result = await response.json();
                 addChatMessage(result.response || "I'm sorry, I couldn't process that.", 'ai');
             } catch (error) {
-                addChatMessage("Sorry, I'm having trouble connecting to the NAIRA brain right now. Please try again later.", 'ai');
+                addChatMessage("Sorry, I'm having trouble connecting to the AIRI Institute brain right now. Please try again later.", 'ai');
             }
         });
     }
@@ -208,7 +208,7 @@ document.addEventListener('DOMContentLoaded', () => {
             'nav-immersive': 'Immersive',
             'nav-services': 'Services',
             'nav-projects': 'Projects',
-            'hero-title': 'NAIRA',
+            'hero-title': 'AIRI Institute',
             'hero-badge': "Pioneering Africa's AI Renaissance",
             'hero-subtitle': 'NBU ARTIFICIAL INTELLIGENCE RESEARCH & ADVANCEMENT INSTITUTE',
             'hero-description': 'Transforming education and innovation through immersive XR experiences and agentic AI architectures, embedding African languages, culture, and indigenous knowledge into global technology solutions.',
@@ -229,7 +229,7 @@ document.addEventListener('DOMContentLoaded', () => {
             'nav-immersive': 'Immersive',
             'nav-services': 'Awọn iṣẹ',
             'nav-projects': 'Awọn Ise-Agbeṣe',
-            'hero-title': 'NAIRA',
+            'hero-title': 'AIRI Institute',
             'hero-badge': "Asiwaju Isọji AI ti Afirika",
             'hero-subtitle': 'ILE-IṢẸ NBU FUN IWADII ATI ILỌSIWAJU AI',
             'hero-description': 'Yiyipada eto ẹkọ ati isọdọtun nipasẹ awọn iriri XR immersive ati awọn faaji AI aṣoju, fifi awọn ede Afirika, aṣa, ati imọ abinibi sinu awọn ojutu imọ-ẹrogbaye.',
@@ -250,7 +250,7 @@ document.addEventListener('DOMContentLoaded', () => {
             'nav-immersive': 'Immersive',
             'nav-services': 'Huduma',
             'nav-projects': 'Miradi',
-            'hero-title': 'NAIRA',
+            'hero-title': 'AIRI Institute',
             'hero-badge': "Uanzilishi wa Renaissance ya AI ya Afrika",
             'hero-subtitle': 'TAASISI YA NBU YA UTAFITI NA MAENDELEO YA AI',
             'hero-description': 'Kubadilisha elimu na uvumbuzi kupitia uzoefu wa XR wa kuzama na usanifu wa AI, kupachika lugha za Kiafrika, utamaduni, na maarifa asilia katika suluhisho za teknolojia ya kimataifa.',
@@ -271,7 +271,7 @@ document.addEventListener('DOMContentLoaded', () => {
             'nav-immersive': 'Immersive',
             'nav-services': 'Ọrụ',
             'nav-projects': 'Ihe omume',
-            'hero-title': 'NAIRA',
+            'hero-title': 'AIRI Institute',
             'hero-badge': "Ịsụ ụzọ AI Renaissance nke Africa",
             'hero-subtitle': 'NBU ARTIFICIAL INTELLIGENCE RESEARCH & ADVANCEMENT INSTITUTE',
             'hero-description': 'Ịgbanwe agụmakwụkwọ na ihe ọhụrụ site na ahụmịhe XR na-emikpu na usoro AI, na-etinye asụsụ Africa, omenala, na ihe ọmụma obodo n\'ime usoro teknụzụ zuru ụwa ọnụ.',
@@ -292,7 +292,7 @@ document.addEventListener('DOMContentLoaded', () => {
             'nav-immersive': 'Immersive',
             'nav-services': 'Sabis',
             'nav-projects': 'Ayyuka',
-            'hero-title': 'NAIRA',
+            'hero-title': 'AIRI Institute',
             'hero-badge': "Jagorar Farfadowar AI ta Afirka",
             'hero-subtitle': 'CIBIYAR BINCIKE DA CIGABAN AI TA NBU',
             'hero-description': 'Canza ilimi da sabbin abubuwa ta hanyar abubuwan XR masu zurfi da tsarin AI, sanya harsunan Afirka, al\'adu, da ilimin asali cikin hanyoyin fasahar duniya.',
