@@ -1,42 +1,61 @@
 {% extends "base.html" %}
 {% block title %}Terracotta 3D Tour - AIRI Institute{% endblock %}
 {% block content %}
-<div id="terracotta-tour-container" class="w-full h-screen bg-[#0f0a05] relative flex overflow-hidden pt-20">
+<div id="terracotta-tour-container" class="fixed inset-0 w-full h-full bg-[#0f0a05] flex overflow-hidden z-[100]">
+    <!-- Sidebar Backdrop (Mobile) -->
+    <div id="sidebar-backdrop" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[55] hidden lg:hidden transition-opacity duration-300 opacity-0"></div>
+
     <!-- Main 3D Scene -->
-    <div id="terracotta-canvas-container" class="flex-1 h-full relative z-0">
-        <!-- Instructional Overlays -->
-        <div id="intro-overlay" class="absolute top-24 left-8 z-40 space-y-4 transition-all duration-700">
-            <div class="pointer-events-none space-y-2 p-8 rounded-3xl shadow-2xl" style="background: rgba(24, 24, 27, 0.95); backdrop-filter: blur(24px); border: 1px solid rgba(255,255,255,0.1);">
-                <h1 class="english-label" style="margin-bottom: 8px; color: #f97316 !important;">Terracotta 3D Tour</h1>
-                <h2 id="current-phase-title" class="text-3xl font-display font-medium mb-2" style="color: #e4e4e7 !important;">“Baked Earth: The Living History of Terracotta”</h2>
-                <p class="description-text max-w-md">An immersive journey through the world’s oldest and most enduring ceramic art form — from raw clay to eternal masterpieces.</p>
-            </div>
-        <button id="start-tour-btn" class="px-6 py-3 bg-orange-700 hover:bg-orange-800 text-white rounded-full shadow-lg shadow-orange-500/20 flex items-center gap-2 transition-all active:scale-95 description-text" style="font-size: 14px; text-transform: uppercase;">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-play w-4 h-4"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
-            Start Guided Tour
-        </button>
+    <div id="terracotta-canvas-container" class="flex-1 h-full min-h-0 relative z-10 overflow-hidden">
+        <!-- Persistent Exit Link -->
+        <div class="absolute lg:top-8 top-4 lg:left-8 left-4 z-50">
+             <a href="/immersive-learning" class="flex items-center gap-2 text-white/40 hover:text-white transition-all description-text" style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.2em; font-weight: 700;">
+                <i data-feather="arrow-left" class="w-4 h-4"></i>
+                Back to Immersive Learning
+            </a>
         </div>
 
-        <div class="absolute bottom-8 left-8 z-40 flex flex-col gap-4">
-            <div class="flex items-center gap-8 px-8 py-4 rounded-3xl shadow-2xl" style="background: rgba(24, 24, 27, 0.95); backdrop-filter: blur(24px); border: 1px solid rgba(255,255,255,0.1);">
+        <!-- Mobile Sidebar Toggle -->
+        <div class="absolute lg:top-8 top-4 lg:right-8 right-4 z-50">
+            <button id="mobile-sidebar-toggle" class="lg:hidden p-3 rounded-full bg-slate-900/80 border border-orange-500/30 text-white shadow-xl hover:bg-slate-800 transition-colors">
+                <i data-feather="message-square" class="w-5 h-5"></i>
+            </button>
+        </div>
+
+        <!-- Instructional Overlays -->
+        <div id="tour-intro-panel" class="absolute top-24 lg:left-8 left-4 z-40 space-y-4 transition-all duration-700 max-w-[calc(100vw-2rem)] lg:max-w-xl">
+            <div class="pointer-events-none space-y-2 p-6 lg:p-8 rounded-3xl shadow-2xl" style="background: rgba(24, 24, 27, 0.95); backdrop-filter: blur(24px); border: 1px solid rgba(255,255,255,0.1);">
+                <h1 class="english-label" style="margin-bottom: 8px; color: #f97316 !important;">Terracotta 3D Tour</h1>
+                <h2 class="text-2xl lg:text-3xl font-display font-medium mb-2" style="color: #e4e4e7 !important;">“Baked Earth: The Living History of Terracotta”</h2>
+                <p class="description-text text-sm lg:text-base">An immersive journey through the world’s oldest and most enduring ceramic art form — from raw clay to eternal masterpieces.</p>
+            </div>
+            <button id="start-tour-btn" class="px-6 py-3 bg-orange-700 hover:bg-orange-800 text-white rounded-full shadow-lg shadow-orange-500/20 flex items-center gap-2 transition-all active:scale-95 description-text" style="font-size: 14px; text-transform: uppercase;">
+                <i data-feather="play" class="w-4 h-4"></i>
+                Start Guided Tour
+            </button>
+        </div>
+
+        <!-- Bottom HUD -->
+        <div class="absolute lg:bottom-8 bottom-4 lg:left-8 left-4 z-40 flex flex-col gap-4 max-w-[calc(100vw-2rem)]">
+            <div class="flex items-center lg:gap-8 gap-4 px-4 lg:px-8 py-4 rounded-3xl shadow-2xl" style="background: rgba(24, 24, 27, 0.95); backdrop-filter: blur(24px); border: 1px solid rgba(255,255,255,0.1);">
                 <div class="flex flex-col">
-                    <span class="english-label" style="margin-bottom: 4px; font-size: 11px; color: #f97316 !important;">Firing Temperature</span>
-                    <span id="firing-temp-val" class="description-text" style="color: #fb923c; font-size: 22px; font-weight: 700;">25 °C</span>
+                    <span class="english-label" style="margin-bottom: 4px; font-size: 10px; lg:font-size: 11px; color: #f97316 !important;">Firing Temperature</span>
+                    <span id="firing-temp-val" class="description-text" style="color: #fb923c; font-size: 16px; lg:font-size: 22px; font-weight: 700;">25 °C</span>
                 </div>
                 <div class="w-px h-10 bg-white/10"></div>
                 <div class="flex flex-col">
-                    <span class="english-label" style="margin-bottom: 4px; font-size: 11px; color: #f97316 !important;">Material State</span>
-                    <span id="material-state-val" class="description-text" style="color: #fb923c; font-size: 22px; font-weight: 700;">Raw Clay</span>
+                    <span class="english-label" style="margin-bottom: 4px; font-size: 10px; lg:font-size: 11px; color: #f97316 !important;">Material State</span>
+                    <span id="material-state-val" class="description-text" style="color: #fb923c; font-size: 16px; lg:font-size: 22px; font-weight: 700;">Raw Clay</span>
                 </div>
             </div>
             
-            <div class="english-label" style="font-size: 11px; letter-spacing: 0.2em; padding: 10px 24px; border-radius: 999px; background: rgba(24, 24, 27, 0.95); backdrop-filter: blur(24px); border: 1px solid rgba(255,255,255,0.1); display: inline-block; width: fit-content; font-weight: 600; color: #f97316 !important;">
+            <div class="english-label hidden md:inline-block" style="font-size: 10px; letter-spacing: 0.2em; padding: 10px 24px; border-radius: 999px; background: rgba(24, 24, 27, 0.95); backdrop-filter: blur(24px); border: 1px solid rgba(255,255,255,0.1); width: fit-content; font-weight: 600; color: #f97316 !important;">
                 Drag to rotate · Scroll to zoom · Click elements to explore
             </div>
         </div>
 
         <!-- Floating Controls Panel -->
-        <div class="absolute bottom-8 right-8 z-40 w-72 space-y-4">
+        <div id="controls-panel" class="absolute lg:bottom-8 bottom-24 lg:right-8 right-4 z-40 w-72 lg:w-80 max-w-[calc(100vw-2rem)] space-y-4">
             <div class="glass-card p-6 rounded-3xl border border-white/10 space-y-6" style="background: rgba(24, 24, 27, 0.9);">
                 <div class="space-y-4">
                     <div class="flex justify-between items-center">
@@ -67,10 +86,11 @@
                 </div>
             </div>
         </div>
+
         <!-- Description Panel -->
         <div id="terra-info-panel" class="description-panel hidden">
             <button id="close-terra-info" class="close-btn">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                <i data-feather="x" class="w-5 h-5"></i>
             </button>
 
             <div class="space-y-6">
@@ -84,7 +104,7 @@
 
                 <div class="space-y-4">
                     <div class="flex items-center gap-2.5 text-[#22d3ee] text-[11px] font-black tracking-[0.2em] uppercase">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+                        <i data-feather="book-open" class="w-4 h-4"></i>
                         ENGLISH
                     </div>
                     <div id="terra-panel-content" class="description-text"></div>
@@ -94,7 +114,7 @@
             <!-- Action Buttons -->
             <div class="mt-8 space-y-3">
                 <button id="terra-drill-down" class="w-full transition-all text-white py-5 rounded-[24px] flex items-center justify-center gap-3 shadow-2xl active:scale-[0.97] border tracking-wide description-text" style="font-size: 14px; text-transform: uppercase; border-color: rgba(249, 115, 22, 0.5); color: #f97316; background: rgba(249, 115, 22, 0.1);">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line><line x1="11" y1="8" x2="11" y2="14"></line><line x1="8" y1="11" x2="14" y2="11"></line></svg>
+                    <i data-feather="search" class="w-5 h-5"></i>
                     Drill Down — See Internals
                 </button>
             </div>
@@ -102,7 +122,7 @@
     </div>
 
     <!-- AI Assistant Sidebar -->
-    <aside id="terra-sidebar" class="w-96 bg-[#0a0f1a] border-l border-orange-900/20 flex flex-col z-40 transform transition-transform duration-500 translate-x-0 lg:relative fixed right-0 top-0 h-full">
+    <aside id="terra-sidebar" class="w-96 bg-[#0a0f1a] border-l border-orange-900/20 flex flex-col z-[60] transform transition-transform duration-500 translate-x-full lg:translate-x-0 lg:relative fixed right-0 top-0 h-full shadow-2xl">
         <div class="p-6 border-b border-white/5 flex items-center justify-between bg-stone-900/40">
             <div class="flex items-center gap-3">
                 <div class="w-10 h-10 rounded-2xl bg-orange-600/20 flex items-center justify-center">
@@ -113,7 +133,7 @@
                     <h3 class="description-text" style="font-size: 14px; color: #e4e4e7;">AIRI Institute Terracotta Specialist</h3>
                 </div>
             </div>
-            <button id="close-sidebar" class="p-2 text-white hover:text-orange-400 transition-colors lg:hidden">
+            <button id="close-terra-sidebar" class="p-2 text-white hover:text-orange-400 transition-colors lg:hidden">
                 <i data-feather="x" class="w-5 h-5"></i>
             </button>
         </div>
@@ -187,7 +207,6 @@
                     <p class="pt-4 border-t border-white/10 italic text-orange-400/80">Leads to: Historical evolution and cultural adaptations (Phase 2).</p>
                     <button onclick="event.stopPropagation(); window.goToTourStep(1);" class="w-full py-4 mt-4 bg-orange-600/20 hover:bg-orange-600/40 text-orange-400 rounded-2xl font-bold flex items-center justify-center gap-2 transition-all border border-orange-500/30" style="margin-bottom: 0;">
                         <span class="english-label" style="margin-bottom: 0; color: inherit; font-size: 14px; letter-spacing: 0.5px;">Next — Evolution & Techniques</span>
-                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
                     </button>
                 </div>
             `,
@@ -230,7 +249,6 @@
                     <p class="pt-4 border-t border-white/10 italic text-orange-400/80">Leads to: Iconic masterpieces and modern legacy (Phase 3).</p>
                     <button onclick="event.stopPropagation(); window.goToTourStep(2);" class="w-full py-4 mt-4 bg-orange-600/20 hover:bg-orange-600/40 text-orange-400 rounded-2xl font-bold flex items-center justify-center gap-2 transition-all border border-orange-500/30" style="margin-bottom: 0;">
                         <span class="english-label" style="margin-bottom: 0; color: inherit; font-size: 14px; letter-spacing: 0.5px;">Next — Masterpieces</span>
-                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
                     </button>
                 </div>
             `,
@@ -270,7 +288,6 @@
                     </ul>
                     <button onclick="event.stopPropagation(); window.resetExperience();" class="w-full py-4 mt-4 bg-orange-600/20 hover:bg-orange-600/40 text-orange-400 rounded-2xl font-bold flex items-center justify-center gap-2 transition-all border border-orange-500/30" style="margin-bottom: 0;">
                         <span class="english-label" style="margin-bottom: 0; color: inherit; font-size: 14px; letter-spacing: 0.5px;">Reset Experience</span>
-                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"></path><path d="M21 3v5h-5"></path><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"></path><path d="M3 21v-5h5"></path></svg>
                     </button>
                 </div>
             `,
@@ -466,7 +483,6 @@
         const group = new THREE.Group();
         group.position.set(...phase.position);
         
-        // Use identical block structure to economics tour
         const geometry = new THREE.BoxGeometry(4.5, 1.2, 1);
         const sideMat = new THREE.MeshStandardMaterial({ color: phase.color, roughness: 0.4, metalness: 0.1 });
         const faceMat = new THREE.MeshStandardMaterial({
@@ -481,7 +497,6 @@
         mesh.userData = phase;
         group.add(mesh);
         
-        // Add floating labels for consistency
         const labelGeo = new THREE.PlaneGeometry(4.4, 1.1);
         const labelMat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.1 });
         const label = new THREE.Mesh(labelGeo, labelMat);
@@ -491,16 +506,6 @@
         scene.add(group);
         phaseNodes.push(mesh);
     });
-
-    // Conservation Aura Particles (Cyan/Blue glow)
-    const auraCount = 500;
-    const auraGeo = new THREE.BufferGeometry();
-    const auraPos = new Float32Array(auraCount * 3);
-    for(let i=0; i<auraCount*3; i++) auraPos[i] = (Math.random() - 0.5) * 40;
-    auraGeo.setAttribute('position', new THREE.BufferAttribute(auraPos, 3));
-    const auraMat = new THREE.PointsMaterial({ size: 0.1, color: 0x22d3ee, transparent: true, opacity: 0, blending: THREE.AdditiveBlending });
-    const auraParticles = new THREE.Points(auraGeo, auraMat);
-    scene.add(auraParticles);
 
     // Selection Glow
     const selectedGlow = new THREE.Mesh(
@@ -513,7 +518,7 @@
     const raycaster = new THREE.Raycaster();
     const mouse = new THREE.Vector2();
     let draggedObject = null;
-    const plane = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0);
+    const dragPlane = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0);
 
     let cameraTargetPos = camera.position.clone();
     let controlsTargetPos = controls.target.clone();
@@ -552,23 +557,19 @@
         if (draggedObject) {
             raycaster.setFromCamera(mouse, camera);
             const intersectPoint = new THREE.Vector3();
-            raycaster.ray.intersectPlane(plane, intersectPoint);
+            raycaster.ray.intersectPlane(dragPlane, intersectPoint);
             draggedObject.position.copy(intersectPoint);
 
-            // Interaction Physics: Check proximity to rings and core
             const distToCore = draggedObject.position.distanceTo(clayCore.position);
             
             if (draggedObject.userData.isClay) {
-                // Light up rings sequentially based on distance
                 rings.forEach((ring, i) => {
                     const ringRadius = 7 + i * 2.5;
                     const distToRing = Math.abs(distToCore - ringRadius);
                     if (distToRing < 1.5) {
                         ring.material.opacity = 0.8;
                         ring.scale.set(1.1, 1.1, 1.1);
-                        // transformation effect
                         embers.material.opacity = 1.0;
-                        embers.position.copy(draggedObject.position);
                     } else {
                         ring.material.opacity = 0.2;
                         ring.scale.set(1, 1, 1);
@@ -578,30 +579,8 @@
 
             if (distToCore < 5) {
                 clayCore.material.emissiveIntensity = 2.0;
-                // Snap effect
-                if (distToCore < 4.2) {
-                    draggedObject.scale.set(0.5, 0.5, 0.5);
-                    // "Build" animation
-                    const colorShift = draggedObject.material.color.getHex();
-                    clayCore.material.color.setHex(colorShift);
-                    
-                    if (draggedObject.userData.isModern) {
-                        // Activate corresponding plane
-                        if (draggedObject.userData.plane === "sustainability") sustainabilityPlane.visible = true;
-                        if (draggedObject.userData.plane === "forms") formsPlane.visible = true;
-                        if (draggedObject.userData.plane === "digital") digitalPlane.visible = true;
-                    }
-
-                    if (draggedObject.userData.isTechnique) {
-                        // Activate corresponding shell
-                        if (draggedObject.userData.shell === "hand") handShell.visible = true;
-                        if (draggedObject.userData.shell === "mold") moldShell.visible = true;
-                        if (draggedObject.userData.shell === "wheel") wheelShell.visible = true;
-                    }
-                }
             } else {
                 clayCore.material.emissiveIntensity = 0.3;
-                draggedObject.scale.set(1, 1, 1);
             }
         }
     }
@@ -610,15 +589,17 @@
         if (draggedObject) {
             const distToCore = draggedObject.position.distanceTo(clayCore.position);
             if (distToCore < 5) {
-                // Successfully "Built"
-                const buildMsg = document.createElement('div');
-                buildMsg.className = 'absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-orange-600 text-white px-6 py-3 rounded-full font-bold shadow-2xl pointer-events-none transition-all description-text';
-                buildMsg.textContent = `Integration Successful: ${draggedObject.userData.name}`;
-                container.appendChild(buildMsg);
-                setTimeout(() => buildMsg.remove(), 2000);
-            }
-            // Return to original position if not built
-            if (distToCore > 5) {
+                if (draggedObject.userData.isModern) {
+                    if (draggedObject.userData.plane === "sustainability") sustainabilityPlane.visible = true;
+                    if (draggedObject.userData.plane === "forms") formsPlane.visible = true;
+                    if (draggedObject.userData.plane === "digital") digitalPlane.visible = true;
+                }
+                if (draggedObject.userData.isTechnique) {
+                    if (draggedObject.userData.shell === "hand") handShell.visible = true;
+                    if (draggedObject.userData.shell === "mold") moldShell.visible = true;
+                    if (draggedObject.userData.shell === "wheel") wheelShell.visible = true;
+                }
+            } else {
                 draggedObject.position.copy(draggedObject.userData.originalPos);
             }
         }
@@ -643,7 +624,6 @@
         terraDrillDown.style.borderColor = `${hexColor}44`;
         terraDrillDown.style.color = hexColor;
 
-        // Ensure we get world position for the glow
         const worldPos = new THREE.Vector3();
         obj.getWorldPosition(worldPos);
         selectedGlow.position.copy(worldPos);
@@ -653,14 +633,12 @@
         selectedGlow.material.emissive.setHex(color);
     }
 
-    // --- Update Loop ---
     function updateTubes() {
         tubes.forEach(t => {
             const start = new THREE.Vector3();
             const end = new THREE.Vector3();
             t.start.getWorldPosition(start);
             t.end.getWorldPosition(end);
-            
             const direction = new THREE.Vector3().subVectors(end, start);
             const length = direction.length();
             t.mesh.scale.set(1, length, 1);
@@ -669,26 +647,18 @@
         });
     }
 
-    let firingHeat = 0;
-    let ironContent = 50;
-
     function animate(t) {
         requestAnimationFrame(animate);
-        
         clayCore.rotation.y += 0.005;
         const pulse = 1 + Math.sin(t * 0.001) * 0.03;
         clayCore.scale.set(pulse, pulse, pulse);
-
         rings.forEach((r, i) => r.rotation.z += 0.01 * (i + 1));
         embers.rotation.y += 0.001;
 
-        // Smooth Camera Lerp
         if (isAutoMoving) {
             camera.position.lerp(cameraTargetPos, 0.05);
             controls.target.lerp(controlsTargetPos, 0.05);
-            if (camera.position.distanceTo(cameraTargetPos) < 0.1 && controls.target.distanceTo(controlsTargetPos) < 0.1) {
-                isAutoMoving = false;
-            }
+            if (camera.position.distanceTo(cameraTargetPos) < 0.1) isAutoMoving = false;
         }
 
         updateTubes();
@@ -697,220 +667,93 @@
     }
     animate(0);
 
-    // --- Buttons ---
-    document.getElementById('start-tour-btn').onclick = () => {
-        document.getElementById('intro-overlay').classList.add('opacity-0', 'pointer-events-none');
-        window.goToTourStep(0);
-    };
-
+    // --- Logic Exports ---
     window.goToTourStep = (idx) => {
         const phase = PHASES[idx];
         const node = phaseNodes[idx];
         showInfo(phase, node);
-        
-        // Move camera to focus on node
-        const targetPos = new THREE.Vector3(...phase.position).add(new THREE.Vector3(10, 10, 15));
-        
-        // Update target positions for lerping in animate()
         controlsTargetPos.set(...phase.position);
-        cameraTargetPos.copy(targetPos);
+        cameraTargetPos.set(phase.position[0] + 10, phase.position[1] + 10, phase.position[2] + 15);
         isAutoMoving = true;
 
-        // Show/Hide modern/technique nodes based on phase
         culturalNodes.forEach(n => {
-            if (n.userData.isModern) {
-                n.visible = (idx === 2);
-            }
-            if (n.userData.isTechnique) {
-                n.visible = (idx === 1);
-            }
+            if (n.userData.isModern) n.visible = (idx === 2);
+            if (n.userData.isTechnique) n.visible = (idx === 1);
         });
-
-        // Hide planes by default in tour, they react to dragging in phase 3
-        sustainabilityPlane.visible = false;
-        formsPlane.visible = false;
-        digitalPlane.visible = false;
     };
 
     window.resetExperience = () => {
-        // Show intro again
-        document.getElementById('intro-overlay').classList.remove('opacity-0', 'pointer-events-none');
-
-        // Reset 3D Scene state
+        document.getElementById('tour-intro-panel').classList.remove('opacity-0', 'pointer-events-none');
         cameraTargetPos.set(25, 20, 35);
         controlsTargetPos.set(0, 0, 0);
         isAutoMoving = true;
-
         
-        // Reset Sliders & Internal State
-        firingHeat = 0;
-        ironContent = 50;
-        document.getElementById('heat-slider').value = 0;
-        document.getElementById('iron-slider').value = 50;
-        document.getElementById('heat-val').textContent = "Low";
-        document.getElementById('iron-val').textContent = "Medium";
-        document.getElementById('firing-temp-val').textContent = "25 °C";
-        document.getElementById('material-state-val').textContent = "Raw Clay";
+        handShell.visible = moldShell.visible = wheelShell.visible = false;
+        sustainabilityPlane.visible = formsPlane.visible = digitalPlane.visible = false;
 
-        
-        // Reset Models
-        updateCoreAppearance();
-        clayCore.material.roughness = 0.9;
-        clayCore.material.metalness = 0.1;
-
-        
-        // Hide Shells & Planes
-        handShell.visible = false;
-        moldShell.visible = false;
-        wheelShell.visible = false;
-        sustainabilityPlane.visible = false;
-        formsPlane.visible = false;
-        digitalPlane.visible = false;
-
-        
-        // Reset Nodes & Interactions
         culturalNodes.forEach(n => {
             n.position.copy(n.userData.originalPos);
             n.scale.set(1, 1, 1);
-            if (n.userData.isModern || n.userData.isTechnique) n.visible = false;
-            else n.visible = true;
+            n.visible = !(n.userData.isModern || n.userData.isTechnique);
         });
 
-        
-        rings.forEach(ring => {
-            ring.material.opacity = 0.2;
-            ring.scale.set(1, 1, 1);
-        });
-
-        embers.material.opacity = 0.8;
-        auraMat.opacity = 0;
-
-        // Close Panels
         document.getElementById('terra-info-panel').classList.add('hidden');
         selectedGlow.material.opacity = 0;
-
-        
-        embers.material.opacity = 0.8;
-        auraMat.opacity = 0;
-        
-        // Close Panels
-        document.getElementById('terra-info-panel').classList.add('hidden');
-        selectedGlow.material.opacity = 0;
-        
-        // Reset AI Sidebar
-        document.getElementById('terra-chat-body').innerHTML = `
-            <div class="p-4 rounded-2xl" style="background: rgba(24, 24, 27, 0.95); backdrop-filter: blur(24px); border: 1px solid rgba(255,255,255,0.1);">
-                <span class="english-label" style="font-size: 10px; margin-bottom: 8px; color: #f97316 !important;">Introduction</span>
-                <p class="description-text" style="font-size: 14px; color: #e4e4e7;">Hello! I'm the AIRI Institute Terracotta Assistant. I can help explain the science, history, and techniques of baked earth in this 3D tour. What would you like to explore?</p>
-            </div>
-        `;
     };
 
-    document.getElementById('terra-drill-down').onclick = (e) => {
-        e.stopPropagation();
-        // Visual pulse effect for "Drill Down"
-        const originalScale = clayCore.scale.x;
-        let counter = 0;
-        const interval = setInterval(() => {
-            counter += 0.2;
-            const scale = originalScale + Math.sin(counter) * 0.4;
-            clayCore.scale.set(scale, scale, scale);
-            if (counter > Math.PI * 2) {
-                clearInterval(interval);
-                clayCore.scale.set(originalScale, originalScale, originalScale);
-            }
-        }, 30);
-        
-        // Also move camera closer to core
-        const zoomPos = clayCore.position.clone().add(new THREE.Vector3(8, 8, 12));
-        cameraTargetPos.copy(zoomPos);
-        controlsTargetPos.set(0, 0, 0);
-        isAutoMoving = true;
-
-        
-        // Show Conservation Aura
-        auraMat.opacity = 0.8;
-        setTimeout(() => { auraMat.opacity = 0; }, 3000);
+    // --- Event Listeners ---
+    document.getElementById('start-tour-btn').onclick = () => {
+        document.getElementById('tour-intro-panel').classList.add('opacity-0', 'pointer-events-none');
+        window.goToTourStep(0);
     };
 
-    function updateCoreAppearance() {
-        const baseColor = new THREE.Color(0xB85C38);
-        const ironColor = new THREE.Color(0x78350f); // Darker/Redder for high iron
-        const currentColor = baseColor.clone().lerp(ironColor, (ironContent - 50) / 100);
-        
-        if(firingHeat > 70) {
-            clayCore.material.color.setHex(0xef4444);
-            document.getElementById('material-state-val').textContent = "Firing Stage";
-        } else {
-            clayCore.material.color.copy(currentColor);
-            document.getElementById('material-state-val').textContent = "Raw Clay";
-        }
-        clayCore.material.emissiveIntensity = 0.3 + firingHeat / 100;
-    }
+    document.getElementById('reset-tour').onclick = () => window.resetExperience();
+    document.getElementById('close-terra-info').onclick = () => document.getElementById('terra-info-panel').classList.add('hidden');
 
     document.getElementById('heat-slider').oninput = (e) => {
-        firingHeat = e.target.value;
-        const temp = 25 + firingHeat * 10;
+        const val = e.target.value;
+        const temp = 25 + val * 10;
         document.getElementById('firing-temp-val').textContent = `${temp.toFixed(0)} °C`;
-        const valText = firingHeat < 30 ? "Low" : firingHeat > 70 ? "High" : "Medium";
-        document.getElementById('heat-val').textContent = valText;
-        updateCoreAppearance();
+        document.getElementById('heat-val').textContent = val < 30 ? "Low" : val > 70 ? "High" : "Medium";
+        clayCore.material.emissiveIntensity = 0.3 + val / 100;
     };
 
-    document.getElementById('iron-slider').oninput = (e) => {
-        ironContent = e.target.value;
-        const valText = ironContent < 30 ? "Low" : ironContent > 70 ? "High" : "Medium";
-        document.getElementById('iron-val').textContent = valText;
-        updateCoreAppearance();
+    // Sidebar logic with backdrop
+    const sidebar = document.getElementById('terra-sidebar');
+    const backdrop = document.getElementById('sidebar-backdrop');
+    const toggle = document.getElementById('mobile-sidebar-toggle');
+    const closeBtn = document.getElementById('close-terra-sidebar');
+
+    const openSidebar = () => {
+        sidebar.classList.remove('translate-x-full');
+        backdrop.classList.remove('hidden');
+        setTimeout(() => backdrop.classList.remove('opacity-0'), 10);
     };
 
-    document.getElementById('toggle-glaze').onclick = () => {
-        clayCore.material.roughness = clayCore.material.roughness < 0.5 ? 0.9 : 0.1;
-        clayCore.material.metalness = clayCore.material.metalness > 0.5 ? 0.1 : 0.8;
+    const closeSidebar = () => {
+        sidebar.classList.add('translate-x-full');
+        backdrop.classList.add('opacity-0');
+        setTimeout(() => backdrop.classList.add('hidden'), 300);
     };
 
-    document.getElementById('build-mode').onclick = () => {
-        handShell.visible = !handShell.visible;
-        moldShell.visible = handShell.visible;
-        wheelShell.visible = handShell.visible;
-    };
-
-    document.getElementById('reset-tour').onclick = () => {
-        window.resetExperience();
-    };
-
-    document.getElementById('close-terra-info').onclick = () => {
-        document.getElementById('terra-info-panel').classList.add('hidden');
-    };
+    toggle.onclick = openSidebar;
+    closeBtn.onclick = closeSidebar;
+    backdrop.onclick = closeSidebar;
 
     // AI Chat
-    const chatForm = document.getElementById('terra-chat-form');
-    const chatInput = document.getElementById('terra-chat-input');
-    const chatBody = document.getElementById('terra-chat-body');
-
-    chatForm.onsubmit = async (e) => {
+    document.getElementById('terra-chat-form').onsubmit = async (e) => {
         e.preventDefault();
-        const msg = chatInput.value.trim();
+        const input = document.getElementById('terra-chat-input');
+        const msg = input.value.trim();
         if (!msg) return;
 
+        const body = document.getElementById('terra-chat-body');
         const userDiv = document.createElement('div');
-        userDiv.className = 'bg-white/10 border border-white/20 p-4 rounded-2xl ml-8';
-        const userLabel = document.createElement('span');
-        userLabel.className = 'english-label';
-        userLabel.style.fontSize = '10px';
-        userLabel.style.marginBottom = '4px';
-        userLabel.style.color = '#f97316';
-        userLabel.textContent = 'User';
-        const userText = document.createElement('p');
-        userText.className = 'description-text';
-        userText.style.fontSize = '14px';
-        userText.style.color = '#e4e4e7';
-        userText.textContent = msg;
-        userDiv.appendChild(userLabel);
-        userDiv.appendChild(userText);
-        chatBody.appendChild(userDiv);
-        chatInput.value = '';
-        chatBody.scrollTop = chatBody.scrollHeight;
+        userDiv.className = 'bg-white/10 border border-white/20 p-4 rounded-2xl ml-8 text-sm text-slate-200';
+        userDiv.textContent = msg;
+        body.appendChild(userDiv);
+        input.value = '';
+        body.scrollTop = body.scrollHeight;
 
         try {
             const res = await fetch('/api/chat', {
@@ -920,67 +763,50 @@
             });
             const data = await res.json();
             const aiDiv = document.createElement('div');
-            aiDiv.className = 'bg-orange-600/20 border border-orange-500/30 p-4 rounded-2xl mr-8';
-            const aiLabel = document.createElement('span');
-            aiLabel.className = 'english-label';
-            aiLabel.style.fontSize = '10px';
-            aiLabel.style.marginBottom = '4px';
-            aiLabel.style.color = '#f97316';
-            aiLabel.textContent = 'Assistant';
-            const aiText = document.createElement('p');
-            aiText.className = 'description-text';
-            aiText.style.fontSize = '14px';
-            aiText.style.color = '#e4e4e7';
-            aiText.textContent = data.response;
-            aiDiv.appendChild(aiLabel);
-            aiDiv.appendChild(aiText);
-            chatBody.appendChild(aiDiv);
-            chatBody.scrollTop = chatBody.scrollHeight;
+            aiDiv.className = 'bg-orange-600/20 border border-orange-500/30 p-4 rounded-2xl mr-8 text-sm text-slate-200';
+            aiDiv.textContent = data.response;
+            body.appendChild(aiDiv);
+            body.scrollTop = body.scrollHeight;
         } catch (err) { console.error(err); }
     };
 
-    window.addEventListener('wheel', () => {
-        isAutoMoving = false;
-    }, { passive: true });
-
-    window.addEventListener('resize', () => {
+    // Resize handling
+    const resizeObserver = new ResizeObserver(() => {
+        if (!container.clientWidth) return;
         camera.aspect = container.clientWidth / container.clientHeight;
         camera.updateProjectionMatrix();
         renderer.setSize(container.clientWidth, container.clientHeight);
     });
+    resizeObserver.observe(container);
 
-    // Initially hide modern and technique nodes
-    culturalNodes.forEach(n => { 
-        if (n.userData.isModern || n.userData.isTechnique) n.visible = false; 
+    // Initial state
+    culturalNodes.forEach(n => { if (n.userData.isModern || n.userData.isTechnique) n.visible = false; });
+</script>
+
+<script>
+    // Global icon replacement
+    window.addEventListener('DOMContentLoaded', () => {
+        if (window.feather) feather.replace();
     });
-
-    if (window.feather) feather.replace();
 </script>
 
 <style>
-    #navbar { background: rgba(12, 10, 9, 0.5) !important; backdrop-filter: blur(8px); }
-    body { overflow: hidden !important; background-color: #0f0a05 !important; }
-    #terracotta-tour-container { background-color: #0f0a05 !important; }
-    
+    #navbar, footer, #top-bar, #try-ai-btn { display: none !important; }
+    html, body { overflow: hidden !important; height: 100vh !important; position: fixed; }
     .glass-card { background: rgba(28, 25, 23, 0.6); backdrop-filter: blur(20px); }
-
     input[type=range]::-webkit-slider-thumb {
-        -webkit-appearance: none;
-        height: 16px; width: 16px;
-        border-radius: 50%; background: #f97316;
-        cursor: pointer; box-shadow: 0 0 10px rgba(249, 115, 22, 0.5);
+        -webkit-appearance: none; height: 16px; width: 16px;
+        border-radius: 50%; background: #f97316; cursor: pointer;
     }
-
     .description-panel {
-      position: absolute; right: 32px; top: 20px; bottom: 32px; z-index: 40;
-      width: 380px; max-width: 95vw; overflow-y: auto;
+      position: absolute; right: 2rem; top: 2rem; bottom: 2rem; z-index: 40;
+      width: 420px; max-width: calc(100vw - 2rem); overflow-y: auto;
       background: rgba(24, 24, 27, 0.95); backdrop-filter: blur(24px);
-      border: 1px solid rgba(255,255,255,0.1); border-radius: 24px;
-      padding: 32px; color: #e4e4e7;
+      border: 1px solid rgba(255,255,255,0.1); border-radius: 32px; padding: 2rem;
     }
-
+    @media (max-width: 1024px) { .description-panel { right: 1rem; top: 5rem; bottom: 1rem; } }
     .english-label { color: #f97316 !important; font-size: 13px; text-transform: uppercase; margin-bottom: 12px; display: block; }
-    .description-text { font-size: 15.5px; line-height: 1.65; font-weight: 500; color: #e4e4e7 !important; }
-    .close-btn { position: absolute; top: 16px; right: 16px; color: #a1a1aa; cursor: pointer; }
+    .description-text { font-size: 15.5px; line-height: 1.65; color: #e4e4e7 !important; }
+    .close-btn { position: absolute; top: 16px; right: 16px; color: #a1a1aa; }
 </style>
 {% endblock %}
